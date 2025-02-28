@@ -15,7 +15,7 @@
       </el-aside>
       <el-container>
         <!-- 主体内容 -->
-        <el-main>Main</el-main>
+        <el-main><Home /></el-main>
         <!-- 页脚内容 -->
         <el-footer>Footer</el-footer>
       </el-container>
@@ -24,13 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import router from '@/router'
-import { ElMessage } from 'element-plus'
 import Aside from '@/components/Aside.vue'
 import Header from '@/components/Header.vue'
-
-const loginOut = () => {
-  ElMessage.success('登出事件')
-  router.push('/login')
-}
+import Home from './Home.vue'
 </script>

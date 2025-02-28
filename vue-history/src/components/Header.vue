@@ -67,6 +67,7 @@
 </template>
 
 <script setup lang="ts">
+import router from '@/router'
 import { Close, Switch } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
@@ -80,6 +81,7 @@ const handleSelect = (key, keyPath) => {
 //退出登录点击事件
 const loginOut = () => {
   ElMessage.success('登出事件')
+  router.push('/login')
 }
 
 //头像点击事件:查看个人信息
