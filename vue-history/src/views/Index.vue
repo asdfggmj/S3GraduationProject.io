@@ -17,7 +17,7 @@
         <!-- 主体内容 -->
         <el-main><Main /></el-main>
         <!-- 页脚内容 -->
-        <el-footer>Footer</el-footer>
+        <!-- <el-footer>Footer</el-footer> -->
       </el-container>
     </el-container>
   </el-container>

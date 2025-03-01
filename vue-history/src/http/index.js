@@ -18,9 +18,8 @@ http.interceptors.request.use(function (config) {
   //如果token存在，将Authorization添加到请求头中
   if (token) {
     config.headers['Authorization'] = `Bearer${token}`
+    // console.log(config.headers['Authorization'] = `Bearer${token}`)
   }
-  console.log(config);
-
   return config;
 }, function (error) {
   // 对请求错误做些什么
