@@ -19,10 +19,78 @@ const router = createRouter({
       meta: { title: '医疗一体站管理系统--登录' }
     },
     {
-      path: '/index',
+      path: '/home',
       name: 'index',
       meta: { title: '医疗一体站管理系统--主页' },
-      component: () => import('../views/Index.vue')
+      component: () => import('@/views/Index.vue'),
+      children: [
+        {
+          path: '/home',
+          name: 'home',
+          component: () => import('@/views/Home.vue'),
+          meta: { title: '医疗一体站管理系统--主页' }
+        },
+        {
+          path: '/system/user',
+          name: 'user',
+          component: () => import('@/views/system/user.vue'),
+          meta: { title: '医疗一体站管理系统--用户管理' }
+        },
+        {
+          path: '/system/role',
+          name: 'role',
+          component: () => import('@/views/system/role.vue'),
+          meta: { title: '医疗一体站管理系统--角色管理' }
+        },
+        {
+          path: '/system/menu',
+          name: 'menu',
+          component: () => import('@/views/system/menu.vue'),
+          meta: { title: '医疗一体站管理系统--菜单管理' }
+        },
+        {
+          path: '/system/dept',
+          name: 'ks',
+          component: () => import('@/views/system/ks.vue'),
+          meta: { title: '医疗一体站管理系统--科室管理' }
+        },
+        {
+          path: '/system/dict',
+          name: 'dict',
+          component: () => import('@/views/system/dict.vue'),
+          meta: { title: '医疗一体站管理系统--字典管理' }
+        },
+        {
+          path: '/system/notice',
+          name: 'tzgg',
+          component: () => import('@/views/system/tzgg.vue'),
+          meta: { title: '医疗一体站管理系统--通知公告' }
+        },
+        {
+          path: '/system/log_login',
+          name: 'loginLog',
+          component: () => import('@/views/system/loginLog.vue'),
+          meta: { title: '医疗一体站管理系统--登录日志管理' }
+        },
+        {
+          path: '/system/log_opt',
+          name: 'czlog',
+          component: () => import('@/views/system/czlog.vue'),
+          meta: { title: '医疗一体站管理系统--操作日志管理' }
+        },
+        {
+          path: '/system/ins_fee',
+          name: 'jcfysz',
+          component: () => import('@/views/system/jcfysz.vue'),
+          meta: { title: '医疗一体站管理系统--检查费用设置' }
+        },
+        {
+          path: '/system/reg_fee',
+          name: 'ghfysz',
+          component: () => import('@/views/system/ghfysz.vue'),
+          meta: { title: '医疗一体站管理系统--挂号费用设置' }
+        }
+      ]
     }
 
   ],
@@ -33,7 +101,7 @@ router.beforeEach(async (to) => {
   //使用cookie对象
   const cookie = useCookies()
   //从cookie中获取token
-  const token = cookie.get('token')
+  const token = cookie.get('Authorization')
 
   //登录前进行的操作
   if (token == undefined && to.path != "/login") {

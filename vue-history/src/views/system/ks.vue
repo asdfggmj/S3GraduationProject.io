@@ -1,4 +1,4 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <router-view></router-view>
+  <div>科室管理</div>
 </template>

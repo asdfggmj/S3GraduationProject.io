@@ -1,4 +1,4 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <router-view></router-view>
+  <div>字典管理</div>
 </template>

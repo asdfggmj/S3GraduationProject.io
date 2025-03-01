@@ -89,9 +89,9 @@ const submitLogin = () => {
             ElMessage.error('登录失败!')
             return
           }
-          cookie.set('token', token)
+          cookie.set('Authorization', token)
           ElMessage.success('登录成功!')
-          router.push('/index')
+          router.push('/home')
         })
         .finally(() => {
           isLoading.value = false

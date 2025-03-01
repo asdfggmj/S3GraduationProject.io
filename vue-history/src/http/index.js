@@ -14,11 +14,13 @@ const http = axios.create({
 http.interceptors.request.use(function (config) {
   // 在发送请求之前做些什么
   const cookie = useCookies()
-  const token = cookie.get('token')
-  //如果token存在，将token添加到请求头中
+  const token = cookie.get('Authorization')
+  //如果token存在，将Authorization添加到请求头中
   if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`
+    config.headers['Authorization'] = `Bearer${token}`
   }
+  console.log(config);
+
   return config;
 }, function (error) {
   // 对请求错误做些什么

@@ -15,7 +15,7 @@
       </el-aside>
       <el-container>
         <!-- 主体内容 -->
-        <el-main><Home /></el-main>
+        <el-main><Main /></el-main>
         <!-- 页脚内容 -->
         <el-footer>Footer</el-footer>
       </el-container>
@@ -26,5 +26,5 @@
 <script setup lang="ts">
 import Aside from '@/components/Aside.vue'
 import Header from '@/components/Header.vue'
-import Home from './Home.vue'
+import Main from '@/components/Main.vue'
 </script>

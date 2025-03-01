@@ -5,11 +5,10 @@
     class="el-menu-demo"
     mode="horizontal"
     :ellipsis="false"
-    @select="handleSelect"
     style="padding: 0"
   >
-    <el-menu-item index="0">
-      <img style="width: 100px" src="" alt="Element logo" />
+    <el-menu-item index="0" @click="router.push('/home')">
+      <img style="width: 180px" src="../assets/image/menuLogo.png" alt="Element logo" />
     </el-menu-item>
     <!-- 头像地址 -->
     <el-menu-item index="1">
@@ -69,18 +68,18 @@
 <script setup lang="ts">
 import router from '@/router'
 import { Close, Switch } from '@element-plus/icons-vue'
+import { useCookies } from '@vueuse/integrations/useCookies'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
 
+const cookie = useCookies()
 const personalDrawer = ref(false) //个人信息抽屉控制变量
 const activeIndex = ref('1')
-const handleSelect = (key, keyPath) => {
-  console.log(key, keyPath)
-}
 
 //退出登录点击事件
 const loginOut = () => {
   ElMessage.success('登出事件')
+  cookie.remove('Authorization')
   router.push('/login')
 }
 

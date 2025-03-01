@@ -12,7 +12,7 @@ const route = useRoute()
 watch(
   route,
   (to) => {
-    document.title = to.meta.title || '默认标题'
+    document.title = to.meta.title || '医疗一体站管理系统'
   },
   { immediate: true },
 ) // 使用 immediate: true 以便页面加载时立刻更新标题
