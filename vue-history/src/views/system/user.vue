@@ -151,12 +151,12 @@
             <el-input v-model="userObject.email" placeholder="请输入邮箱" />
           </el-form-item>
           <el-form-item label="所属部门">
-            <el-select v-model="userObject.deptId" placeholder="所属科室">
+            <el-select v-model="userObject.deptId" @click="getAllDept" placeholder="所属科室">
               <el-option
-                v-for="item in options"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+                v-for="item in deptData"
+                :key="item.deptId"
+                :label="item.deptName"
+                :value="item.deptId"
               />
             </el-select>
           </el-form-item>
@@ -228,6 +228,7 @@ const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
 const userData = reactive([]) //用户数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
+const deptData = reactive([]) //科室数据
 
 const userObject = reactive({
   userId: '',
@@ -241,6 +242,16 @@ const userObject = reactive({
   userRank: '',
   schedulingFlag: '0',
 }) //用户对象，用于存储添加或修改的用户信息
+
+//获取科室数据
+const getAllDept = () => {
+  if (deptData.length === 0) {
+    http.get('/dept/list').then((res) => {
+      const list = Array.isArray(res.data.list) ? res.data.list : []
+      deptData.splice(0, deptData.length, ...list)
+    })
+  }
+}
 
 //模糊查询
 const searchUser = (keyWordInput) => {
@@ -286,6 +297,7 @@ const beforeChangeAddOrEditDrawer = () => {
   })
     .then(() => {
       addOrEditDrawerModal.value = false
+      deptData.splice(0, deptData.length)
     })
     .catch(() => {
       return

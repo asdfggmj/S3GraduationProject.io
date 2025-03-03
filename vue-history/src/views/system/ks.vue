@@ -38,12 +38,12 @@
           <el-col>
             <el-table :data="deptData" style="width: 100%" max-height="500" row-key="deptId">
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="科室名称" prop="userName" width="120" />
-              <el-table-column label="科室编码" prop="deptId" />
-              <el-table-column label="当前挂号量" prop="phone" width="120" />
-              <el-table-column label="负责人" prop="age" />
-              <el-table-column label="电话" prop="userRank" />
-              <el-table-column label="状态" prop="background">
+              <el-table-column label="科室名称" prop="deptName" width="120" />
+              <el-table-column label="科室编码" prop="deptNumber" />
+              <el-table-column label="当前挂号量" prop="regNumber" width="120" />
+              <el-table-column label="负责人" prop="deptLeader" />
+              <el-table-column label="电话" prop="leaderPhone" />
+              <el-table-column label="状态" prop="status">
                 <template #default="scope">
                   <el-switch
                     v-model="scope.row.userStatus"
@@ -107,7 +107,8 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import http from '@/http'
+import { onMounted, reactive, ref } from 'vue'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
@@ -115,4 +116,56 @@ const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
 const deptData = reactive([]) //科室数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
+
+//上一页
+const sizeChange = (newPageSize) => {
+  pageSize.value = newPageSize
+  getDeptFetch()
+}
+
+//下一页
+const currentChange = (newPage) => {
+  pageNum.value = newPage
+  getDeptFetch()
+}
+
+//页面加载时挂载
+onMounted(() => {
+  getDeptFetch()
+})
+
+const getDeptFetch = () => {
+  //获取科室数据
+  http
+    .get('/dept/list', {
+      params: {
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        keyWord: keyWord.value,
+      },
+    })
+    .then((res) => {
+      const list = Array.isArray(res.data.list) ? res.data.list : []
+      deptData.splice(0, deptData.length, ...list)
+      pageTotal.value = res.data?.total || 0
+    })
+}
 </script>
+
+<style>
+.mr-20px {
+  margin-right: 20px;
+}
+.mt-10px {
+  margin-top: 10px;
+}
+.mb-10px {
+  margin-bottom: 10px;
+}
+.ml-10px {
+  margin-left: 10px;
+}
+.text-center {
+  text-align: center;
+}
+</style>

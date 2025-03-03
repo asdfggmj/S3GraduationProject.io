@@ -36,12 +36,12 @@
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
-            <el-table :data="RoleData" style="width: 100%" max-height="500" row-key="roleId">
+            <el-table :data="roleData" style="width: 100%" max-height="500" row-key="roleId">
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="角色名称" prop="userName" width="120" />
-              <el-table-column label="权限编码" prop="deptId" />
-              <el-table-column label="显示顺序" prop="phone" width="120" />
-              <el-table-column label="状态" prop="background">
+              <el-table-column label="角色名称" prop="roleName" width="120" />
+              <el-table-column label="权限编码" prop="roleCode" />
+              <el-table-column label="显示顺序" prop="roleSort" width="120" />
+              <el-table-column label="状态" prop="status">
                 <template #default="scope">
                   <el-switch
                     v-model="scope.row.userStatus"
@@ -64,7 +64,7 @@
                   />
                 </template>
               </el-table-column>
-              <el-table-column label="备注" prop="phone" width="120" />
+              <el-table-column label="备注" prop="remark" width="120" />
               <el-table-column label="创建时间" prop="createTime" width="200" />
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="240">
@@ -110,12 +110,55 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import http from '@/http'
+import { ElMessage } from 'element-plus'
+import { onMounted, reactive, ref } from 'vue'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
-const RoleData = reactive([]) //科室数据
+const roleData = reactive([]) //科室数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
+
+//模糊查询
+const searchRole = (keyWordInput) => {
+  keyWord.value = keyWordInput
+  ElMessage.info(keyWord.value)
+  // getUserData()
+}
+
+//上一页
+const sizeChange = (newPageSize) => {
+  pageSize.value = newPageSize
+  getRoleFetch()
+}
+
+//下一页
+const currentChange = (newPage) => {
+  pageNum.value = newPage
+  getRoleFetch()
+}
+
+//页面加载时挂载
+onMounted(() => {
+  getRoleFetch()
+})
+
+const getRoleFetch = () => {
+  // 获取角色列表
+  http
+    .get('/role/list', {
+      params: {
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        keyWord: keyWord.value,
+      },
+    })
+    .then((res) => {
+      const list = Array.isArray(res.data.list) ? res.data.list : []
+      roleData.splice(0, roleData.length, ...list)
+      pageTotal.value = res.data?.total || 0
+    })
+}
 </script>

@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <!-- 第一行 -->
   <el-row>
@@ -6,7 +5,7 @@
       <el-card shadow="always" class="mb-10px">
         <el-row justify="space-between">
           <el-col :span="12">
-            <el-button type="primary" @click="addInspectionFee">
+            <el-button type="primary" @click="addRegistrationFee">
               <el-icon><Plus /></el-icon>
               <span>新增</span>
             </el-button>
@@ -19,7 +18,7 @@
           <el-col :span="5">
             <el-input
               v-model="keyWord"
-              @change="searchInspectionFee"
+              @change="searchRegistrationFee"
               placeholder="请输入关键字回车以查询"
               clearable
               size=""
@@ -37,66 +36,40 @@
         <el-row class="mt-10px">
           <el-col>
             <el-table
-              :data="inspectionFeeData"
+              :data="registrationFeeData"
               style="width: 100%"
               max-height="500"
               row-key="dictId"
             >
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="项目费用ID" prop="checkItemId" width="120" />
-              <el-table-column label="项目名称" prop="checkItemName" width="120" />
-              <el-table-column label="关键字" prop="keyWords" width="120" />
-              <el-table-column label="项目单价" prop="unitPrice" width="120" />
-              <el-table-column label="项目成本" prop="cost" width="120" />
-              <el-table-column label="单位" prop="unit" width="120" />
-              <el-table-column label="类别" prop="dictLabel" width="120" />
-              <el-table-column label="状态" prop="status">
-                <template #default="scope">
-                  <el-switch
-                    v-model="scope.row.status"
-                    :before-change="
-                      () =>
-                        handleBeforeChange(
-                          scope.row.userId,
-                          scope.row.userStatus === 0 ? 1 : 0,
-                          scope.row.userName,
-                        )
-                    "
-                    :active-value="0"
-                    :inactive-value="1"
-                    active-text="正常"
-                    inactive-text="禁用"
-                    class="ml-2"
-                    inline-prompt
-                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-                    :loading="rowLoadingMap[scope.row.status]"
-                  />
-                </template>
-              </el-table-column>
-              <el-table-column label="创建时间" prop="createTime" width="200" />
-              <el-table-column label="创建人" prop="createTime" width="200" />
-              <el-table-column label="最后一次修改时间" prop="updateTime" width="200" />
-              <el-table-column label="修改人" prop="updateBy" width="200" />
-
+              <el-table-column label="患者姓名" prop="regItemId" width="120" />
+              <el-table-column label="挂号科室" prop="regItemName" width="180" />
+              <el-table-column label="接诊医生" prop="regItemFee" />
+              <el-table-column label="挂号费用" prop="status" />
+              <el-table-column label="流水编号" prop="createTime" width="200" />
+              <el-table-column label="状态" prop="createBy" width="200" />
+              <el-table-column label="就诊日期" prop="updateTime" width="200" />
+              <el-table-column label="挂号类型" prop="updateBy" width="200" />
+              <el-table-column label="挂号时段" prop="updateBy" width="200" />
               <!-- 按钮组 -->
-              <el-table-column label="操作" fixed="right" width="160">
+              <el-table-column label="操作" fixed="right" width="180">
                 <template #default="scope">
                   <el-button-group>
                     <el-button
                       type="success"
                       size="small"
-                      @click="editInspectionFee(scope.row.userId)"
+                      @click="editRegistrationFee(scope.row.userId)"
                     >
-                      <el-icon><Edit /></el-icon>
-                      <span>编辑</span>
+                      <i class="iconfont icon-shoufei" style="margin-right: 6px" />
+                      <span>收费</span>
                     </el-button>
                     <el-button
                       type="danger"
                       size="small"
-                      @click="delInspectionFee(scope.row.userId)"
+                      @click="delRegistrationFee(scope.row.userId)"
                     >
-                      <el-icon><Delete /></el-icon>
-                      <span>删除</span>
+                      <i class="iconfont icon-tuifei" style="margin-right: 6px" />
+                      <span>退费</span>
                     </el-button>
                   </el-button-group>
                 </template>
@@ -134,11 +107,11 @@ const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
-const inspectionFeeData = reactive([]) //科室数据
+const registrationFeeData = reactive([]) //科室数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
 
 //模糊查询
-const searchInspectionFee = (keyWordInput) => {
+const searchRegistrationFee = (keyWordInput) => {
   keyWord.value = keyWordInput
   ElMessage.info(keyWord.value)
   // getUserData()
@@ -164,7 +137,7 @@ onMounted(() => {
 const getAnnouncementFetch = () => {
   //获取检查费用数据
   http
-    .get('/checkItem/list', {
+    .get('/registeredItem/list', {
       params: {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
@@ -173,13 +146,14 @@ const getAnnouncementFetch = () => {
     })
     .then((res) => {
       const list = Array.isArray(res.data.list) ? res.data.list : []
-      inspectionFeeData.splice(0, inspectionFeeData.length, ...list)
+      registrationFeeData.splice(0, registrationFeeData.length, ...list)
       pageTotal.value = res.data?.total || 0
     })
 }
 </script>
 
 <style>
+@import url('https://at.alicdn.com/t/c/font_4844128_ml5lxuth918.css');
 .mr-20px {
   margin-right: 20px;
 }

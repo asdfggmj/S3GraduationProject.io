@@ -38,9 +38,15 @@
           <el-col>
             <el-table :data="dictData" style="width: 100%" max-height="500" row-key="dictId">
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="字典名称" prop="userName" width="120" />
-              <el-table-column label="字典类型" prop="deptId" />
-              <el-table-column label="状态" prop="background">
+              <el-table-column label="字典名称" prop="dictName" width="120" />
+              <el-table-column label="字典类型" prop="dictType" width="200">
+                <template #default="scope">
+                  <el-button type="primary" link @click="checkDictData(scope.row.dictType)">{{
+                    scope.row.dictType
+                  }}</el-button>
+                </template>
+              </el-table-column>
+              <el-table-column label="状态" prop="status" width="100">
                 <template #default="scope">
                   <el-switch
                     v-model="scope.row.userStatus"
@@ -63,10 +69,13 @@
                   />
                 </template>
               </el-table-column>
-              <el-table-column label="备注" prop="createTime" width="200" />
+              <el-table-column label="备注" prop="remark" width="200" />
               <el-table-column label="创建时间" prop="createTime" width="200" />
+              <el-table-column label="创建人" prop="createBy" width="120" />
+              <el-table-column label="最后一次修改时间" prop="updateTime" width="200" />
+              <el-table-column label="修改人" prop="updateBy" width="120" />
               <!-- 按钮组 -->
-              <el-table-column label="操作" fixed="right" width="240">
+              <el-table-column label="操作" fixed="right" width="160">
                 <template #default="scope">
                   <el-button-group>
                     <el-button type="success" size="small" @click="editDept(scope.row.userId)">
@@ -105,7 +114,11 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import http from '@/http'
+import router from '@/router'
+import { useDictTypeStore } from '@/stores/dictType'
+import { ElMessage } from 'element-plus'
+import { onMounted, reactive, ref } from 'vue'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
@@ -113,4 +126,73 @@ const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
 const dictData = reactive([]) //科室数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
+const dictTypeStore = useDictTypeStore() //使用字典类别的xx
+
+//根据ID查看数据类别的数据
+const checkDictData = (dictType) => {
+  dictTypeStore.setDictType({ dictType: dictType })
+  console.log(dictTypeStore.getDictType)
+  ElMessage.success(dictType)
+  router.push({ name: 'dictData' })
+}
+
+//模糊查询
+const searchDict = (keyWordInput) => {
+  keyWord.value = keyWordInput
+  ElMessage.info(keyWord.value)
+  // getUserData()
+}
+
+//上一页
+const sizeChange = (newPageSize) => {
+  pageSize.value = newPageSize
+  getDictFetch()
+}
+
+//下一页
+const currentChange = (newPage) => {
+  pageNum.value = newPage
+  getDictFetch()
+}
+
+//页面加载时挂载
+onMounted(() => {
+  getDictFetch()
+})
+
+const getDictFetch = () => {
+  //获取字典数据
+  http
+    .get('/dict/type', {
+      params: {
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        keyWord: keyWord.value,
+      },
+    })
+    .then((res) => {
+      const list = Array.isArray(res.data.list) ? res.data.list : []
+
+      dictData.splice(0, dictData.length, ...list)
+      pageTotal.value = res.data?.total || 0
+    })
+}
 </script>
+
+<style>
+.mr-20px {
+  margin-right: 20px;
+}
+.mt-10px {
+  margin-top: 10px;
+}
+.mb-10px {
+  margin-bottom: 10px;
+}
+.ml-10px {
+  margin-left: 10px;
+}
+.text-center {
+  text-align: center;
+}
+</style>
