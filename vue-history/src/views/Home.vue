@@ -20,15 +20,17 @@
             <el-row>
               <el-col>仓库地址</el-col>
               <el-col class="mt-4px"
-                >前端：<a href="https://github.com/asdfggmj/S3GraduationProject.io"
-                  >链接直达</a
-                ></el-col
-              >
+                >前端：
+                <el-button type="primary" link @click="gitHub">
+                  <i class="iconfont icon-github-fill" style="margin-right: 6px"></i>
+                </el-button>
+                <a href=""></a
+              ></el-col>
               <el-col class="mt-4px"
-                >后端：<a href="https://gitee.com/asdfggmj12/vueBackendRepository"
-                  >链接直达</a
-                ></el-col
-              >
+                >后端：
+                <el-button type="primary" link @click="gitHub">
+                  <i class="iconfont icon-gitee" style="margin-right: 6px"></i> </el-button
+              ></el-col>
             </el-row>
           </el-col>
         </el-row>
@@ -75,6 +77,13 @@
 import { ref } from 'vue'
 import { useTransition } from '@vueuse/core'
 
+const gitHub = () => {
+  window.open('https://github.com/asdfggmj/S3GraduationProject.io')
+}
+const gitee = () => {
+  window.open('https://gitee.com/asdfggmj12/vueBackendRepository')
+}
+
 //头像地址
 const circleUrl =
   'https://asdfggmj.oss-cn-hongkong.aliyuncs.com/images/27994340-a06d-49f3-882b-0cc28797e665.jpg'
@@ -110,6 +119,7 @@ doctorScale.value = 49
 </script>
 
 <style scoped>
+@import url('https://at.alicdn.com/t/c/font_4844128_w3aqyqxebd8.css');
 .mt-4px {
   margin-top: 4px;
 }

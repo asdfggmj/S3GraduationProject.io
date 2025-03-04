@@ -3,9 +3,9 @@
   <el-row>
     <el-col :span="24">
       <el-scrollbar style="height: 90vh">
-        <el-menu class="el-menu-vertical-demo" default-active="1">
+        <el-menu class="el-menu-vertical-demo">
           <!-- 首页 -->
-          <el-menu-item index="1" @click="navigateTo('/home')">
+          <el-menu-item index="0" @click="navigateTo('/home')">
             <el-icon><House /></el-icon>
             <span>首页</span>
           </el-menu-item>

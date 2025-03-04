@@ -6,24 +6,12 @@
       <el-card shadow="always" class="mb-10px">
         <el-row justify="space-between">
           <el-col :span="12">
-            <el-button type="primary" @click="addRegistrationFee">
-              <el-icon><Plus /></el-icon>
-              <span>新增</span>
-            </el-button>
-            <el-button type="danger">
-              <el-icon><Minus /></el-icon>
-              <span>删除选中</span>
-            </el-button>
+            <el-text class="mr-20px">检查项目</el-text>
+            <el-segmented v-model="trigger" :options="options" />
           </el-col>
           <!-- 模糊查询 -->
-          <el-col :span="5">
-            <el-input
-              v-model="keyWord"
-              @change="searchRegistrationFee"
-              placeholder="请输入关键字回车以查询"
-              clearable
-              size=""
-            />
+          <el-col :span="8">
+            <el-input v-model="keyWord" placeholder="请输入检查单号回车以查询" />
           </el-col>
         </el-row>
       </el-card>
@@ -43,59 +31,19 @@
               row-key="dictId"
             >
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="挂号费编号" prop="regItemId" width="120" />
-              <el-table-column label="挂号费名称" prop="regItemName" width="180" />
-              <el-table-column label="挂号费" prop="regItemFee">
-                <template #default="scope">
-                  <el-text>{{ parseFloat(scope.row.regItemFee).toFixed(2) }}</el-text>
-                </template>
-              </el-table-column>
-              <el-table-column label="状态" prop="status">
-                <template #default="scope">
-                  <el-switch
-                    v-model="scope.row.userStatus"
-                    :before-change="
-                      () =>
-                        handleBeforeChange(
-                          scope.row.userId,
-                          scope.row.userStatus === 0 ? 1 : 0,
-                          scope.row.userName,
-                        )
-                    "
-                    :active-value="0"
-                    :inactive-value="1"
-                    active-text="正常"
-                    inactive-text="禁用"
-                    class="ml-2"
-                    inline-prompt
-                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-                    :loading="rowLoadingMap[scope.row.userId]"
-                  />
-                </template>
-              </el-table-column>
-              <el-table-column label="创建时间" prop="createTime" width="200" />
-              <el-table-column label="创建人" prop="createBy" width="200" />
-              <el-table-column label="最后修改时间" prop="updateTime" width="200" />
-              <el-table-column label="修改人" prop="updateBy" width="200" />
+              <el-table-column label="检查单号" prop="regItemId" width="120" />
+              <el-table-column label="项目名称" prop="regItemName" width="180" />
+              <el-table-column label="患者姓名" prop="regItemFee" />
+              <el-table-column label="检查状态" prop="createTime" width="200" />
+              <el-table-column label="检查结果" prop="createBy" width="200" />
+              <el-table-column label="创建时间" prop="updateTime" width="200" />
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="160">
                 <template #default="scope">
                   <el-button-group>
-                    <el-button
-                      type="success"
-                      size="small"
-                      @click="editRegistrationFee(scope.row.userId)"
-                    >
+                    <el-button type="success" size="small" @click="seeResult">
                       <el-icon><Edit /></el-icon>
-                      <span>编辑</span>
-                    </el-button>
-                    <el-button
-                      type="danger"
-                      size="small"
-                      @click="delRegistrationFee(scope.row.userId)"
-                    >
-                      <el-icon><Delete /></el-icon>
-                      <span>删除</span>
+                      <span>录入结果</span>
                     </el-button>
                   </el-button-group>
                 </template>
@@ -122,6 +70,42 @@
       </el-card>
     </el-col>
   </el-row>
+
+  <!-- 检查结果对话框 -->
+  <el-dialog
+    v-model="resultVisible"
+    title="录入[患者名]的检查结果"
+    width="500"
+    :before-close="handleClose"
+  >
+    <el-row>
+      <el-col>
+        <el-form-item label="检查结果">
+          <el-input v-model="textarea" style="width: 240px" :rows="2" type="textarea" />
+        </el-form-item>
+      </el-col>
+    </el-row>
+    <el-row>
+      <el-col>
+        <el-upload
+          class="upload-demo"
+          action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+          list-type="picture"
+        >
+          <el-button type="primary">Click to upload</el-button>
+          <template #tip>
+            <div class="el-upload__tip">jpg/png files with a size less than 500kb</div>
+          </template>
+        </el-upload>
+      </el-col>
+    </el-row>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="resultVisible = false">取消</el-button>
+        <el-button type="primary" @click="resultVisible = false"> 确认录入 </el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -135,6 +119,15 @@ const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
 const registrationFeeData = reactive([]) //科室数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
+const resultVisible = ref(false) //查看结果对话框控制显示
+
+const trigger = ref<'乙肝五项' | '乙肝五项'>('乙肝五项')
+const options = ['乙肝五项', '血常规', 'CT', 'X光']
+
+//查看检查结果
+const seeResult = () => {
+  resultVisible.value = true
+}
 
 //模糊查询
 const searchRegistrationFee = (keyWordInput) => {
