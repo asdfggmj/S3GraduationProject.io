@@ -7,13 +7,17 @@
       <el-card shadow="always">
         <el-row>
           <el-col :span="2">
-            <el-avatar :size="64" :src="circleUrl" />
+            <el-avatar :size="64" :src="userObject.picture" />
           </el-col>
           <el-col :span="16">
             <el-row>
-              <el-col>下午好！用户名，现在是：dddd:yy:mm</el-col>
-              <el-col class="mt-4px">您的职责：未知</el-col>
-              <el-col class="mt-4px">今日天气晴朗，气温在15℃至25℃之间，东南风。</el-col>
+              <el-col>{{ timeText }}---{{ userObject.userName }} </el-col>
+              <el-col class="mt-4px"
+                >现在是：{{ timeObject.year }}年{{ timeObject.month + 1 }}月{{ timeObject.day }}日{{
+                  timeObject.currentTime
+                }}</el-col
+              >
+              <el-col class="mt-4px"><weather /></el-col>
             </el-row>
           </el-col>
           <el-col :span="6">
@@ -21,16 +25,27 @@
               <el-col>仓库地址</el-col>
               <el-col class="mt-4px"
                 >前端：
-                <el-button type="primary" link @click="gitHub">
-                  <i class="iconfont icon-github-fill" style="margin-right: 6px"></i>
-                </el-button>
+                <el-tooltip class="box-item" effect="dark" content="前往前端仓库" placement="top">
+                  <el-button type="primary" link @click="gitHub">
+                    <i class="iconfont icon-github-fill" style="margin-right: 6px"></i>
+                  </el-button>
+                </el-tooltip>
+
                 <a href=""></a
               ></el-col>
               <el-col class="mt-4px"
                 >后端：
-                <el-button type="primary" link @click="gitHub">
-                  <i class="iconfont icon-gitee" style="margin-right: 6px"></i> </el-button
-              ></el-col>
+                <el-tooltip
+                  class="box-item"
+                  effect="dark"
+                  content="前往后端仓库"
+                  placement="bottom"
+                >
+                  <el-button type="primary" link @click="gitee">
+                    <i class="iconfont icon-gitee" style="margin-right: 6px"></i>
+                  </el-button>
+                </el-tooltip>
+              </el-col>
             </el-row>
           </el-col>
         </el-row>
@@ -66,27 +81,67 @@
   <!-- 分隔符 -->
   <el-divider />
   <!-- 第三行 -->
-  <el-row>
-    <el-col :span="12">
-      <p>我的排班</p>
-    </el-col>
-  </el-row>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useTransition } from '@vueuse/core'
+import Weather from '@/components/_weather.vue'
+import { useUserStore } from '@/stores/user'
+import { time } from 'echarts'
 
+const userStore = useUserStore()
+const userObject = ref({}) //用户对象
+// 用于存储当前时间
+const timeObject = ref({
+  year: 0,
+  month: 0,
+  day: 0,
+  hourse: 0,
+  currentTime: '',
+})
+//计算早中晚
+const timeText = ref('')
+
+// 更新当前时间的函数
+const updateTime = () => {
+  const now = new Date()
+  timeObject.value.year = now.getFullYear() //获取年份
+  timeObject.value.month = now.getMonth() //获取月份
+  timeObject.value.day = now.getDate() //获取日期
+  timeObject.value.hourse = now.getHours() //获取小时
+  if (timeObject.value.hourse >= 0 && timeObject.value.hourse < 11) {
+    timeText.value = '早上好！来一份元气早餐吧awa'
+  } else if (timeObject.value.hourse >= 11 && timeObject.value.hourse < 18) {
+    timeText.value = '中午好！要记得吃饭哦~ '
+  } else {
+    timeText.value = '晚上好！再忙再累也要注意休息'
+  }
+
+  timeObject.value.currentTime = now.toLocaleTimeString() // 获取当前时间并转化为本地时间字符串
+}
+
+// 组件挂载
+onMounted(() => {
+  updateTime() // 初始化当前时间
+  setInterval(updateTime, 1000) // 每秒更新时间
+  userObject.value = userStore.getUser.data
+  console.log(userObject.value)
+})
+
+// 组件卸载
+onUnmounted(() => {
+  clearInterval()
+})
+
+//前端地址
 const gitHub = () => {
   window.open('https://github.com/asdfggmj/S3GraduationProject.io')
 }
+//后端地址
 const gitee = () => {
-  window.open('https://gitee.com/asdfggmj12/vueBackendRepository')
+  window.open('https://gitee.com/asdfggmj12/history-back')
 }
-
-//头像地址
-const circleUrl =
-  'https://asdfggmj.oss-cn-hongkong.aliyuncs.com/images/27994340-a06d-49f3-882b-0cc28797e665.jpg'
 
 //今日就诊数
 const medicalVisits = ref(0)

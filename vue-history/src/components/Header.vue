@@ -26,7 +26,7 @@
     <!-- 头像地址 -->
     <el-menu-item index="2">
       <div class="block" @click="chatMyMessage">
-        <el-avatar :size="50" :src="circleUrl" />
+        <el-avatar :size="50" :src="userObject.picture" />
       </div>
     </el-menu-item>
   </el-menu>
@@ -36,12 +36,12 @@
     <template #header="{ close, titleId, titleClass }">
       <!-- 头像 -->
       <div :id="titleId" class="block" :class="titleClass" @click="chatMyMessage">
-        <el-avatar :size="50" :src="circleUrl" />
+        <el-avatar :size="50" :src="userObject.picture" />
         <!-- <span style="margin-left: 16px">{{ userData.data.userName }}</span> -->
       </div>
       <!-- 右侧切换账号 -->
       <el-tooltip class="box-item" effect="dark" content="切换账号" placement="bottom">
-        <el-button round>
+        <el-button round @click="loginOut">
           <el-icon class="el--icon--left"><Switch /></el-icon>
         </el-button>
       </el-tooltip>
@@ -66,13 +66,15 @@
           <el-descriptions-item label="年龄">{{ userData.data.age }}</el-descriptions-item>
           <el-descriptions-item label="邮箱">{{ userData.data.email }}</el-descriptions-item>
           <el-descriptions-item label="手机号">{{ userData.data.phone }}</el-descriptions-item>
-          <el-descriptions-item label="系统权限">开发者</el-descriptions-item>
-          <el-descriptions-item label="所属部门">院长</el-descriptions-item>
+          <el-descriptions-item label="系统权限">{{ userData.data.roleList }}</el-descriptions-item>
+          <el-descriptions-item label="所属部门">{{ userData.data.deptId }}</el-descriptions-item>
         </el-descriptions>
         <!-- 分割线 -->
         <el-divider class="mt-20px mb-20px" />
         <p>
-          <el-button round type="danger" @click="loginOut" style="width: 100%">修改密码</el-button>
+          <el-button round type="danger" @click="updatePwdDialog" style="width: 100%"
+            >修改密码</el-button
+          >
         </p>
         <p class="mt-20px">
           <el-button round type="danger" @click="loginOut" style="width: 100%">退出</el-button>
@@ -80,6 +82,42 @@
       </el-col>
     </el-row>
   </el-drawer>
+
+  <!-- 修改密码对话框 -->
+  <el-dialog
+    v-model="updatePwdDialogVisible"
+    title="修改密码"
+    width="500"
+    :before-close="handleClose"
+  >
+    <el-card shadow="always">
+      <el-row>
+        <el-col>
+          <el-form :data="updatePwdObject">
+            <el-form-item label="原密码">
+              <el-input placeholder="请输入原密码" v-model="updatePwdObject.oldPwd"></el-input>
+            </el-form-item>
+            <el-form-item label="新密码" style="margin-top: 10px">
+              <el-input placeholder="请输入新密码" v-model="updatePwdObject.newPwd"></el-input>
+            </el-form-item>
+          </el-form>
+        </el-col>
+      </el-row>
+    </el-card>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="forgetPwd" type="danger" style="padding: 0 4px 0 4px"
+          >忘记密码</el-button
+        >
+        <el-button @click="updatePwdDialogVisible = false" style="padding: 0 4px 0 4px"
+          >取消</el-button
+        >
+        <el-button type="primary" @click="submitUpdatePwd" style="padding: 0 4px 0 4px">
+          提交
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -87,15 +125,50 @@ import router from '@/router'
 import { useUserStore } from '@/stores/user'
 import { Close, Switch } from '@element-plus/icons-vue'
 import { useCookies } from '@vueuse/integrations/useCookies'
-import { ElMessage } from 'element-plus'
-import { computed, reactive, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
+const updatePwdDialogVisible = ref(false) //控制修改密码对话框显示
 const cookie = useCookies()
 const personalDrawer = ref(false) //个人信息抽屉控制变量
 const activeIndex = ref('1')
 let userData = reactive({})
 const route = useRoute()
+const userStore = useUserStore()
+const userObject = ref({}) //用户对象
+const updatePwdObject = ref({
+  oldPwd: '',
+  newPwd: '',
+})
+
+//忘记密码
+const forgetPwd = () => {
+  ElMessage.success('忘记密码')
+}
+
+//提交修改密码
+const submitUpdatePwd = () => {
+  ElMessage.success('修改用户密码')
+}
+
+//修改用户密码
+const updatePwdDialog = () => {
+  updatePwdDialogVisible.value = true
+}
+const handleClose = (done: () => void) => {
+  ElMessageBox.confirm('确定要关闭吗?保存的数据将会丢失')
+    .then(() => {
+      done()
+    })
+    .catch(() => {
+      // catch error
+    })
+}
+
+onMounted(() => {
+  userObject.value = userStore.getUser.data
+})
 
 // 计算多级面包屑
 const breadcrumbs = computed(() => {
@@ -109,9 +182,14 @@ const breadcrumbs = computed(() => {
 
 //退出登录点击事件
 const loginOut = () => {
-  ElMessage.success('登出事件')
-  cookie.remove('Authorization')
-  router.push('/login')
+  ElMessageBox.confirm('你确定要退出此账号吗?', '温馨提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+  }).then(() => {
+    router.push('/login')
+    ElMessage.success('手动退出了系统')
+    cookie.remove('Authorization')
+  })
 }
 
 //头像点击事件:查看个人信息
@@ -121,10 +199,6 @@ const chatMyMessage = () => {
   personalDrawer.value = true
   console.log(userData.data)
 }
-
-//头像地址
-const circleUrl =
-  'https://asdfggmj.oss-cn-hongkong.aliyuncs.com/images/27994340-a06d-49f3-882b-0cc28797e665.jpg'
 </script>
 
 <style scoped>
