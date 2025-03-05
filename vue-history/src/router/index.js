@@ -15,7 +15,7 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('../views/Login.vue'),
+      component: () => import('@/views/Login.vue'),
       meta: { title: '医疗一体站管理系统--登录' }
     },
     {
@@ -225,31 +225,31 @@ const router = createRouter({
             {
               path: 'docharge',
               name: 'docharge',
-              component: () => import('@/views/stock_inventory.vue'),
+              component: () => import('@/views/charge_docharge.vue'),
               meta: { title: '医疗一体站管理系统--处方收费', breadcrumb: '处方收费' }
             },
             {
               path: 'chargelist',
               name: 'chargelist',
-              component: () => import('@/views/stock_inventory.vue'),
+              component: () => import('@/views/charge_chargelist.vue'),
               meta: { title: '医疗一体站管理系统--收费列表', breadcrumb: '收费列表' }
             },
             {
               path: 'backfee',
               name: 'backfee',
-              component: () => import('@/views/stock_inventory.vue'),
+              component: () => import('@/views/charge_backfee.vue'),
               meta: { title: '医疗一体站管理系统--处方退费', breadcrumb: '处方退费' }
             },
             {
               path: 'backfeelist',
               name: 'backfeelist',
-              component: () => import('@/views/stock_inventory.vue'),
+              component: () => import('@/views/charge_backfeelist.vue'),
               meta: { title: '医疗一体站管理系统--退费查询', breadcrumb: '退费查询' }
             },
             {
               path: 'dispensing',
               name: 'dispensing',
-              component: () => import('@/views/stock_inventory.vue'),
+              component: () => import('@/views/charge_dispensing.vue'),
               meta: { title: '医疗一体站管理系统--处方发药', breadcrumb: '处方发药' }
             },
           ]
@@ -268,32 +268,31 @@ const router = createRouter({
             {
               path: 'sales',
               name: 'sales',
-              component: () => import('@/views/statistics_revenue.vue'),
+              component: () => import('@/views/statistics_sales.vue'),
               meta: { title: '医疗一体站管理系统--药品销售统计', breadcrumb: '药品销售统计' }
             },
             {
               path: 'check',
               name: 'check',
-              component: () => import('@/views/statistics_revenue.vue'),
+              component: () => import('@/views/statistics_check.vue'),
               meta: { title: '医疗一体站管理系统--检查项目统计', breadcrumb: '检查项目统计' }
             },
             {
               path: 'yearmonth',
               name: 'yearmonth',
-              component: () => import('@/views/statistics_revenue.vue'),
+              component: () => import('@/views/statistics_yearmonth.vue'),
               meta: { title: '医疗一体站管理系统--年月报表统计', breadcrumb: '年月报表统计' }
             },
             {
               path: 'workload',
               name: 'workload',
-              component: () => import('@/views/statistics_revenue.vue'),
+              component: () => import('@/views/statistics_workload.vue'),
               meta: { title: '医疗一体站管理系统--工作量统计', breadcrumb: '工作量统计' }
             },
           ]
         }
       ]
     }
-
   ],
 })
 
