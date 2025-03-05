@@ -1,3 +1,4 @@
+<!-- 看病就诊 -->
 <template>
   <!-- 第一行 -->
   <el-row>
@@ -15,7 +16,7 @@
             </div>
           </el-col>
           <el-col :span="8" style="margin-left: 40px">
-            <el-button type="primary">
+            <el-button type="primary" @click="getPatientFetch">
               <el-icon><Search /></el-icon>
               <span>加载身份证号</span>
             </el-button>
@@ -35,7 +36,7 @@
           <el-row>
             <el-col :span="5">
               <el-form-item label="身份证号">
-                <el-input v-model="patientForm.name" />
+                <el-input v-model="patientForm.idCode" />
               </el-form-item>
               <el-form-item label="患者姓名">
                 <el-input v-model="patientForm.name" />
@@ -43,7 +44,7 @@
             </el-col>
             <el-col :span="5" class="ml-20px">
               <el-form-item label="患者电话">
-                <el-input v-model="patientForm.name" />
+                <el-input v-model="patientForm.phone" />
               </el-form-item>
               <el-form-item label="出生日期">
                 <el-date-picker
@@ -193,6 +194,8 @@
 </template>
 
 <script setup lang="ts">
+import http from '@/http'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { reactive, ref } from 'vue'
 
 const value = ref('门诊')
@@ -201,24 +204,47 @@ const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const idCode = ref('') //身份证号
-const patientForm = reactive({
+const patientForm = ref({
+  idCode: '',
   name: '',
-  age: '0',
+  phone: '',
+  age: 0,
   sex: '0',
   birthday: '',
   address: '',
-})
+}) //患者信息
+
+//根据身份者号获取患者信息
+const getPatientFetch = () => {
+  http.get(`/patient/get/${idCode.value}`).then((res) => {
+    if (res.data === null || res.data === '') {
+      ElMessage.warning('未查询到该患者')
+    } else {
+      ElMessage.success(`查询到1个患者`)
+      patientForm.value.idCode = res.data.idCard
+      patientForm.value.phone = res.data.phone
+      patientForm.value.sex = res.data.sex
+      patientForm.value.name = res.data.name
+      const birthDate = new Date(res.data.birthDay) // 将生日字符串转换为 Date 对象
+      const currentYear = new Date().getFullYear() // 获取当前年份
+      const birthYear = birthDate.getFullYear() // 获取出生年份
+      patientForm.value.age = currentYear - birthYear // 计算年龄
+      patientForm.value.birthday = res.data.birthDay
+      patientForm.value.address = res.data.address
+    }
+  })
+}
 
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
-  getUserData()
+  // getUserData()
 }
 
 //下一页
 const currentChange = (newPage) => {
   pageNum.value = newPage
-  getUserData()
+  // getUserData()
 }
 </script>
 

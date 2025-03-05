@@ -3,7 +3,7 @@
   <el-row>
     <el-col :span="24">
       <el-scrollbar style="height: 90vh">
-        <el-menu class="el-menu-vertical-demo">
+        <el-menu class="el-menu-vertical-demo" default-active="0">
           <!-- 首页 -->
           <el-menu-item index="0" @click="navigateTo('/home')">
             <el-icon><House /></el-icon>
@@ -21,7 +21,7 @@
             </template>
             <!-- 子菜单循环遍历 -->
             <el-menu-item
-              v-for="childrenMenu in parentMenu.childMenuList"
+              v-for="childrenMenu in parentMenu.childMenus"
               :key="childrenMenu.menuId"
               :index="`${parentMenu.menuId}-${childrenMenu.menuId}`"
               @click="navigateTo(childrenMenu.path)"
@@ -68,7 +68,7 @@ const getMenus = async () => {
     return
   }
   //获取用户菜单
-  http.get(`/menu/getById`).then((response) => {
+  http.get(`/menu/getUserMenus`).then((response) => {
     menuData.value = response.data
   })
 }

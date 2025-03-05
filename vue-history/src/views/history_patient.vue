@@ -43,14 +43,14 @@
               row-key="dictId"
             >
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="姓名" prop="regItemId" width="120" />
-              <el-table-column label="电话" prop="regItemName" width="180" />
-              <el-table-column label="身份证号" prop="regItemFee" />
-              <el-table-column label="出生日期" prop="createTime" width="200" />
-              <el-table-column label="年龄" prop="createBy" width="200" />
-              <el-table-column label="性别" prop="updateTime" width="200" />
-              <el-table-column label="信息状态" prop="updateBy" width="200" />
-              <el-table-column label="创建时间" prop="updateBy" width="200" />
+              <el-table-column label="姓名" prop="name" width="120" />
+              <el-table-column label="电话" prop="phone" width="180" />
+              <el-table-column label="身份证号" prop="idCard" width="180" />
+              <el-table-column label="出生日期" prop="birthDay" width="200" />
+              <el-table-column label="年龄" prop="age" width="200" />
+              <el-table-column label="性别" prop="sex" width="200" />
+              <el-table-column label="信息状态" prop="isFinal" width="200" />
+              <el-table-column label="创建时间" prop="createTime" width="200" />
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="160">
                 <template #default="scope">
@@ -108,7 +108,6 @@ const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
 const registrationFeeData = reactive([]) //科室数据
-const rowLoadingMap = reactive({}) //是否处于加载状态
 
 //模糊查询
 const searchRegistrationFee = (keyWordInput) => {
@@ -137,7 +136,7 @@ onMounted(() => {
 const getAnnouncementFetch = () => {
   //获取检查费用数据
   http
-    .get('/registeredItem/list', {
+    .get('/patient/list', {
       params: {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
@@ -148,6 +147,7 @@ const getAnnouncementFetch = () => {
       const list = Array.isArray(res.data.list) ? res.data.list : []
       registrationFeeData.splice(0, registrationFeeData.length, ...list)
       pageTotal.value = res.data?.total || 0
+      console.log(registrationFeeData)
     })
 }
 </script>
