@@ -62,7 +62,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import http from '@/http'
+import { onMounted, ref } from 'vue'
 
 //排班医生数据《固定值，换成动态
 const schedulingData = ref([
@@ -99,6 +100,17 @@ const schedulingData = ref([
     time7: '2025-3-9',
   },
 ])
+
+onMounted(() => {
+  getMySchedulingData()
+})
+
+//获取我的排班信息
+const getMySchedulingData = () => {
+  http.get('/doctors/schedule').then((res) => {
+    console.log(res.data)
+  })
+}
 
 //表格跨列方法
 const objectSpanMethod = ({ rowIndex, columnIndex }) => {

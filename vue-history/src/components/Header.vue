@@ -59,15 +59,21 @@
     <el-row>
       <el-col>
         <el-descriptions title="个人信息" border :column="1">
-          <el-descriptions-item label="姓名">{{ userData.data.userName }}</el-descriptions-item>
+          <el-descriptions-item label="姓名">{{
+            userData.data.data.userName
+          }}</el-descriptions-item>
           <el-descriptions-item label="性别">
             {{ userData.data.sex == 0 ? '男' : '女' }}
           </el-descriptions-item>
-          <el-descriptions-item label="年龄">{{ userData.data.age }}</el-descriptions-item>
-          <el-descriptions-item label="邮箱">{{ userData.data.email }}</el-descriptions-item>
-          <el-descriptions-item label="手机号">{{ userData.data.phone }}</el-descriptions-item>
-          <el-descriptions-item label="系统权限">{{ userData.data.roleList }}</el-descriptions-item>
-          <el-descriptions-item label="所属部门">{{ userData.data.deptId }}</el-descriptions-item>
+          <el-descriptions-item label="年龄">{{ userData.data.data.age }}</el-descriptions-item>
+          <el-descriptions-item label="邮箱">{{ userData.data.data.email }}</el-descriptions-item>
+          <el-descriptions-item label="手机号">{{ userData.data.data.phone }}</el-descriptions-item>
+          <el-descriptions-item label="系统权限">{{
+            userData.data.data.roleList
+          }}</el-descriptions-item>
+          <el-descriptions-item label="所属部门">{{
+            userData.data.data.deptId
+          }}</el-descriptions-item>
         </el-descriptions>
         <!-- 分割线 -->
         <el-divider class="mt-20px mb-20px" />
@@ -167,7 +173,7 @@ const handleClose = (done: () => void) => {
 }
 
 onMounted(() => {
-  userObject.value = userStore.getUser.data
+  userObject.value = userStore.getUser.data.data
 })
 
 // 计算多级面包屑
@@ -197,7 +203,6 @@ const chatMyMessage = () => {
   const userStore = useUserStore()
   userData = userStore.getUser
   personalDrawer.value = true
-  console.log(userData.data)
 }
 </script>
 

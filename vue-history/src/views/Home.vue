@@ -110,12 +110,16 @@ const updateTime = () => {
   timeObject.value.month = now.getMonth() //获取月份
   timeObject.value.day = now.getDate() //获取日期
   timeObject.value.hourse = now.getHours() //获取小时
-  if (timeObject.value.hourse >= 0 && timeObject.value.hourse < 11) {
-    timeText.value = '早上好！来一份元气早餐吧awa'
-  } else if (timeObject.value.hourse >= 11 && timeObject.value.hourse < 18) {
+  if (timeObject.value.hourse >= 0 && timeObject.value.hourse < 6) {
+    timeText.value = '凌晨了,忙碌的同时要合理的休息哦,'
+  } else if (timeObject.value.hourse >= 6 && timeObject.value.hourse < 10) {
+    timeText.value = '早上好！来一份元气早餐吧 '
+  } else if (timeObject.value.hourse >= 10 && timeObject.value.hourse < 14) {
     timeText.value = '中午好！要记得吃饭哦~ '
+  } else if (timeObject.value.hourse >= 14 && timeObject.value.hourse < 20) {
+    timeText.value = '下午好！要记得吃饭哦~ '
   } else {
-    timeText.value = '晚上好！再忙再累也要注意休息'
+    timeText.value = '晚上好！身体重要,要注意休息才行呢'
   }
 
   timeObject.value.currentTime = now.toLocaleTimeString() // 获取当前时间并转化为本地时间字符串
@@ -125,7 +129,7 @@ const updateTime = () => {
 onMounted(() => {
   updateTime() // 初始化当前时间
   setInterval(updateTime, 1000) // 每秒更新时间
-  userObject.value = userStore.getUser.data
+  userObject.value = userStore.getUser.data.data
   console.log(userObject.value)
 })
 

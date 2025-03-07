@@ -84,14 +84,14 @@ const submitLogin = () => {
       http
         .post('/auth/login', loginData)
         .then((response) => {
-          const token = response.data
-          if (response.data == '') {
-            ElMessage.error('登录失败!')
+          if (response.data.code === 200) {
+            const token = response.data.data
+            cookie.set('Authorization', token)
+            ElMessage.success('登录成功!')
+            router.push('/home')
             return
           }
-          cookie.set('Authorization', token)
-          ElMessage.success('登录成功!')
-          router.push('/home')
+          return ElMessage.error(response.data.message)
         })
         .finally(() => {
           isLoading.value = false

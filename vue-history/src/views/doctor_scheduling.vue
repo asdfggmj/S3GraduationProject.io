@@ -7,12 +7,16 @@
           <el-col :span="5">
             <el-form>
               <el-form-item label="所属科室">
-                <el-select v-model="value" placeholder="请选择所属科室">
+                <el-select
+                  v-model="selectedDeptValue"
+                  @click="getDepts"
+                  placeholder="请选择所属科室"
+                >
                   <el-option
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
+                    v-for="item in deptData"
+                    :key="item.deptId"
+                    :label="item.deptName"
+                    :value="item.deptId"
                   />
                 </el-select>
               </el-form-item>
@@ -21,12 +25,16 @@
           <el-col :span="5" class="ml-10px">
             <el-form>
               <el-form-item label="医生名字">
-                <el-select v-model="value" placeholder="请选择医生名字">
+                <el-select
+                  v-model="selectedDoctorValue"
+                  @click="getUsers"
+                  placeholder="请选择医生名字"
+                >
                   <el-option
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
+                    v-for="item in doctorData"
+                    :key="item.userId"
+                    :label="item.userName"
+                    :value="item.userId"
                   />
                 </el-select>
               </el-form-item>
@@ -66,25 +74,28 @@
       <el-card shadow="always">
         <el-row>
           <el-col :span="24">
-            <el-table border :data="schedulingData" :span-method="objectSpanMethod">
-              <el-table-column label="医生" prop="doctorName" align="center"></el-table-column>
-              <el-table-column label="科室" prop="deptName" align="center"></el-table-column>
-              <el-table-column label="时间/日期" prop="time" align="center"></el-table-column>
-              <el-table-column label="1" prop="time1" align="center"></el-table-column>
-              <el-table-column label="2" prop="time2" align="center"></el-table-column>
-              <el-table-column label="3" prop="time3" align="center"></el-table-column>
-              <el-table-column label="4" prop="time4" align="center"></el-table-column>
-              <el-table-column label="5" prop="time5" align="center"></el-table-column>
-              <el-table-column label="6" prop="time6" align="center"></el-table-column>
-              <el-table-column label="7" prop="time7" align="center"></el-table-column>
-              <el-table-column label="操作" align="center">
+            <el-table
+              border
+              :data="schedulingData"
+              :span-method="objectSpanMethod"
+              :row-key="(row) => `${row.userId}-${row.subsectionType}`"
+              max-height="500"
+            >
+              <el-table-column label="医生" prop="userName" align="center" />
+              <el-table-column label="科室" prop="deptName" align="center" />
+              <el-table-column label="时间段" prop="subsectionName" align="center" />
+              <!-- <el-table-column v-for="date in weekDates" :key="date" :label="date" align="center">
                 <template #default="scope">
-                  <el-button-group>
-                    <el-button size="small" type="primary" @click="editScheduling(scope.row.index)">
-                      <el-icon><Edit /></el-icon>
-                      <span>编辑</span>
-                    </el-button>
-                  </el-button-group>
+                  {{ scope.row.scheduling[date] ?? '-' }}
+                </template>
+              </el-table-column> -->
+              <!-- 操作列 -->
+              <el-table-column label="操作" prop="userId" align="center">
+                <template #default="scope">
+                  <el-button size="small" type="primary" @click="editScheduling(scope.row)">
+                    <el-icon><Edit /></el-icon>
+                    <span>排班</span>
+                  </el-button>
                 </template>
               </el-table-column>
             </el-table>
@@ -94,10 +105,10 @@
     </el-col>
   </el-row>
 
-  <!-- 编辑医生排版对话框 -->
+  <!-- 医生排班对话框 -->
   <el-dialog
     v-model="dialogVisible"
-    title="修改[医生名字]的排班信息"
+    :title="schedulingEditTitle"
     style="min-width: 1200px; max-width: 1800px"
     :before-close="handleClose"
     destroy-on-close
@@ -136,73 +147,78 @@
 </template>
 
 <script setup lang="ts">
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { ref } from 'vue'
+import http from '@/http'
+import { dayjs, ElMessageBox } from 'element-plus'
+import { computed, onMounted, ref } from 'vue'
 
 const dialogVisible = ref(false) //对话框控制显示
-//排班医生数据《固定值，换成动态
-const schedulingData = ref([
-  {
-    doctorName: '张三',
-    deptName: '儿科',
-    time: '上午',
-    time1: '2025-3-3',
-    time2: '2025-3-4',
-    time3: '2025-3-5',
-    time4: '2025-3-6',
-    time5: '2025-3-7',
-    time6: '2025-3-8',
-    time7: '2025-3-9',
-  },
-  {
-    time: '下午',
-    time1: '2025-3-3',
-    time2: '2025-3-4',
-    time3: '2025-3-5',
-    time4: '2025-3-6',
-    time5: '2025-3-7',
-    time6: '2025-3-8',
-    time7: '2025-3-9',
-  },
-  {
-    time: '晚上',
-    time1: '2025-3-3',
-    time2: '2025-3-4',
-    time3: '2025-3-5',
-    time4: '2025-3-6',
-    time5: '2025-3-7',
-    time6: '2025-3-8',
-    time7: '2025-3-9',
-  },
-])
-const editSchedulingData = ref([
-  {
-    time: '上午',
-  },
-  {
-    time: '下午',
-  },
-  {
-    time: '晚上',
-  },
-])
+const schedulingData = ref([]) //排班医生数据
+const deptData = ref([]) //部门数据
+const doctorData = ref([]) //医生(用户)数据
+const selectedDeptValue = ref('') //选中的部门值
+const selectedDoctorValue = ref('') //选中的医生值
+const schedulingEditTitle = ref('') //编辑标题
 
-//表格跨列方法
-const objectSpanMethod = ({ rowIndex, columnIndex }) => {
-  if (columnIndex === 0 || columnIndex === 1 || columnIndex === 10) {
-    if (rowIndex % 3 === 0) {
-      return {
-        rowspan: 3,
-        colspan: 1,
-      }
-    } else {
-      return {
-        rowspan: 0,
-        colspan: 0,
-      }
-    }
+onMounted(() => {
+  getDoctorFetch()
+})
+
+//获取所有医生用户信息
+const getUsers = () => {
+  if (doctorData.value.length === 0) {
+    http.get('/user/getDoctor').then((res) => {
+      console.log(res.data.data)
+
+      doctorData.value = res.data.data
+    })
   }
 }
+
+//获取所有部门信息
+const getDepts = () => {
+  if (deptData.value.length === 0) {
+    http.get('/dept/getAll').then((res) => {
+      deptData.value = res.data
+    })
+  }
+}
+
+//获取所有医生信息
+const getDoctorFetch = () => {
+  http.get('/doctors/ScheduleList').then((res) => {
+    schedulingData.value = res.data.data
+  })
+}
+
+// 计算本周 7 天的日期
+// const weekDates = computed(() => {
+//   const start = dayjs().startOf('week').add(1, 'day') // 让周一作为第一天
+//   return Array.from({ length: 7 }, (_, i) => start.add(i, 'day').format('YYYY/MM/DD'))
+// })
+
+// 跨行合并
+// const objectSpanMethod = ({ row, column, rowIndex, columnIndex }) => {
+//   if (columnIndex === 0) {
+//     if (rowIndex % 3 === 0) {
+//       return [3, 1]
+//     } else {
+//       return [0, 0]
+//     }
+//   }
+//   if (columnIndex === 1) {
+//     if (rowIndex % 3 === 0) {
+//       return {
+//         rowspan: 3,
+//         colspan: 1,
+//       }
+//     } else {
+//       return {
+//         rowspan: 0,
+//         colspan: 0,
+//       }
+//     }
+//   }
+// }
 
 //关闭对话框前执行的方法
 const handleClose = () => {
@@ -216,9 +232,10 @@ const handleClose = () => {
 }
 
 //编辑医生排班
-const editScheduling = (docto_id) => {
+const editScheduling = (row) => {
   dialogVisible.value = true
-  ElMessage.info(docto_id) //调试医生ID
+  const user_name = row.userName // 获取部门信息
+  schedulingEditTitle.value = `修改${user_name}的排班信息`
 }
 </script>
 
