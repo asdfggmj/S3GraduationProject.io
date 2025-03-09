@@ -1,3 +1,4 @@
+<!-- 天气组件 -->
 <template>
   <div v-if="loading">加载中...</div>
   <div v-else-if="error">{{ error }}</div>
@@ -12,7 +13,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
-// 替换为你的高德 API Key
+// 高德 API Key
 const API_KEY = '318d6e64adc9c16f6dab3879b6cee04c'
 
 const city = ref('')

@@ -84,11 +84,16 @@
               <el-table-column label="医生" prop="userName" align="center" />
               <el-table-column label="科室" prop="deptName" align="center" />
               <el-table-column label="时间段" prop="subsectionName" align="center" />
-              <!-- <el-table-column v-for="date in weekDates" :key="date" :label="date" align="center">
+              <el-table-column
+                v-for="date in schedulingData.schedulingDay"
+                :key="date"
+                :label="date"
+                align="center"
+              >
                 <template #default="scope">
                   {{ scope.row.scheduling[date] ?? '-' }}
                 </template>
-              </el-table-column> -->
+              </el-table-column>
               <!-- 操作列 -->
               <el-table-column label="操作" prop="userId" align="center">
                 <template #default="scope">
@@ -190,35 +195,29 @@ const getDoctorFetch = () => {
   })
 }
 
-// 计算本周 7 天的日期
-// const weekDates = computed(() => {
-//   const start = dayjs().startOf('week').add(1, 'day') // 让周一作为第一天
-//   return Array.from({ length: 7 }, (_, i) => start.add(i, 'day').format('YYYY/MM/DD'))
-// })
-
 // 跨行合并
-// const objectSpanMethod = ({ row, column, rowIndex, columnIndex }) => {
-//   if (columnIndex === 0) {
-//     if (rowIndex % 3 === 0) {
-//       return [3, 1]
-//     } else {
-//       return [0, 0]
-//     }
-//   }
-//   if (columnIndex === 1) {
-//     if (rowIndex % 3 === 0) {
-//       return {
-//         rowspan: 3,
-//         colspan: 1,
-//       }
-//     } else {
-//       return {
-//         rowspan: 0,
-//         colspan: 0,
-//       }
-//     }
-//   }
-// }
+const objectSpanMethod = ({ row, column, rowIndex, columnIndex }) => {
+  if (columnIndex === 0) {
+    if (rowIndex % 3 === 0) {
+      return [3, 1]
+    } else {
+      return [0, 0]
+    }
+  }
+  if (columnIndex === 1) {
+    if (rowIndex % 3 === 0) {
+      return {
+        rowspan: 3,
+        colspan: 1,
+      }
+    } else {
+      return {
+        rowspan: 0,
+        colspan: 0,
+      }
+    }
+  }
+}
 
 //关闭对话框前执行的方法
 const handleClose = () => {
