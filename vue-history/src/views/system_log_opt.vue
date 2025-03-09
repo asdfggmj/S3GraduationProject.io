@@ -5,8 +5,49 @@
     <el-col :span="24">
       <el-card shadow="always" class="mb-10px">
         <el-row justify="space-between">
-          <el-col :span="12">
-            <el-button type="primary" @click="addOperateLog">
+          <!-- 模糊查询 -->
+          <el-form-item label="系统模块" style="font-size: 15px;">
+      <el-input v-model="title"   placeholder="请输入系统模块"/>
+    </el-form-item>
+    <!-- <el-form-item label="操作人员" style="font-size: 15px;">
+      <el-input v-model="operName"  placeholder="请输入操作人员"/>
+    </el-form-item>
+    <el-form-item label="操作类型" style="font-size: 15px;">
+      <el-select v-model="operatorType" placeholder="请选择状态">
+        <el-option label="其他" value="0" />
+        <el-option label="后台应用" value="2" />
+        <el-option label="手机端应用" value="3" />
+      </el-select>
+    </el-form-item>
+    <el-form-item label="状态" style="font-size: 15px;">
+      <el-select v-model="status" placeholder="请选择登录状态">
+        <el-option label="正常" value="0" />
+        <el-option label="异常" value="1" />
+      </el-select>
+    </el-form-item> -->
+    <el-row>
+      <el-col :span="12">
+    <el-form-item label="创建时间" style="font-size: 15px;">
+      <el-date-picker
+        v-model="operTime"
+        type="date"
+        placeholder=""
+        clearable
+      />
+    </el-form-item>
+    </el-col>
+    <el-col :span="12">
+    <el-button type="primary" :icon="Search" @click="searchLoginLog">
+      搜索
+      </el-button>
+      <el-button type="plain" :icon="Refresh" >
+      重置
+      </el-button>
+      </el-col>
+      </el-row>
+        </el-row>
+        <el-col :span="12">
+            <el-button type="primary" @click="addLoginLog">
               <el-icon><Plus /></el-icon>
               <span>删除</span>
             </el-button>
@@ -15,17 +56,6 @@
               <span>清空</span>
             </el-button>
           </el-col>
-          <!-- 模糊查询 -->
-          <el-col :span="5">
-            <el-input
-              v-model="keyWord"
-              @change="searchOperateLog"
-              placeholder="请输入关键字回车以查询"
-              clearable
-              size=""
-            />
-          </el-col>
-        </el-row>
       </el-card>
     </el-col>
   </el-row>
@@ -36,7 +66,7 @@
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
-            <el-table :data="OperateLogData" style="width: 100%" max-height="500" row-key="dictId">
+            <el-table :data="operLogData" style="width: 100%" max-height="500" row-key="dictId">
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="日志ID" prop="userName" width="120" />
               <el-table-column label="系统模块" prop="userName" width="120" />
@@ -84,11 +114,98 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
+import { Search, Refresh } from '@element-plus/icons-vue'
+import http from '@/http'
+import { useCookies } from '@vueuse/integrations/useCookies';
+
+//从cookie获取authorization
+const cookie=useCookies();
+const auhtorization=cookie.get('authorization')
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
-const keyWord = ref('') //关键字
-const OperateLogData = reactive([]) //科室数据
+const operName = ref('')
+const title = ref('')
+const status = ref('')
+const operatorType = ref('')
+const operTime = ref('')
+
+//操作日志数据
+const operLogData = reactive([
+  {
+    operId:'',
+    title:'',
+    businessType:'',
+    method:'',
+    requestMethod:'',
+    operatorType:'',
+    operName:'',
+    operUrl:'',
+    operLocation:'',
+    operParam:'',
+    jsonResult:'',
+    status:'',
+    errorMsg:'',
+    operTime:''
+  }
+])
+
+//模糊查询
+const searchLoginLog = () => {
+   getLoginLoginData()
+}
+
+//添加操作日志
+const addLoginLog = () => {
+
+}
+
+//删除操作日志
+const delOperateLog = (userId) => {
+
+}
+
+//上一页
+const sizeChange = (newPageSize) => {
+  pageSize.value = newPageSize
+  getLoginLoginData()
+}
+
+//下一页
+const currentChange = (newPage) => {
+  pageNum.value = newPage
+  getLoginLoginData()
+}
+
+// 页面加载时获取操作数据
+onMounted(() => {
+  getLoginLoginData()
+})
+
+// 获取操作日志记录数据
+const getLoginLoginData = () => {
+  http
+    .get('/operLog/list', {
+      params: {
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        title: title.value,
+        operName: operName.value,
+        status: status.value,
+        operatorType: operatorType.value,
+        operTime: operTime.value
+      },headers: { 'Authorization': 'Bearer' + auhtorization }
+    })
+    .then((res) => {
+      const user = res.data
+      if (user.list) {
+        pageTotal.value = user.total
+        pageNum.value = user.pageNum
+        pageSize.value = user.pageSize
+        operLogData.splice(0, operLogData.length, ...user.list)
+      }
+    })
+  }
 </script>
