@@ -20,7 +20,7 @@
             <el-input
               v-model="keyWord"
               @change="searchDept"
-              placeholder="请输入科室名称回车以查询"
+              placeholder="请输入科室名称"
               clearable
               size=""
             />
@@ -71,11 +71,11 @@
               <el-table-column label="操作" fixed="right" width="240">
                 <template #default="scope">
                   <el-button-group>
-                    <el-button type="success" size="small" @click="editDept(scope.row.userId)">
+                    <el-button type="success" size="small" @click="editDept(scope.row.deptId)">
                       <el-icon><Edit /></el-icon>
                       <span>编辑</span>
                     </el-button>
-                    <el-button type="danger" size="small" @click="delDept(scope.row.userId)">
+                    <el-button type="danger" size="small" @click="delDept(scope.row.deptId)">
                       <el-icon><Delete /></el-icon>
                       <span>删除</span>
                     </el-button>
@@ -104,18 +104,209 @@
       </el-card>
     </el-col>
   </el-row>
+
+  <!-- 添加科室和编辑科室抽屉 -->
+  <el-drawer
+    v-model="addOrEditDrawerModal"
+    :title="addOrEditDrawerTitle"
+    size="30%"
+    :before-close="beforeChangeAddOrEditDrawer"
+  >
+    <el-row>
+      <el-col :span="20">
+        <el-form :model="deptObject" label-width="auto" style="max-width: 600px">
+          <el-input v-model="deptObject.deptId" style="display: none;"/>
+          <el-form-item label="科室名称">
+            <el-input v-model="deptObject.deptName" placeholder="请输入科室名" />
+          </el-form-item>
+          <el-form-item label="科室编码">
+            <el-input v-model="deptObject.deptNumber" placeholder="请输入科室编码" />
+          </el-form-item>
+          <el-form-item label="负责人">
+            <el-input v-model="deptObject.deptLeader" placeholder="请输入负责人" />
+          </el-form-item>
+          <el-form-item label="电话">
+            <el-input v-model="deptObject.leaderPhone" placeholder="请输入电话" />
+          </el-form-item>
+          <el-form-item label="显示顺序">
+            <el-input-number v-model="deptObject.orderNum" :min="18" :max="200" />
+          </el-form-item>
+          <el-form-item label="状态">
+            <el-radio-group v-model="deptObject.status">
+              <el-radio value="0">正常</el-radio>
+              <el-radio value="1">禁用</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-form>
+      </el-col>
+    </el-row>
+    <el-divider />
+    <el-row class="text-center">
+      <el-col>
+        <el-button @click="handleSubmit" type="primary">提交</el-button>
+        <el-button type="primary">取消</el-button>
+      </el-col>
+    </el-row>
+  </el-drawer>
 </template>
 
 <script setup lang="ts">
 import http from '@/http'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { de } from 'element-plus/es/locale'
 import { onMounted, reactive, ref } from 'vue'
-
+const addOrEditDrawerModal = ref(false) //添加或编辑科室抽屉
+const addOrEditDrawerTitle = ref('') //添加或编辑科室抽屉标题
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
 const deptData = reactive([]) //科室数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
+
+
+//科室对象，用于存储添加或修改的科室信息
+const deptObject = reactive({
+  deptId: '',
+  deptName: '',
+  deptNumber: '',
+  regNumber: '',
+  orderNum: '',
+  deptLeader: '',
+  leaderPhone: '',
+  status: 0
+})
+//模糊查询
+const searchDept = (keyWordInput) => {
+  keyWord.value = keyWordInput
+  // ElMessage.info(keyWord.value)
+  getDeptFetch()
+}
+
+
+//添加科室抽屉
+const addDept = () => {
+  //清空科室对象
+  deptObject.deptId = ''
+  deptObject.deptName = ''
+  deptObject.deptNumber = ''
+  deptObject.regNumber = ''
+  deptObject.orderNum = '0'
+  deptObject.deptLeader = ''
+  deptObject.leaderPhone = ''
+  deptObject.status = 0
+
+  addOrEditDrawerTitle.value = '添加科室'
+  addOrEditDrawerModal.value = true
+}
+
+//添加科室
+const addDeptSubmit = () => {
+  // console.log("添加的数据"+deptObject)
+  //后端发送添加科室请求
+  http.post("/dept/addDept",deptObject).then((res) => {
+    if (res.data) {
+      ElMessage.success('添加成功')
+      addOrEditDrawerModal.value = false
+    } else {
+      ElMessage.error('添加失败')
+    }
+    getDeptFetch()
+  })
+}
+
+//删除科室
+const delDept = (deptId) => {
+  ElMessageBox.confirm(
+    "确定删除编号为"+deptId+"的科室？",
+    '警告',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  )
+  .then(() => {
+      //删除科室
+      http.post("dept/deleteDept?deptId="+deptId).then((res)=>{
+        if(res.data){
+          ElMessage.success('删除成功')
+          getDeptFetch()
+        } else {
+      throw new Error('科室删除失败')
+    }
+      })
+    })
+    // .catch(() => {
+    //   ElMessage({
+    //     type: 'info',
+    //     message: 'Delete canceled',
+    //   })
+    // })
+}
+
+//修改科室抽屉
+const editDept = (deptId) => {
+  //userId=userId
+  addOrEditDrawerTitle.value = '编辑科室'
+  addOrEditDrawerModal.value = true
+  //回调单个科室数据
+  http.get("/dept/getDeptById?deptId="+deptId).then((res)=>{
+   if(res.data){
+      deptObject.deptId = deptId
+      deptObject.deptName = res.data.deptName
+      deptObject.deptLeader=res.data.deptLeader
+      deptObject.deptNumber=res.data.deptNumber
+      deptObject.orderNum=res.data.orderNum
+      deptObject.leaderPhone=res.data.leaderPhone
+      deptObject.status=res.data.status
+    }
+  })
+  // .catch((error)=>{
+  //   ElMessage.error('获取科室数据失败'+error)
+  // })
+}
+
+//修改科室
+const updateDeptSubmit = () => {
+  // console.log("修改的数据"+userObject)
+  //后端发送修改科室请求
+  http.post("/dept/updateDept",deptObject).then((res) => {
+    if (res.data) {
+      ElMessage.success('修改成功')
+      addOrEditDrawerModal.value = false
+      getDeptFetch()
+    } else {
+      ElMessage.error('操作有误,请重试!')
+    }
+    getDeptFetch()
+  })
+}
+
+//判断当前抽屉的按钮操作是添加还是修改
+const handleSubmit = () => {
+  if (addOrEditDrawerTitle.value === "添加科室") {
+    addDeptSubmit(); // 调用添加科室的方法
+  } else if (addOrEditDrawerTitle.value === "编辑科室") {
+    updateDeptSubmit(); // 调用修改科室的方法
+  }
+};
+
+//关闭抽屉前提示用户是否关闭
+const beforeChangeAddOrEditDrawer = () => {
+  ElMessageBox.confirm('你确定要关闭吗?所有数据将不会做任何保存', '温馨提示', {
+    confirmButtonText: '确认',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      addOrEditDrawerModal.value = false
+      //deptData.splice(0, deptData.length)
+    })
+    .catch(() => {
+      return
+    })
+}
 
 //上一页
 const sizeChange = (newPageSize) => {
@@ -127,6 +318,60 @@ const sizeChange = (newPageSize) => {
 const currentChange = (newPage) => {
   pageNum.value = newPage
   getDeptFetch()
+}
+
+// 修改科室状态改变事件
+const updateUserStatus = async (rid, roleStatus, roleName) => {
+  try {
+    const response = await http.put(`/dept/update/${rid}/${roleName}`)
+    if (response.data) {
+      ElNotification({
+        title: '修改成功!',
+        message: `科室 ${roleName} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
+        type: 'success',
+        offset: 50,
+        duration: 3000,
+      })
+    } else {
+      throw new Error('状态更新失败')
+    }
+  } catch (error) {
+    console.error(error)
+    ElNotification({
+      title: '修改失败!',
+      message: '状态更新时发生错误，请稍后重试.',
+      type: 'error',
+      offset: 50,
+      duration: 3000,
+    })
+    throw error
+  }
+}
+
+//判断修改科室状态前逻辑，判断科室id是否相同，如果相同拦截并不让更改，否则放行
+const beforeChange = () => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true)
+    }, 1000)
+  })
+}
+
+//按钮切换主逻辑方法
+const handleBeforeChange = async (rid, roleStatus, roleName) => {
+  //将当前开关的动画状态开启
+  rowLoadingMap[rid] = true
+  try {
+    //执行beforeChange和更改科室状态
+    await beforeChange()
+    await updateUserStatus(rid, roleStatus, roleName)
+    return true
+  } catch (error) {
+    console.error(error.message)
+    return false // 阻止状态切换
+  } finally {
+    rowLoadingMap[rid] = false
+  }
 }
 
 //页面加载时挂载

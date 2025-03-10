@@ -19,38 +19,6 @@
           <el-form-item label="用户名称" style="font-size: 15px;">
       <el-input v-model="userName"   placeholder="请输入用户名称" @change="searchLoginLog"/>
     </el-form-item>
-    <!-- <el-form-item label="用户账号" style="font-size: 15px;">
-      <el-input v-model="loginAccount"  placeholder="请输入用户账号" @change="searchLoginLog"/>
-    </el-form-item> -->
-    <!-- <el-form-item label="IP地址" style="font-size: 15px;">
-      <el-input v-model="ipAddr" placeholder="请输入IP地址"/>
-    </el-form-item>
-    <el-form-item label="登录状态" style="font-size: 15px;">
-      <el-select v-model="loginStatus" placeholder="请选择登录状态">
-        <el-option label="成功" value="0" />
-        <el-option label="失败" value="1" />
-      </el-select>
-    </el-form-item>
-    <el-form-item label="登录类型" style="font-size: 15px;">
-      <el-select v-model="loginType" placeholder="请选择登录类型">
-        <el-option label="系统用户" value="0" />
-        <el-option label="患者用户" value="1" />
-      </el-select>
-    </el-form-item> -->
-    <!-- <el-form-item label="登录时间" style="font-size: 15px;">
-      <el-date-picker
-        v-model="loginTime"
-        type="date"
-        placeholder=""
-        clearable
-      />
-    </el-form-item> -->
-    <!-- <el-button type="primary" :icon="Search">
-      搜索
-      </el-button>
-      <el-button type="plain" :icon="Refresh" >
-      重置
-      </el-button> -->
         </el-row>
       </el-card>
     </el-col>

@@ -9,22 +9,6 @@
           <el-form-item label="系统模块" style="font-size: 15px;">
       <el-input v-model="title"   placeholder="请输入系统模块"/>
     </el-form-item>
-    <!-- <el-form-item label="操作人员" style="font-size: 15px;">
-      <el-input v-model="operName"  placeholder="请输入操作人员"/>
-    </el-form-item>
-    <el-form-item label="操作类型" style="font-size: 15px;">
-      <el-select v-model="operatorType" placeholder="请选择状态">
-        <el-option label="其他" value="0" />
-        <el-option label="后台应用" value="2" />
-        <el-option label="手机端应用" value="3" />
-      </el-select>
-    </el-form-item>
-    <el-form-item label="状态" style="font-size: 15px;">
-      <el-select v-model="status" placeholder="请选择登录状态">
-        <el-option label="正常" value="0" />
-        <el-option label="异常" value="1" />
-      </el-select>
-    </el-form-item> -->
     <el-row>
       <el-col :span="12">
     <el-form-item label="创建时间" style="font-size: 15px;">
@@ -66,17 +50,17 @@
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
-            <el-table :data="operLogData" style="width: 100%" max-height="500" row-key="dictId">
+            <el-table :data="operLogData" style="width: 100%" max-height="500" row-key="operId">
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="日志ID" prop="userName" width="120" />
-              <el-table-column label="系统模块" prop="userName" width="120" />
-              <el-table-column label="操作类型" prop="deptId" />
-              <el-table-column label="请求方式" prop="createTime" width="200" />
-              <el-table-column label="操作人员" prop="createTime" width="200" />
-              <el-table-column label="主机" prop="createTime" width="200" />
-              <el-table-column label="操作地点" prop="createTime" width="200" />
-              <el-table-column label="操作状态" prop="createTime" width="200" />
-              <el-table-column label="操作时间" prop="createTime" width="200" />
+              <el-table-column label="日志ID" prop="operId" width="120" />
+              <el-table-column label="系统模块" prop="businessType" width="120" />
+              <el-table-column label="操作类型" prop="operatorType" />
+              <el-table-column label="请求方式" prop="requestMethod" width="200" />
+              <el-table-column label="操作人员" prop="operName" width="200" />
+              <el-table-column label="主机" prop="operIp" width="200" />
+              <el-table-column label="操作地点" prop="operLocation" width="200" />
+              <el-table-column label="操作状态" prop="status" width="200" />
+              <el-table-column label="操作时间" prop="operTime" width="200" />
 
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="240">
@@ -199,12 +183,12 @@ const getLoginLoginData = () => {
       },headers: { 'Authorization': 'Bearer' + auhtorization }
     })
     .then((res) => {
-      const user = res.data
-      if (user.list) {
-        pageTotal.value = user.total
-        pageNum.value = user.pageNum
-        pageSize.value = user.pageSize
-        operLogData.splice(0, operLogData.length, ...user.list)
+      const operLog = res.data.data
+      if (operLog.list) {
+        pageTotal.value = operLog.total
+        pageNum.value = operLog.pageNum
+        pageSize.value = operLog.pageSize
+        operLogData.splice(0, operLogData.length, ...operLog.list)
       }
     })
   }

@@ -166,7 +166,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="级别">
-            <el-select v-model="userObject.userRankValue" @click="getAllRank" placeholder="用户级别">
+            <el-select v-model="selectedFieldUserRank" @click="getAllRank" placeholder="用户级别">
               <el-option
                 v-for="item in userRankData"
                 :key="item.dictValue"
@@ -176,7 +176,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="背景">
-            <el-select v-model="userObject.backgroundValue" @click="getAllBackground" placeholder="学历">
+            <el-select v-model="selectedFieldBackground" @click="getAllBackground" placeholder="学历">
               <el-option
               v-for="item in backgroundData"
                 :key="item.dictValue"
@@ -252,7 +252,7 @@
 <script setup lang="ts">
 import http from '@/http'
 import { ElMessage, ElMessageBox, ElNotification, UploadProps } from 'element-plus'
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useCookies } from '@vueuse/integrations/useCookies'
 import { Message, Plus } from '@element-plus/icons-vue'
 
@@ -312,6 +312,38 @@ function addUserRole(){
       }
    })
 }
+
+//根据抽屉值选择值返回用户级别
+const selectedFieldUserRank = computed({
+  get() {
+    return addOrEditDrawerTitle.value === '编辑用户'
+      ? userObject.userRankValue
+      : userObject.userRank;
+  },
+  set(value) {
+    if (addOrEditDrawerTitle.value === '编辑用户') {
+      userObject.userRankValue = value;
+    } else {
+      userObject.userRank = value;
+    }
+  },
+});
+
+//根据抽屉值选择值返回学历
+const selectedFieldBackground = computed({
+  get() {
+    return addOrEditDrawerTitle.value === '编辑用户'
+      ? userObject.backgroundValue
+      : userObject.background;
+  },
+  set(value) {
+    if (addOrEditDrawerTitle.value === '编辑用户') {
+      userObject.backgroundValue = value;
+    } else {
+      userObject.background = value;
+    }
+  },
+});
 
 //用户对象，用于存储添加或修改的用户信息
 const userObject = reactive({

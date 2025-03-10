@@ -48,9 +48,9 @@
                     :before-change="
                       () =>
                         handleBeforeChange(
-                          scope.row.userId,
-                          scope.row.userStatus === 0 ? 1 : 0,
-                          scope.row.userName,
+                          scope.row.roleId,
+                          scope.row.roleStatus === 0 ? 1 : 0,
+                          scope.row.roleName,
                         )
                     "
                     :active-value="0"
@@ -78,7 +78,7 @@
                       <el-icon><Delete /></el-icon>
                       <span>删除</span>
                     </el-button>
-                    <el-button type="primary" size="small">
+                    <el-button type="primary" size="small" @click="menuGrant(scope.$index, scope.row)">
                       <el-icon><Pointer /></el-icon>
                       <span>分配权限</span>
                     </el-button>
@@ -149,11 +149,29 @@
     </el-row>
   </el-drawer>
 
+<!-- 角色分配权限的抽屉 -->
+<el-drawer v-model="dialog" title="分配菜单权限" direction="rtl"  class="demo-drawer"  :before-close="beforeChangeAddOrEditDrawer">
+    <div class="demo-drawer__content">
+      <!-- 树状图Tree -->
+      <el-tree
+       ref="treeRef"
+       style="max-width: 600px" :data="menuData" show-checkbox
+       node-key="menuId"
+       default-expand-all
+        :default-checked-keys="mids" :props="defaultProps"/>
+      <div class="demo-drawer__footer">
+        <el-button type="primary"@click="addRoleMenu">
+          确定
+        </el-button>
+        <el-button @click="dialog = false">取消</el-button>
+      </div>
+    </div>
+  </el-drawer>
 </template>
 
 <script setup lang="ts">
 import http from '@/http'
-import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification, ElTree } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 
 const addOrEditDrawerModal = ref(false) //添加或编辑角色抽屉
@@ -164,7 +182,18 @@ const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
 const roleData = reactive([]) //角色数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
-let dialog = ref(false) //控制分配抽屉的显示隐藏
+let dialog = ref(false) //控制分配抽屉
+//存储选中的角色编号的数组
+let mids = ref([])
+//所有的菜单的数据
+let menuData=ref([])
+//角色编号
+let rid = ref('')
+
+const defaultProps = {
+  children: 'childMenus',
+  label: 'menuName',
+}
 
 //角色对象，用于存储添加或修改的角色信息
 const roleObject = reactive({
@@ -178,6 +207,57 @@ const roleObject = reactive({
   delFlag:''
 })
 
+//角色授权的按钮
+const menuGrant = async (index: number, role) => {
+  //抽屉显示
+  dialog.value = true
+  //获取角色的编号
+  rid.value=role.roleId
+    //查询当前角色拥有的子菜单的权限编号
+    await http.get('/role/getRoleMids?rid='+rid.value)
+    .then((res)=>{
+      mids.value=res.data
+      console.log(mids.value)
+    })
+  //查询所有的菜单(查询父菜单以及子菜单的层次结构的格式)
+  await http.get('/menu/getMenusAll')
+  .then((res)=>{
+      menuData.value=res.data
+      console.log(menuData.value)
+  })
+}
+const treeRef = ref<InstanceType<typeof ElTree>>()
+//授权的确定按钮，添加角色的菜单权限
+const addRoleMenu=()=>{
+  //存储选中的菜单编号
+  let checkMids=[];
+  treeRef.value!.getCheckedNodes(false, false).forEach(menuNode=>{
+    //获取选中的菜单编号
+    checkMids.push(menuNode.id)
+    //如果当前节点是一个子菜单，添加父菜单编号
+    if(menuNode.parentId!=null){
+      checkMids.push(menuNode.parentId)
+    }
+  })
+  //去重复父菜单编号
+  checkMids=[...new Set(checkMids)]
+  //console.log(checkMids)
+  //发送异步请求，添加当前角色选中的菜单
+  http.get('/role/addRoleMenu',{params:{
+    rid:rid.value,
+    mids:checkMids.toString()
+  }}).then((res)=>{
+      //成功提示
+      ElMessage({
+          message: '授权成功',
+          type: 'success',
+        })
+      //抽屉隐藏
+      dialog.value = false
+  })
+
+}
+
 //模糊查询
 const searchRole = (keyWordInput) => {
   keyWord.value = keyWordInput
@@ -186,7 +266,7 @@ const searchRole = (keyWordInput) => {
 }
 
 
-//添加用户抽屉
+//添加角色抽屉
 const addRole = () => {
   //清空角色对象
   roleObject.roleId = ''
@@ -221,7 +301,7 @@ const addRoleSubmit = () => {
 const delRole = (roleId) => {
   ElMessageBox.confirm(
     "确定删除编号为"+roleId+"的角色？",
-    'Warning',
+    '警告',
     {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
@@ -367,19 +447,19 @@ const updateUserStatus = async (rid, roleStatus, roleName) => {
 }
 
 //按钮切换主逻辑方法
-const handleBeforeChange = async (uid, value, username) => {
+const handleBeforeChange = async (rid, roleStatus, roleName) => {
   //将当前开关的动画状态开启
-  rowLoadingMap[uid] = true
+  rowLoadingMap[rid] = true
   try {
     //执行beforeChange和更改角色状态
     await beforeChange()
-    await updateUserStatus(uid, value, username)
+    await updateUserStatus(rid, roleStatus, roleName)
     return true
   } catch (error) {
     console.error(error.message)
     return false // 阻止状态切换
   } finally {
-    rowLoadingMap[uid] = false
+    rowLoadingMap[rid] = false
   }
 }
 
