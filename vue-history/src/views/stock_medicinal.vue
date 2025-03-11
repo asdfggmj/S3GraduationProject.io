@@ -36,17 +36,23 @@
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
-            <el-table :data="dictData" style="width: 100%" max-height="500" row-key="dictId">
+            <el-table
+              :data="medicinesData"
+              style="width: 100%"
+              max-height="500"
+              row-key="medicinesId"
+              border
+            >
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="药品编号" prop="dictName" width="120" />
-              <el-table-column label="生产厂家" prop="dictType" width="200" />
-              <el-table-column label="药品类型" prop="dictType" width="200" />
-              <el-table-column label="处方类型" prop="dictType" width="200" />
-              <el-table-column label="单位" prop="dictType" width="200" />
-              <el-table-column label="处方价格" prop="dictType" width="200" />
-              <el-table-column label="库存量" prop="dictType" width="200" />
-              <el-table-column label="预警值" prop="dictType" width="200" />
-              <el-table-column label="换算量" prop="dictType" width="200" />
+              <el-table-column label="药品编号" prop="medicinesId" width="120" />
+              <el-table-column label="生产厂家" prop="producterId" width="200" />
+              <el-table-column label="药品类型" prop="medicinesType" width="200" />
+              <el-table-column label="处方类型" prop="prescriptionType" width="200" />
+              <el-table-column label="单位" prop="unit" width="200" />
+              <el-table-column label="处方价格" prop="prescriptionPrice" width="200" />
+              <el-table-column label="库存量" prop="medicinesStockNum" width="200" />
+              <el-table-column label="预警值" prop="medicinesStockDangerNum" width="200" />
+              <el-table-column label="换算量" prop="conversion" width="200" />
               <el-table-column label="状态" prop="status" width="100">
                 <template #default="scope">
                   <el-switch
@@ -115,8 +121,6 @@
 
 <script setup lang="ts">
 import http from '@/http'
-import router from '@/router'
-import { useDictTypeStore } from '@/stores/dictType'
 import { ElMessage } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 
@@ -124,46 +128,37 @@ const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
-const dictData = reactive([]) //科室数据
+const medicinesData = reactive([]) //药品数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
-const dictTypeStore = useDictTypeStore() //使用字典类别的xx
-
-//根据ID查看数据类别的数据
-const checkDictData = (dictType) => {
-  dictTypeStore.setDictType({ dictType: dictType })
-  console.log(dictTypeStore.getDictType)
-  ElMessage.success(dictType)
-  router.push({ name: 'dictData' })
-}
 
 //模糊查询
 const searchDict = (keyWordInput) => {
   keyWord.value = keyWordInput
   ElMessage.info(keyWord.value)
-  // getUserData()
+  // getMedicinesFetch()
 }
 
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
-  getDictFetch()
+  getMedicinesFetch()
 }
 
 //下一页
 const currentChange = (newPage) => {
   pageNum.value = newPage
-  getDictFetch()
+  getMedicinesFetch()
 }
 
 //页面加载时挂载
 onMounted(() => {
-  getDictFetch()
+  getMedicinesFetch()
 })
 
-const getDictFetch = () => {
-  //获取字典数据
+const getMedicinesFetch = () => {
+  //获取药品信息
   http
-    .get('/dict/type', {
+    .get('/medicines/list', {
       params: {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
@@ -171,8 +166,8 @@ const getDictFetch = () => {
       },
     })
     .then((res) => {
-      const list = Array.isArray(res.data.list) ? res.data.list : []
-      dictData.splice(0, dictData.length, ...list)
+      const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
+      medicinesData.splice(0, medicinesData.length, ...list)
       pageTotal.value = res.data?.total || 0
     })
 }
