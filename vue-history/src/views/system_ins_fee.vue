@@ -6,11 +6,11 @@
       <el-card shadow="always" class="mb-10px">
         <el-row justify="space-between">
           <el-col :span="12">
-            <el-button type="primary" @click="addInspectionFee">
+            <el-button type="primary" @click="addCheckItem">
               <el-icon><Plus /></el-icon>
               <span>新增</span>
             </el-button>
-            <el-button type="danger">
+            <el-button type="danger" @click="batchDelete">
               <el-icon><Minus /></el-icon>
               <span>删除选中</span>
             </el-button>
@@ -19,8 +19,8 @@
           <el-col :span="5">
             <el-input
               v-model="keyWord"
-              @change="searchInspectionFee"
-              placeholder="请输入关键字回车以查询"
+              @change="searchCheckItem"
+              placeholder="请输入项目名称回车键搜索"
               clearable
               size=""
             />
@@ -40,7 +40,8 @@
               :data="inspectionFeeData"
               style="width: 100%"
               max-height="500"
-              row-key="dictId"
+              row-key="checkItemId"
+              @selection-change="handleSelectionChange"
             >
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="项目费用ID" prop="checkItemId" width="120" />
@@ -85,7 +86,7 @@
                     <el-button
                       type="success"
                       size="small"
-                      @click="editInspectionFee(scope.row.userId)"
+                      @click="editCheckItem(scope.row.checkItemId)"
                     >
                       <el-icon><Edit /></el-icon>
                       <span>编辑</span>
@@ -93,7 +94,7 @@
                     <el-button
                       type="danger"
                       size="small"
-                      @click="delInspectionFee(scope.row.userId)"
+                      @click="delCheckItem(scope.row.checkItemId)"
                     >
                       <el-icon><Delete /></el-icon>
                       <span>删除</span>
@@ -123,25 +124,303 @@
       </el-card>
     </el-col>
   </el-row>
+
+  <!-- 添加检查费用和编辑检查费用抽屉 -->
+  <el-drawer
+    v-model="addOrEditDrawerModal"
+    :title="addOrEditDrawerTitle"
+    size="30%"
+    :before-close="beforeChangeAddOrEditDrawer"
+  >
+    <el-row>
+      <el-col :span="20">
+        <el-form :model="checkItemObject" label-width="auto" style="max-width: 600px">
+          <el-input v-model="checkItemObject.checkItemId" style="display: none;"/>
+          <el-form-item label="项目类型">
+            <el-select id="itemType" v-model="checkItemObject.typeId" placeholder="项目类型">
+              <el-option label="拍片类" value="1"></el-option>
+              <el-option label="化验类" value="2"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="项目名称">
+            <el-input v-model="checkItemObject.checkItemName" placeholder="请输入项目名称" />
+          </el-form-item>
+          <el-form-item label="关键字">
+            <el-input v-model="checkItemObject.keyWords" placeholder="请输入关键字" />
+          </el-form-item>
+          <el-form-item label="项目价格">
+            <el-input v-model="checkItemObject.unitPrice" placeholder="请输入项目价格" />
+          </el-form-item>
+          <el-form-item label="项目成本">
+            <el-input v-model="checkItemObject.cost" placeholder="请输入项目成本" />
+          </el-form-item>
+          <el-form-item label="项目单位">
+            <el-input v-model="checkItemObject.unit" placeholder="请输入项目单位" />
+          </el-form-item>
+          <el-form-item label="状态">
+            <el-radio-group v-model="checkItemObject.status">
+              <el-radio value="0">正常</el-radio>
+              <el-radio value="1">禁用</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-form>
+      </el-col>
+    </el-row>
+    <el-divider />
+    <el-row class="text-center">
+      <el-col>
+        <el-button @click="handleSubmit" type="primary">提交</el-button>
+        <el-button type="primary">取消</el-button>
+      </el-col>
+    </el-row>
+  </el-drawer>
 </template>
 
 <script setup lang="ts">
 import http from '@/http'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { c } from 'vite/dist/node/moduleRunnerTransport.d-CXw_Ws6P'
 import { onMounted, reactive, ref } from 'vue'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
-const inspectionFeeData = reactive([]) //科室数据
+const inspectionFeeData = reactive([]) //检查费用数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
+const addOrEditDrawerModal = ref(false) //添加或编辑检查费用抽屉
+const addOrEditDrawerTitle = ref('') //添加或编辑检查费用抽屉标题
+const checkItemIds = ref([]) //选中的编号数组
+
+//检查费用对象，用于存储添加或修改的检查费用信息
+const checkItemObject = reactive({
+  checkItemId: '',
+  checkItemName: '',
+  keyWords: '',
+  unitPrice: '',
+  cost:'',
+  unit:'',
+  typeId: '',
+  status: '0'
+})
+
+// 监听多选
+const handleSelectionChange = (val) => {
+  //console.log('当前选中的数据:', val) // ✅ 确保这里不是空的
+  checkItemIds.value = val
+}
+
+//批量删除
+const batchDelete = async () => {
+  if (checkItemIds.value.length === 0) {
+    return ElMessage.warning('请选择要删除的项！')
+  }
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${checkItemIds.value.length} 条记录吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+
+    //提取id
+    const ids = checkItemIds.value.map((item) => item.checkItemId)
+    // 调用 API 批量删除
+    await http.post('/checkItem/batchDelete', { ids })
+
+    // 重新查询一遍数据
+    getAnnouncementFetch()
+
+    ElMessage.success('批量删除成功！')
+  } catch (error) {
+    ElMessage.error('批量删除失败！', error)
+  }
+}
 
 //模糊查询
-const searchInspectionFee = (keyWordInput) => {
+const searchCheckItem = (keyWordInput) => {
   keyWord.value = keyWordInput
-  ElMessage.info(keyWord.value)
-  // getUserData()
+  // ElMessage.info(keyWord.value)
+  getAnnouncementFetch()
+}
+
+
+//添加检查费用抽屉
+const addCheckItem = () => {
+  //清空检查费用对象
+  checkItemObject.checkItemId = ''
+  checkItemObject.checkItemName = ''
+  checkItemObject.keyWords='',
+  checkItemObject.unitPrice = ''
+  checkItemObject.cost = ''
+  checkItemObject.unit = ''
+  checkItemObject.typeId = ''
+  checkItemObject.status = '0'
+
+  addOrEditDrawerTitle.value = '添加检查费用'
+  addOrEditDrawerModal.value = true
+}
+
+//添加检查费用
+const addCheckItemSubmit = () => {
+  // console.log("添加的数据"+checkItemObject)
+  //后端发送添加检查费用请求
+  http.post("/checkItem/add",checkItemObject).then((res) => {
+    if (res.data) {
+      ElMessage.success('添加成功')
+      addOrEditDrawerModal.value = false
+    } else {
+      ElMessage.error('添加失败')
+    }
+    getAnnouncementFetch()
+  })
+}
+
+//删除检查费用
+const delCheckItem = (checkItemId) => {
+  ElMessageBox.confirm(
+    "确定删除编号为"+checkItemId+"的检查费用？",
+    '警告',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  )
+  .then(() => {
+      //删除检查费用
+      http.post("checkItem/deleteById?id="+checkItemId).then((res)=>{
+        if(res.data){
+          ElMessage.success('删除成功')
+          getAnnouncementFetch()
+        } else {
+      throw new Error('检查费用删除失败')
+    }
+      })
+    })
+    // .catch(() => {
+    //   ElMessage({
+    //     type: 'info',
+    //     message: 'Delete canceled',
+    //   })
+    // })
+}
+
+//修改检查费用抽屉
+const editCheckItem = (checkItemId) => {
+  //userId=userId
+  addOrEditDrawerTitle.value = '编辑检查费用'
+  addOrEditDrawerModal.value = true
+  //回调单个检查费用数据
+  http.get("/checkItem/getById?id="+checkItemId).then((res)=>{
+   if(res.data){
+    checkItemObject.checkItemId = res.data.checkItemId
+    checkItemObject.checkItemName = res.data.checkItemName
+    checkItemObject.keyWords = res.data.keyWords
+    checkItemObject.unitPrice = res.data.unitPrice
+    checkItemObject.cost = res.data.cost
+    checkItemObject.unit = res.data.unit
+    checkItemObject.typeId = res.data.typeId
+    checkItemObject.status = res.data.status
+    }
+  })
+  // .catch((error)=>{
+  //   ElMessage.error('获取检查费用数据失败'+error)
+  // })
+}
+
+//修改检查费用
+const updateCheckItemSubmit = () => {
+  // console.log("修改的数据"+userObject)
+  //后端发送修改检查费用请求
+  http.post("/checkItem/update",checkItemObject).then((res) => {
+    if (res.data) {
+      ElMessage.success('修改成功')
+      addOrEditDrawerModal.value = false
+      getAnnouncementFetch()
+    } else {
+      ElMessage.error('操作有误,请重试!')
+    }
+    getAnnouncementFetch()
+  })
+}
+
+//判断当前抽屉的按钮操作是添加还是修改
+const handleSubmit = () => {
+  if (addOrEditDrawerTitle.value === "添加检查费用") {
+    addCheckItemSubmit(); // 调用添加检查费用的方法
+  } else if (addOrEditDrawerTitle.value === "编辑检查费用") {
+    updateCheckItemSubmit(); // 调用修改检查费用的方法
+  }
+};
+
+//关闭抽屉前提示用户是否关闭
+const beforeChangeAddOrEditDrawer = () => {
+  ElMessageBox.confirm('你确定要关闭吗?所有数据将不会做任何保存', '温馨提示', {
+    confirmButtonText: '确认',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      addOrEditDrawerModal.value = false
+      //checkItemData.splice(0, checkItemData.length)
+    })
+    .catch(() => {
+      return
+    })
+}
+
+// 修改检查费用状态改变事件
+const updateUserStatus = async (rid, roleStatus, roleName) => {
+  try {
+    const response = await http.put(`/checkItem/update/${rid}/${roleName}`)
+    if (response.data) {
+      ElNotification({
+        title: '修改成功!',
+        message: `检查费用 ${roleName} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
+        type: 'success',
+        offset: 50,
+        duration: 3000,
+      })
+    } else {
+      throw new Error('状态更新失败')
+    }
+  } catch (error) {
+    console.error(error)
+    ElNotification({
+      title: '修改失败!',
+      message: '状态更新时发生错误，请稍后重试.',
+      type: 'error',
+      offset: 50,
+      duration: 3000,
+    })
+    throw error
+  }
+}
+
+//判断修改检查费用状态前逻辑，判断检查费用id是否相同，如果相同拦截并不让更改，否则放行
+const beforeChange = () => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true)
+    }, 1000)
+  })
+}
+
+//按钮切换主逻辑方法
+const handleBeforeChange = async (rid, roleStatus, roleName) => {
+  //将当前开关的动画状态开启
+  rowLoadingMap[rid] = true
+  try {
+    //执行beforeChange和更改检查费用状态
+    await beforeChange()
+    await updateUserStatus(rid, roleStatus, roleName)
+    return true
+  } catch (error) {
+    console.error(error.message)
+    return false // 阻止状态切换
+  } finally {
+    rowLoadingMap[rid] = false
+  }
 }
 
 //上一页

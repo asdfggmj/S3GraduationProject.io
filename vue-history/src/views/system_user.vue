@@ -353,11 +353,11 @@ const userObject = reactive({
   deptId: '',
   phone: '',
   age: '',
-  sex: '0',
+  sex: '3',
   status: '0',
   userRank: '',
   background:'',
-  schedulingFlag: '',
+  schedulingFlag: '1',
   picture:'',
   userRankValue:'',
   backgroundValue:''
@@ -453,9 +453,13 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
 const addUser = () => {
   //清空用户对象
   userObject.userId=userObject.userName=userObject.email=userObject.deptId=
-  userObject.phone=userObject.age=userObject.sex=userObject.userRank=userObject.background=
-  userObject.schedulingFlag=userObject.picture=userObject.userRankValue
+  userObject.phone=userObject.age=userObject.userRank=userObject.background
+  =userObject.picture=userObject.userRankValue
   =userObject.backgroundValue=''
+  userObject.status='0'
+  userObject.schedulingFlag='1'
+  userObject.sex='3'
+
   addOrEditDrawerTitle.value = '添加用户'
   addOrEditDrawerModal.value = true
 }
@@ -631,6 +635,7 @@ const handleBeforeChange = async (uid, value, username) => {
 // 页面加载时获取用户数据
 onMounted(() => {
   getUserData()
+  console.log(userObject.sex);
 })
 
 // 获取用户数据

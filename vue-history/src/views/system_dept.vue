@@ -10,9 +10,9 @@
               <el-icon><Plus /></el-icon>
               <span>新增科室</span>
             </el-button>
-            <el-button type="danger">
+            <el-button type="danger" @click="batchDelete">
               <el-icon><Minus /></el-icon>
-              <span>删除选中科室</span>
+              <span>批量删除</span>
             </el-button>
           </el-col>
           <!-- 模糊查询 -->
@@ -36,7 +36,8 @@
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
-            <el-table :data="deptData" style="width: 100%" max-height="500" row-key="deptId">
+            <el-table :data="deptData" style="width: 100%" max-height="500" row-key="deptId"
+              @selection-change="handleSelectionChange">
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="科室名称" prop="deptName" width="120" />
               <el-table-column label="科室编码" prop="deptNumber" />
@@ -163,7 +164,7 @@ const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
 const deptData = reactive([]) //科室数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
-
+const depIds = ref([]) //选中的编号数组
 
 //科室对象，用于存储添加或修改的科室信息
 const deptObject = reactive({
@@ -176,6 +177,39 @@ const deptObject = reactive({
   leaderPhone: '',
   status: 0
 })
+
+// 监听多选
+const handleSelectionChange = (val) => {
+  //console.log('当前选中的数据:', val) // ✅ 确保这里不是空的
+  depIds.value = val
+}
+
+//批量删除
+const batchDelete = async () => {
+  if (depIds.value.length === 0) {
+    return ElMessage.warning('请选择要删除的项！')
+  }
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${depIds.value.length} 条记录吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+
+    //提取id
+    const ids = depIds.value.map((item) => item.operId)
+    // 调用 API 批量删除
+    await http.post('/dept/batchDelete', { ids })
+
+    // 重新查询一遍数据
+    getDeptFetch()
+
+    ElMessage.success('批量删除成功！')
+  } catch (error) {
+    ElMessage.error('批量删除失败！', error)
+  }
+}
+
 //模糊查询
 const searchDept = (keyWordInput) => {
   keyWord.value = keyWordInput

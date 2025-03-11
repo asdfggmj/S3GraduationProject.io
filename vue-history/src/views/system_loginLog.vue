@@ -5,20 +5,28 @@
     <el-col :span="24">
       <el-card shadow="always" class="mb-10px">
         <el-row justify="space-between">
-          <!-- 模糊查询 -->
-          <el-col :span="12">
-            <el-button type="primary" @click="addLoginLog">
-              <el-icon><Plus /></el-icon>
+      <el-col :span="12">
+            <el-button type="danger" @click="batchDelete">
+              <el-icon><Minus /></el-icon>
               <span>删除</span>
             </el-button>
-            <el-button type="danger">
-              <el-icon><Minus /></el-icon>
+            <el-button type="warning" @click="emptyLoginInfo">
+              <el-icon><DeleteFilled /></el-icon>
               <span>清空</span>
             </el-button>
           </el-col>
-          <el-form-item label="用户名称" style="font-size: 15px;">
-      <el-input v-model="userName"   placeholder="请输入用户名称" @change="searchLoginLog"/>
+          <!-- 模糊查询 -->
+          <el-form-item label="用户名" style="font-size: 15px;">
+            <el-input
+              v-model="userName"
+              @change="searchLoginLog"
+              placeholder="请输入用户名"
+              clearable
+              size=""
+            />
     </el-form-item>
+    <el-row>
+      </el-row>
         </el-row>
       </el-card>
     </el-col>
@@ -30,7 +38,8 @@
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
-            <el-table :data="loginLogData" style="width: 100%" max-height="500" row-key="dictId">
+            <el-table :data="loginLogData" style="width: 100%" max-height="500" row-key="infoId"
+            @selection-change="handleSelectionChange">
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="用户名" prop="userName" width="120" />
               <el-table-column label="登录账号" prop="loginAccount" />
@@ -53,7 +62,7 @@
               <el-table-column label="操作" fixed="right" width="240">
                 <template #default="scope">
                   <el-button-group>
-                    <el-button type="danger" size="small" @click="delLoginLog(scope.row.userId)">
+                    <el-button type="danger" size="small" @click="delLoginInfo(scope.row.infoId, scope.row.userName)">
                       <el-icon><Delete /></el-icon>
                       <span>删除</span>
                     </el-button>
@@ -89,6 +98,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { Search, Refresh } from '@element-plus/icons-vue'
 import http from '@/http'
 import { useCookies } from '@vueuse/integrations/useCookies';
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 //从cookie获取authorization
 const cookie=useCookies();
@@ -98,11 +108,6 @@ const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const userName = ref('') //用户名称
-const loginAccount = ref('') //用户账号
-const ipAddr = ref('') //IP地址
-const loginStatus = ref('') //登录状态
-const loginType = ref('') //登录类型
-const loginTime = ref('') //登录时间
 
 //登录日志数据
 const loginLogData = reactive([
@@ -120,51 +125,100 @@ const loginLogData = reactive([
   }
 ])
 
+const infoIds = ref([]) //选中的编号数组
+
+// 监听多选
+const handleSelectionChange = (val) => {
+  console.log('当前选中的数据:', val) // ✅ 确保这里不是空的
+  infoIds.value = val
+}
+
+//批量删除
+const batchDelete = async () => {
+  if (infoIds.value.length === 0) {
+    return ElMessage.warning('请选择要删除的项！')
+  }
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${infoIds.value.length} 条记录吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+
+    //提取id
+    const ids = infoIds.value.map((item) => item.infoId)
+    // 调用 API 批量删除
+    await http.post('/loginInfo/batchDelete', { ids })
+
+    // 重新查询一遍数据
+    getLoginInfoData()
+    ElMessage.success('批量删除成功！')
+  } catch (error) {
+    ElMessage.error('批量删除失败！', error)
+  }
+}
 //模糊查询
 const searchLoginLog = () => {
-   getLoginLoginData()
+   getLoginInfoData()
 }
 
-//添加登录日志
-const addLoginLog = () => {
-
+//删除操作日志
+const delLoginInfo = (id,title) => {
+  ElMessageBox.confirm(`你确定要删除本条登录日志记录吗?`, '安全提示', {
+    type: 'warning',
+    cancelButtonText: '取消',
+    confirmButtonText: '确定',
+  }).then(() => {
+    http.delete(`/loginInfo/deleteById/${id}`).then((res) => {
+      if (res.data.data === true) {
+        ElMessage.success('删除成功！')
+        getLoginInfoData()
+      }
+    })
+  })
 }
 
-//删除登录日志
-const delLoginLog = (userId) => {
-
+//清空操作日志
+const emptyLoginInfo = () => {
+  ElMessageBox.confirm(`你确定要删除所有记录吗?`, '安全提示', {
+    type: 'warning',
+    cancelButtonText: '取消',
+    confirmButtonText: '确定',
+  }).then(() => {
+    http.post("/loginInfo/emptyLoginInfo").then((res) => {
+      if (res.data.data === true) {
+        ElMessage.success('清空成功！')
+        getLoginInfoData()
+      }
+    })
+  })
 }
 
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
-  getLoginLoginData()
+  getLoginInfoData()
 }
 
 //下一页
 const currentChange = (newPage) => {
   pageNum.value = newPage
-  getLoginLoginData()
+  getLoginInfoData()
 }
 
 // 页面加载时获取登录数据
 onMounted(() => {
-  getLoginLoginData()
+  getLoginInfoData()
 })
 
 // 获取登录日志记录数据
-const getLoginLoginData = () => {
+const getLoginInfoData = () => {
   http
     .get('/loginInfo/list', {
       params: {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
-        userName: userName.value,
-        loginAccount: loginAccount.value,
-        ipAddr: ipAddr.value,
-        loginStatus: loginStatus.value,
-        loginType: loginType.value,
-        loginTime: loginTime.value
+        userName: userName.value
       },headers: { 'Authorization': 'Bearer' + auhtorization }
     })
     .then((res) => {
@@ -177,4 +231,6 @@ const getLoginLoginData = () => {
       }
     })
   }
+
+
 </script>
