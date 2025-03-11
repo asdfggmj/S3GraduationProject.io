@@ -1,4 +1,5 @@
 <template>
+  <!-- 第一行 -->
   <el-row>
     <el-col :span="24" style="text-align: right">
       <el-card shadow="always">
@@ -10,7 +11,9 @@
                 <el-select
                   v-model="selectedDeptValue"
                   @click="getDepts"
+                  @change="selectByDoctorId"
                   placeholder="请选择所属科室"
+                  clearable
                 >
                   <el-option
                     v-for="item in deptData"
@@ -28,7 +31,9 @@
                 <el-select
                   v-model="selectedDoctorValue"
                   @click="getUsers"
+                  @change="selectByDoctorId"
                   placeholder="请选择医生名字"
+                  clearable
                 >
                   <el-option
                     v-for="item in doctorData"
@@ -40,14 +45,17 @@
               </el-form-item>
             </el-form>
           </el-col>
+          <el-col :span="1">
+            <el-button type="danger" @click="clearQueryCondition">清空条件</el-button>
+          </el-col>
           <!-- 右侧 -->
-          <el-col :span="13">
-            <el-button type="primary">
+          <el-col :span="12">
+            <el-button type="primary" @click="lastWeek">
               <el-icon><ArrowLeftBold /></el-icon>
               <span>上一周</span>
             </el-button>
-            <el-button type="success">当前周</el-button>
-            <el-button type="primary">
+            <el-button type="success" @click="thisWeek">当前周</el-button>
+            <el-button type="primary" @click="nextWeek">
               <el-icon><ArrowRightBold /></el-icon>
               <span>下一周</span>
             </el-button>
@@ -62,7 +70,7 @@
       <el-card shadow="always">
         <el-row>
           <el-col :span="24" style="text-align: center">
-            <el-text>2025-3-3(周一)-2025-3-9(周日)</el-text>
+            <el-text>{{ weekDates[0] + '(周一)' + '到' + weekDates[6] + '(周日)' }}</el-text>
           </el-col>
         </el-row>
       </el-card>
@@ -78,24 +86,49 @@
               border
               :data="schedulingData"
               :span-method="objectSpanMethod"
-              :row-key="(row) => `${row.userId}-${row.subsectionType}`"
+              row-key="userId"
               max-height="500"
             >
-              <el-table-column label="医生" prop="userName" align="center" />
-              <el-table-column label="科室" prop="deptName" align="center" />
-              <el-table-column label="时间段" prop="subsectionName" align="center" />
               <el-table-column
-                v-for="date in schedulingData.schedulingDay"
-                :key="date"
-                :label="date"
+                label="医生"
+                prop="userName"
                 align="center"
+                width="120"
+                fixed="left"
+              />
+              <el-table-column
+                label="科室"
+                prop="deptName"
+                align="center"
+                width="120"
+                fixed="left"
+              />
+              <el-table-column
+                label="时间段"
+                prop="subsectionType"
+                align="center"
+                width="120"
+                fixed="left"
               >
                 <template #default="scope">
-                  {{ scope.row.scheduling[date] ?? '-' }}
+                  <span>{{ timesDataMap[scope.row.subsectionType] }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                v-for="(date, index) in weekDates"
+                :key="index"
+                :label="`${date}(周${['一', '二', '三', '四', '五', '六', '日'][index]}) `"
+                width="160"
+              >
+                <template #default="{ row }">
+                  <span v-if="row.schedulingType[index]">
+                    {{ schedulingTypeMap[row.schedulingType[index]] || row.schedulingType[index] }}
+                  </span>
+                  <span v-else>--</span>
                 </template>
               </el-table-column>
               <!-- 操作列 -->
-              <el-table-column label="操作" prop="userId" align="center">
+              <el-table-column label="操作" align="center" width="120" fixed="right">
                 <template #default="scope">
                   <el-button size="small" type="primary" @click="editScheduling(scope.row)">
                     <el-icon><Edit /></el-icon>
@@ -121,20 +154,28 @@
     <el-row>
       <el-col :span="24">
         <!-- 数据表格 -->
-        <el-table :data="editSchedulingData">
-          <el-table-column label="时间/日期" prop="time"></el-table-column>
-          <el-table-column
-            v-for="item in 7"
-            :key="item"
-            :label="'2025 - 3 - ' + (item + 2) + '(周' + item + ')'"
-          >
+        <el-table :data="aScheduleData">
+          <el-table-column label="时间段" prop="subsectionType" align="center">
             <template #default="scope">
-              <el-select v-model="value" placeholder="请选择所属科室">
+              <span>{{ timesDataMap[scope.row.subsectionType] }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-for="(date, index) in weekDates"
+            :key="index"
+            :label="`${date}(周${['一', '二', '三', '四', '五', '六', '日'][index]}) `"
+          >
+            <template #default="{ row }">
+              <el-select
+                v-model="row.schedulingType[index]"
+                @focus="getAllShiftTypeDataFetch"
+                placeholder="请选择排班类型"
+              >
                 <el-option
-                  v-for="item in options"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
+                  v-for="item in shiftTypeData"
+                  :key="item.dictValue"
+                  :label="item.dictLabel"
+                  :value="item.dictValue"
                 />
               </el-select>
             </template>
@@ -145,7 +186,7 @@
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="dialogVisible = false"> 确定 </el-button>
+        <el-button type="primary" @click="submitShiftTypeData"> 确定 </el-button>
       </div>
     </template>
   </el-dialog>
@@ -153,27 +194,130 @@
 
 <script setup lang="ts">
 import http from '@/http'
-import { dayjs, ElMessageBox } from 'element-plus'
-import { computed, onMounted, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, ref } from 'vue'
 
+const timesDataMap = ref({}) //存储排班时间类型字典
+const schedulingTypeMap = ref({}) //存储排班类型字典
 const dialogVisible = ref(false) //对话框控制显示
 const schedulingData = ref([]) //排班医生数据
+const aScheduleData = ref([]) //一个排班医生数据
+const selectedDoctorId = ref('') //点击排班后选中的医生ID
+const shiftTypeData = ref([]) //排班信息数据
 const deptData = ref([]) //部门数据
 const doctorData = ref([]) //医生(用户)数据
 const selectedDeptValue = ref('') //选中的部门值
 const selectedDoctorValue = ref('') //选中的医生值
 const schedulingEditTitle = ref('') //编辑标题
+const weekDates = ref([]) // 本周日期
+const weekToAdd = ref(0) //周位移  -1代表上周 0本周 1下周
 
 onMounted(() => {
   getDoctorFetch()
+  getSchedulingType()
+  getTimesData()
 })
+
+//获取上周排班信息
+const lastWeek = () => {
+  weekToAdd.value = weekToAdd.value - 1
+  getDoctorFetch()
+  ElMessage.success(`时间已往前偏移${weekToAdd.value}周`)
+}
+//获取本周排班信息
+const thisWeek = () => {
+  if (weekToAdd.value === 0) {
+    ElMessage.warning('当前日期已经是本周日期了哦！')
+    return
+  }
+  weekToAdd.value = 0
+  getDoctorFetch()
+}
+//获取下周排班信息
+const nextWeek = () => {
+  weekToAdd.value = weekToAdd.value + 1
+  getDoctorFetch()
+  ElMessage.success(`时间已往后偏移${weekToAdd.value}周`)
+}
+
+//清空查询条件
+const clearQueryCondition = () => {
+  //判断医生排班数据如果>0则清空数组
+  if (schedulingData.value.length !== 0) {
+    //清空排班医生数据
+    schedulingData.value = []
+  }
+  //清空查询条件
+  selectedDoctorValue.value = selectedDeptValue.value = ''
+  //再查询一遍医生排版数据
+  getDoctorFetch()
+}
+
+//根据医生名字查询排班
+const selectByDoctorId = () => {
+  schedulingData.value = []
+  getDoctorFetch()
+}
+
+//获取排班时间段数据
+const getTimesData = () => {
+  http.get('/dict/get/his_subsection_type').then((res) => {
+    const dictData = res.data.data || []
+    timesDataMap.value = dictData.reduce((map, item) => {
+      map[Number(item.dictValue)] = item.dictLabel
+      return map
+    }, {})
+  })
+}
+
+//获取排班类型数据
+const getSchedulingType = () => {
+  http.get('/dict/get/his_scheduling_type').then((res) => {
+    const dictData = res.data.data || []
+
+    schedulingTypeMap.value = dictData.reduce((map, item) => {
+      map[Number(item.dictValue)] = item.dictLabel
+      return map
+    }, {})
+  })
+}
+
+//提交排班数据
+const submitShiftTypeData = () => {
+  // 组装编辑后的排班数据
+  const formattedData = aScheduleData.value.map((row) => ({
+    userId: row.userId, //用户编号
+    deptId: row.deptId, //部门编号
+    subsectionType: row.subsectionType, // 1=上午，2=下午，3=晚上
+    schedulingType: row.schedulingType, // 排班类型，1.门诊，2.急诊
+    dates: row.dates, // 对应日期
+  }))
+  //发送请求
+  http
+    .post('/doctors/updateSchedule', formattedData)
+    .then(() => {
+      ElMessage.success('排班信息更新成功')
+      dialogVisible.value = false
+      getDoctorFetch()
+    })
+    .catch(() => {
+      ElMessage.error('更新失败，请重试')
+    })
+}
+
+//获取所有排班信息数据
+const getAllShiftTypeDataFetch = () => {
+  if (shiftTypeData.value.length === 0) {
+    http.get('/dict/get/his_scheduling_type').then((res) => {
+      shiftTypeData.value = res.data.data
+    })
+  }
+}
 
 //获取所有医生用户信息
 const getUsers = () => {
   if (doctorData.value.length === 0) {
-    http.get('/user/getDoctor').then((res) => {
-      console.log(res.data.data)
-
+    http.get('/user/getNormal').then((res) => {
       doctorData.value = res.data.data
     })
   }
@@ -190,33 +334,39 @@ const getDepts = () => {
 
 //获取所有医生信息
 const getDoctorFetch = () => {
-  http.get('/doctors/ScheduleList').then((res) => {
-    schedulingData.value = res.data.data
-  })
+  http
+    .get('/doctors/ScheduleList', {
+      params: {
+        userId: selectedDoctorValue.value,
+        deptId: selectedDeptValue.value,
+        weekToAdd: weekToAdd.value,
+      },
+    })
+    .then((res) => {
+      if (res.data && res.data.data && res.data.data.length > 0) {
+        schedulingData.value = res.data.data // 存储医生排班数据
+        weekDates.value = res.data.data[0].dates // 获取排班日期
+      } else {
+        console.error('排班数据为空')
+      }
+    })
+    .catch((error) => {
+      console.error('获取排班数据失败:', error)
+    })
 }
 
 // 跨行合并
 const objectSpanMethod = ({ row, column, rowIndex, columnIndex }) => {
-  if (columnIndex === 0) {
+  // 需要合并的列（第一列、第二列、最后一列）
+  if (columnIndex === 0 || columnIndex === 1 || columnIndex === 10) {
     if (rowIndex % 3 === 0) {
-      return [3, 1]
+      return [3, 1] // 纵向合并3行
     } else {
-      return [0, 0]
+      return [0, 0] // 不显示该单元格
     }
   }
-  if (columnIndex === 1) {
-    if (rowIndex % 3 === 0) {
-      return {
-        rowspan: 3,
-        colspan: 1,
-      }
-    } else {
-      return {
-        rowspan: 0,
-        colspan: 0,
-      }
-    }
-  }
+
+  return [1, 1] // 默认单元格
 }
 
 //关闭对话框前执行的方法
@@ -232,9 +382,31 @@ const handleClose = () => {
 
 //编辑医生排班
 const editScheduling = (row) => {
+  //判断如果aScheduleData的数组长度>0则清空
+  if (aScheduleData.value.length !== 0) {
+    //清空一个医生的排班数据数组
+    aScheduleData.value = []
+  }
+  //打开对话框
   dialogVisible.value = true
-  const user_name = row.userName // 获取部门信息
+  // 获取用户名
+  const user_name = row.userName
+  //设置对话框标题
   schedulingEditTitle.value = `修改${user_name}的排班信息`
+  //给选中的医生变量ID赋值
+  selectedDoctorId.value = row.userId
+  //根据用户编号获取排班数据
+  http
+    .get('/doctors/ScheduleList', {
+      params: {
+        userId: row.userId,
+        weekToAdd: weekToAdd.value,
+      },
+    })
+    .then((res) => {
+      //为医生排班赋值
+      aScheduleData.value = res.data.data
+    })
 }
 </script>
 
