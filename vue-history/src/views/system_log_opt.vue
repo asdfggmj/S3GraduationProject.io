@@ -44,7 +44,7 @@
             max-height="500"
             row-key="operId"
             @selection-change="handleSelectionChange"
-            :border="true"
+            :border="false"
             >
             <el-table-column type="expand">
             <template #default="props">
