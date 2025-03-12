@@ -70,7 +70,11 @@
                 </template>
               </el-table-column>
               <el-table-column label="备注" prop="remark" width="200" />
-              <el-table-column label="创建时间" prop="createTime" width="200" />
+              <el-table-column label="创建时间" prop="createTime" width="200">
+                <template #default="scope">
+                  <span>{{ formatDate(scope.row.createTime) }}</span>
+                </template>
+              </el-table-column>
               <el-table-column label="创建人" prop="createBy" width="120" />
               <el-table-column label="最后一次修改时间" prop="updateTime" width="200" />
               <el-table-column label="修改人" prop="updateBy" width="120" />
@@ -117,7 +121,7 @@
 import http from '@/http'
 import router from '@/router'
 import { useDictTypeStore } from '@/stores/dictType'
-import { ElMessage } from 'element-plus'
+import { dayjs, ElMessage } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 
 const pageNum = ref(1) //当前页
@@ -127,6 +131,11 @@ const keyWord = ref('') //关键字
 const dictData = reactive([]) //科室数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
 const dictTypeStore = useDictTypeStore() //使用字典类别的xx
+
+//使用dayjs序列化时间
+const formatDate = (date) => {
+  return date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : '--'
+}
 
 //根据ID查看数据类别的数据
 const checkDictData = (dictType) => {

@@ -2,7 +2,6 @@
 <template>
   <el-row>
     <el-col :span="24">
-      <button @click="router.push('/demo')">测试</button>
       <el-scrollbar style="height: 90vh">
         <el-menu class="el-menu-vertical-demo" default-active="0">
           <!-- 首页 -->
