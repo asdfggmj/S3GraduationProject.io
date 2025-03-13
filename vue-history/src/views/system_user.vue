@@ -50,7 +50,8 @@
               <el-table-column label="用户姓名" prop="userName" width="120" />
               <el-table-column label="所属部门">
                 <template #default="scope">
-                    {{ getDeptName(scope.row.deptId) }} <!-- 根据 deptId 查找科室名称 -->
+                  {{ getDeptName(scope.row.deptId) }}
+                  <!-- 根据 deptId 查找科室名称 -->
                 </template>
               </el-table-column>
               <el-table-column label="手机号码" prop="phone" width="120" />
@@ -92,7 +93,11 @@
                   />
                 </template>
               </el-table-column>
-              <el-table-column label="创建时间" prop="createTime" width="200" />
+              <el-table-column label="创建时间" prop="createTime" width="200">
+                <template #default="scope">
+                  <span>{{ formatDate(scope.row.createTime) }}</span>
+                </template>
+              </el-table-column>
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="240">
                 <template #default="scope">
@@ -105,7 +110,11 @@
                       <el-icon><Delete /></el-icon>
                       <span>删除</span>
                     </el-button>
-                    <el-button type="primary" size="small" @click="userGrant(scope.$index, scope.row.userId)">
+                    <el-button
+                      type="primary"
+                      size="small"
+                      @click="userGrant(scope.$index, scope.row.userId)"
+                    >
                       <el-icon><Pointer /></el-icon>
                       <span>分配角色</span>
                     </el-button>
@@ -145,7 +154,7 @@
     <el-row>
       <el-col :span="20">
         <el-form :model="userObject" label-width="auto" style="max-width: 600px">
-          <el-input v-model="userObject.userId" style="display: none;"/>
+          <el-input v-model="userObject.userId" style="display: none" />
           <el-form-item label="用户名">
             <el-input v-model="userObject.userName" placeholder="请输入用户名" />
           </el-form-item>
@@ -176,9 +185,13 @@
             </el-select>
           </el-form-item>
           <el-form-item label="背景">
-            <el-select v-model="selectedFieldBackground" @click="getAllBackground" placeholder="学历">
+            <el-select
+              v-model="selectedFieldBackground"
+              @click="getAllBackground"
+              placeholder="学历"
+            >
               <el-option
-              v-for="item in backgroundData"
+                v-for="item in backgroundData"
                 :key="item.dictValue"
                 :label="item.dictLabel"
                 :value="item.dictValue"
@@ -232,18 +245,29 @@
     </el-row>
   </el-drawer>
 
-    <!-- 用户分配角色的抽屉 -->
-    <el-drawer v-model="dialog" title="分配角色" direction="rtl" class="demo-drawer" :before-close="beforeChangeAddOrEditDrawer">
+  <!-- 用户分配角色的抽屉 -->
+  <el-drawer
+    v-model="dialog"
+    title="分配角色"
+    direction="rtl"
+    class="demo-drawer"
+    :before-close="beforeChangeAddOrEditDrawer"
+  >
     <div class="demo-drawer__content">
       <!-- 复选框组 -->
       <el-checkbox-group v-model="rids">
-        <el-checkbox v-for="role in roleData" :label="role.roleName"
-            :value="role.roleId" :key="role.roleId" style="display: block; margin:10px;"/>
+        <el-checkbox
+          v-for="role in roleData"
+          :label="role.roleName"
+          :value="role.roleId"
+          :key="role.roleId"
+          style="display: block; margin: 10px"
+        />
       </el-checkbox-group>
 
       <div class="demo-drawer__footer">
         <el-button type="primary" @click="addUserRole">确定</el-button>
-        <el-button @click="dialog=false">取消</el-button>
+        <el-button @click="dialog = false">取消</el-button>
       </div>
     </div>
   </el-drawer>
@@ -251,7 +275,7 @@
 
 <script setup lang="ts">
 import http from '@/http'
-import { ElMessage, ElMessageBox, ElNotification, UploadProps } from 'element-plus'
+import { dayjs, ElMessage, ElMessageBox, ElNotification, UploadProps } from 'element-plus'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useCookies } from '@vueuse/integrations/useCookies'
 import { Message, Plus } from '@element-plus/icons-vue'
@@ -266,52 +290,59 @@ const keyWord = ref('') //关键字
 const userData = reactive([]) //用户数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
 const deptData = reactive([]) //科室数据
-const backgroundData=reactive([]) //背景数据
-const userRankData=reactive([]) //级别数据
+const backgroundData = reactive([]) //背景数据
+const userRankData = reactive([]) //级别数据
 let dialog = ref(false) //控制分配抽屉
 //存储选中的角色编号的数组
 let rids = ref([])
 //所有的角色的数据
-let roleData=ref([])
+let roleData = ref([])
 //授权的用户编号
-let uid=ref('')
+let uid = ref('')
+
+//使用dayjs序列化时间
+const formatDate = (date) => {
+  return date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : '--'
+}
 
 //用户分配角色抽屉
 //用户授权的按钮
-const userGrant = async(index: number, userId) => {
-  uid.value=userId
+const userGrant = async (index: number, userId) => {
+  uid.value = userId
 
   //console.log(index, row)
   //查询用户拥有的角色编号
-  await http.get('/user/getUserRids?uid='+userId).then((res)=>{
-    rids.value=res.data
+  await http.get('/user/getUserRids?uid=' + userId).then((res) => {
+    rids.value = res.data
   })
   //查询所有的角色
-  await http.get('/role/getAll').then((res)=>{
+  await http.get('/role/getAll').then((res) => {
     //console.log(res)
-    roleData.value=res.data
+    roleData.value = res.data
   })
   //用户授予角色抽屉显示
-  dialog.value=true
+  dialog.value = true
 }
 //为用户授权
-function addUserRole(){
-   //判断没有选中的角色，不发送请求
-   //console.log('rids:',rids.value)
-   //向后端发送添加用户的角色的授权的请求
-   http.get('/user/addUserRole',{params:{uid:uid.value,rids:rids.value.toString()}}).then((res)=>{
-      if(res.data){
+function addUserRole() {
+  //判断没有选中的角色，不发送请求
+  //console.log('rids:',rids.value)
+  //向后端发送添加用户的角色的授权的请求
+  http
+    .get('/user/addUserRole', { params: { uid: uid.value, rids: rids.value.toString() } })
+    .then((res) => {
+      if (res.data) {
         //成功提示
         ElMessage({
           message: '授权成功',
           type: 'success',
         })
         //抽屉隐藏
-        dialog.value=false
+        dialog.value = false
         //刷新用户数据
         getUserData()
       }
-   })
+    })
 }
 
 //根据抽屉值选择值返回用户级别
@@ -319,32 +350,32 @@ const selectedFieldUserRank = computed({
   get() {
     return addOrEditDrawerTitle.value === '编辑用户'
       ? userObject.userRankValue
-      : userObject.userRank;
+      : userObject.userRank
   },
   set(value) {
     if (addOrEditDrawerTitle.value === '编辑用户') {
-      userObject.userRankValue = value;
+      userObject.userRankValue = value
     } else {
-      userObject.userRank = value;
+      userObject.userRank = value
     }
   },
-});
+})
 
 //根据抽屉值选择值返回学历
 const selectedFieldBackground = computed({
   get() {
     return addOrEditDrawerTitle.value === '编辑用户'
       ? userObject.backgroundValue
-      : userObject.background;
+      : userObject.background
   },
   set(value) {
     if (addOrEditDrawerTitle.value === '编辑用户') {
-      userObject.backgroundValue = value;
+      userObject.backgroundValue = value
     } else {
-      userObject.background = value;
+      userObject.background = value
     }
   },
-});
+})
 
 //用户对象，用于存储添加或修改的用户信息
 const userObject = reactive({
@@ -357,11 +388,11 @@ const userObject = reactive({
   sex: '2',
   status: '0',
   userRank: '',
-  background:'',
+  background: '',
   schedulingFlag: '1',
-  picture:'',
-  userRankValue:'',
-  backgroundValue:''
+  picture: '',
+  userRankValue: '',
+  backgroundValue: '',
 })
 
 //从cookie获取authorization
@@ -380,37 +411,42 @@ const getAllDept = () => {
 
 //获取背景数据
 const getAllBackground = () => {
-  if(backgroundData.length===0){
-    http.get("user/getBackground", { params: { dictType: 'sys_user_background' } }).then((res)=>{
-    const list = Array.isArray(res.data) ? res.data : []
-    backgroundData.splice(0, backgroundData.length, ...list)
-  })
-}
+  if (backgroundData.length === 0) {
+    http.get('user/getBackground', { params: { dictType: 'sys_user_background' } }).then((res) => {
+      const list = Array.isArray(res.data) ? res.data : []
+      backgroundData.splice(0, backgroundData.length, ...list)
+    })
+  }
 }
 
 //获取级别数据
 const getAllRank = () => {
-  if(userRankData.length===0){
-    http.get("user/getUserRank", { params: { dictType: 'sys_user_level' },headers: { 'Authorization': 'Bearer ' + auhtorization } }).then((res)=>{
-    const list = Array.isArray(res.data) ? res.data : []
-    userRankData.splice(0, userRankData.length, ...list)
-  })
-}
+  if (userRankData.length === 0) {
+    http
+      .get('user/getUserRank', {
+        params: { dictType: 'sys_user_level' },
+        headers: { Authorization: 'Bearer ' + auhtorization },
+      })
+      .then((res) => {
+        const list = Array.isArray(res.data) ? res.data : []
+        userRankData.splice(0, userRankData.length, ...list)
+      })
+  }
 }
 
 //获取科室名称
 const  getDeptName=(deptId)=>{
   //查询所有科室
-    getAllDept()
-    const dept = deptData.find(item => item.deptId === deptId);
-    return dept ? dept.deptName : '未知科室'; // 如果找不到，返回默认值
+  getAllDept()
+  const dept = deptData.find((item) => item.deptId === deptId)
+  return dept ? dept.deptName : '未知科室' // 如果找不到，返回默认值
 }
 
 //模糊查询
 const searchUser = (keyWordInput) => {
   keyWord.value = keyWordInput
   //ElMessage.info(keyWord.value)
-   getUserData()
+  getUserData()
 }
 
 //上一页
@@ -438,8 +474,12 @@ const handleAvatarSuccess: UploadProps['onSuccess'] = (
 }
 //上传之前调用,验证文件的格式文件的大小
 const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
-  if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png' && rawFile.type !== 'image/gif') {
-    ElMessage.error('请选择正确的图片格式')
+  if (
+    rawFile.type !== 'image/jpeg' &&
+    rawFile.type !== 'image/png' &&
+    rawFile.type !== 'image/gif'
+  ) {
+    ElMessage.error('请选择正确图片格式!')
     return false
   } else if (rawFile.size / 1024 / 1024 > 2) {
     ElMessage.error('文件大小不能大于2MB!')
@@ -450,13 +490,21 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
 //添加用户抽屉
 const addUser = () => {
   //清空用户对象
-  userObject.userId=userObject.userName=userObject.email=userObject.deptId=
-  userObject.phone=userObject.age=userObject.userRank=userObject.background
-  =userObject.picture=userObject.userRankValue
-  =userObject.backgroundValue=''
-  userObject.status='0'
-  userObject.schedulingFlag='1'
-  userObject.sex='2'
+  userObject.userId =
+    userObject.userName =
+    userObject.email =
+    userObject.deptId =
+    userObject.phone =
+    userObject.age =
+    userObject.userRank =
+    userObject.background =
+    userObject.picture =
+    userObject.userRankValue =
+    userObject.backgroundValue =
+      ''
+  userObject.status = '0'
+  userObject.schedulingFlag = '1'
+  userObject.sex = '3'
 
   addOrEditDrawerTitle.value = '添加用户'
   addOrEditDrawerModal.value = true
@@ -466,7 +514,7 @@ const addUser = () => {
 const addUserSubmit = () => {
   // console.log("添加的数据"+userObject)
   //后端发送添加用户请求
-  http.post("/user/addUser",userObject).then((res) => {
+  http.post('/user/addUser', userObject).then((res) => {
     if (res.data) {
       ElMessage.success('添加成功')
       addOrEditDrawerModal.value = false
@@ -479,32 +527,27 @@ const addUserSubmit = () => {
 
 //删除用户
 const delUser = (userId) => {
-  ElMessageBox.confirm(
-    "确定删除编号为"+userId+"的用户？",
-    'Warning',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
-  )
-  .then(() => {
-      //删除用户
-      http.post("user/deleteUser?userId="+userId).then((res)=>{
-        if(res.data){
-          ElMessage.success('删除成功')
-          getUserData()
-        } else {
-      throw new Error('用户删除失败')
-    }
-      })
+  ElMessageBox.confirm('确定删除编号为' + userId + '的用户？', 'Warning', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    //删除用户
+    http.post('user/deleteUser?userId=' + userId).then((res) => {
+      if (res.data) {
+        ElMessage.success('删除成功')
+        getUserData()
+      } else {
+        throw new Error('用户删除失败')
+      }
     })
-    // .catch(() => {
-    //   ElMessage({
-    //     type: 'info',
-    //     message: 'Delete canceled',
-    //   })
-    // })
+  })
+  // .catch(() => {
+  //   ElMessage({
+  //     type: 'info',
+  //     message: 'Delete canceled',
+  //   })
+  // })
 }
 
 //修改用户抽屉
@@ -513,32 +556,35 @@ const editUser = (userId) => {
   addOrEditDrawerTitle.value = '编辑用户'
   addOrEditDrawerModal.value = true
   //回调单个用户数据
-  http.get("/user/getUserById?userId="+userId).then((res)=>{
-   if(res.data){
-    userObject.userId=userId
-    userObject.userName=res.data.data.userName
-    userObject.email=res.data.data.email
-    userObject.deptId=res.data.data.deptId
-    userObject.phone=res.data.data.phone
-    userObject.age=res.data.data.age
-    userObject.phone=res.data.data.phone
-    userObject.background=res.data.data.background
-    userObject.userRank=res.data.data.userRank
-    userObject.schedulingFlag=res.data.data.schedulingFlag
-    userObject.picture=res.data.data.picture
-    userObject.userRankValue=res.data.data.userRankValue
-    userObject.backgroundValue=res.data.data.backgroundValue
-   }
-  }).catch((error)=>{
-    // ElMessage.error('获取用户数据失败'+error)
-  })
+  http
+    .get('/user/getUserById?userId=' + userId)
+    .then((res) => {
+      if (res.data) {
+        userObject.userId = userId
+        userObject.userName = res.data.data.userName
+        userObject.email = res.data.data.email
+        userObject.deptId = res.data.data.deptId
+        userObject.phone = res.data.data.phone
+        userObject.age = res.data.data.age
+        userObject.phone = res.data.data.phone
+        userObject.background = res.data.data.background
+        userObject.userRank = res.data.data.userRank
+        userObject.schedulingFlag = res.data.data.schedulingFlag
+        userObject.picture = res.data.data.picture
+        userObject.userRankValue = res.data.data.userRankValue
+        userObject.backgroundValue = res.data.data.backgroundValue
+      }
+    })
+    .catch((error) => {
+      // ElMessage.error('获取用户数据失败'+error)
+    })
 }
 
 //修改用户
 const updateUserSubmit = () => {
   // console.log("修改的数据"+userObject)
   //后端发送修改用户请求
-  http.post("/user/updateUser",userObject).then((res) => {
+  http.post('/user/updateUser', userObject).then((res) => {
     if (res.data) {
       ElMessage.success('修改成功')
       addOrEditDrawerModal.value = false
@@ -552,12 +598,12 @@ const updateUserSubmit = () => {
 
 //判断当前抽屉的按钮操作是添加还是修改
 const handleSubmit = () => {
-  if (addOrEditDrawerTitle.value === "添加用户") {
-    addUserSubmit(); // 调用添加用户的方法
-  } else if (addOrEditDrawerTitle.value === "编辑用户") {
-    updateUserSubmit(); // 调用修改用户的方法
+  if (addOrEditDrawerTitle.value === '添加用户') {
+    addUserSubmit() // 调用添加用户的方法
+  } else if (addOrEditDrawerTitle.value === '编辑用户') {
+    updateUserSubmit() // 调用修改用户的方法
   }
-};
+}
 
 //关闭抽屉前提示用户是否关闭
 const beforeChangeAddOrEditDrawer = () => {
@@ -568,7 +614,7 @@ const beforeChangeAddOrEditDrawer = () => {
   })
     .then(() => {
       addOrEditDrawerModal.value = false
-      dialog.value=false
+      dialog.value = false
       deptData.splice(0, deptData.length)
     })
     .catch(() => {

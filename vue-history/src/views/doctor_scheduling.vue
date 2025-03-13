@@ -227,7 +227,7 @@ const lastWeek = () => {
 //获取本周排班信息
 const thisWeek = () => {
   if (weekToAdd.value === 0) {
-    ElMessage.warning('当前日期已经是本周日期了哦！')
+    ElMessage.warning('当前日期已经是本周日期了！')
     return
   }
   weekToAdd.value = 0

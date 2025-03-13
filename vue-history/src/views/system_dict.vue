@@ -72,7 +72,11 @@
                 </template>
               </el-table-column>
               <el-table-column label="备注" prop="remark" width="200" />
-              <el-table-column label="创建时间" prop="createTime" width="200" />
+              <el-table-column label="创建时间" prop="createTime" width="200">
+                <template #default="scope">
+                  <span>{{ formatDate(scope.row.createTime) }}</span>
+                </template>
+              </el-table-column>
               <el-table-column label="创建人" prop="createBy" width="120" />
               <el-table-column label="最后一次修改时间" prop="updateTime" width="200" />
               <el-table-column label="修改人" prop="updateBy" width="120" />
@@ -157,7 +161,7 @@
 import http from '@/http'
 import router from '@/router'
 import { useDictTypeStore } from '@/stores/dictType'
-import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { dayjs,ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 
 const addOrEditDrawerModal = ref(false) //添加或编辑角色抽屉
@@ -180,6 +184,11 @@ const dictTypeObject = reactive({
     status:'0',
     remark:''
 })
+
+//使用dayjs序列化时间
+const formatDate = (date) => {
+  return date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : '--'
+}
 
 //根据ID查看数据类别的数据
 const checkDictData = (dictType) => {

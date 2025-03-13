@@ -293,12 +293,6 @@ const router = createRouter({
         }
       ]
     },
-    {
-      path: '/demo',
-      name: 'demo',
-      component: () => import('@/views/_DEMO.vue'),
-      meta: { title: '医疗一体站管理系统--测试', breadcrumb: '测试' }
-    }
   ],
 })
 
