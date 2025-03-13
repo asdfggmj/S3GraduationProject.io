@@ -77,18 +77,18 @@
                       () =>
                         handleBeforeChange(
                           scope.row.userId,
-                          scope.row.userStatus === 0 ? 1 : 0,
+                          scope.row.userStatus===0 ? 1 : 0,
                           scope.row.userName,
                         )
                     "
-                    :active-value="0"
-                    :inactive-value="1"
+                     :active-value="0"
+                     :inactive-value="1"
                     active-text="正常"
                     inactive-text="禁用"
                     class="ml-2"
                     inline-prompt
-                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-                    :loading="rowLoadingMap[scope.row.userId]"
+                    style="--el-switch-on-color:#13ce66 ; --el-switch-off-color: #ff4949"
+                :loading="rowLoadingMap[scope.row.userId]"
                   />
                 </template>
               </el-table-column>
@@ -195,18 +195,18 @@
               <el-radio value="2">未知</el-radio>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="头像:" label-width="140px">
+          <el-form-item label="头像:" label-width="140px" style="margin-left:-40px">
             <el-upload
-    class="avatar-uploader"
-    action="https://locahost:8080/user/upload"
-    :show-file-list="false"
-    :on-success="handleAvatarSuccess"
-    :before-upload="beforeAvatarUpload"
-    :v-model="userObject.picture"
-  >
-    <img v-if="picture" :src="picture" class="avatar" />
-    <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-  </el-upload>
+            class="avatar-uploader"
+            action="https://localhost:8080/user/uploadImg"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload"
+            :headers="{Authorization: auhtorization }"
+          >
+            <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+          </el-upload>
       </el-form-item>
           <el-form-item label="状态">
             <el-radio-group v-model="userObject.status">
@@ -214,7 +214,7 @@
               <el-radio value="1">禁用</el-radio>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="是否参与排班">
+          <el-form-item label="是否参与排班" style="margin-left:30px">
             <el-radio-group v-model="userObject.schedulingFlag">
               <el-radio value="0">是</el-radio>
               <el-radio value="1">否</el-radio>
@@ -255,6 +255,7 @@ import { ElMessage, ElMessageBox, ElNotification, UploadProps } from 'element-pl
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useCookies } from '@vueuse/integrations/useCookies'
 import { Message, Plus } from '@element-plus/icons-vue'
+import { useData } from 'element-plus/es/components/table-v2/src/composables'
 
 const addOrEditDrawerModal = ref(false) //添加或编辑用户抽屉
 const addOrEditDrawerTitle = ref('') //添加或编辑用户抽屉标题
@@ -353,7 +354,7 @@ const userObject = reactive({
   deptId: '',
   phone: '',
   age: '',
-  sex: '3',
+  sex: '2',
   status: '0',
   userRank: '',
   background:'',
@@ -365,7 +366,7 @@ const userObject = reactive({
 
 //从cookie获取authorization
 const cookie=useCookies();
-const auhtorization=cookie.get('authorization')
+const auhtorization=cookie.get('Authorization')
 
 //获取科室数据
 const getAllDept = () => {
@@ -398,7 +399,7 @@ const getAllRank = () => {
 }
 
 //获取科室名称
-const getDeptName=(deptId)=>{
+const  getDeptName=(deptId)=>{
   //查询所有科室
     getAllDept()
     const dept = deptData.find(item => item.deptId === deptId);
@@ -425,30 +426,27 @@ const currentChange = (newPage) => {
 }
 
 //实现添加用户头像文件上传
-//上传成功的图片路径
-const picture = ref('')
+const imageUrl = ref('')//上传成功的图片路径
 //上传成功调用
 const handleAvatarSuccess: UploadProps['onSuccess'] = (
   response,
   uploadFile
 ) => {
-  picture.value = URL.createObjectURL(uploadFile.raw!)
+  imageUrl.value = URL.createObjectURL(uploadFile.raw!)
   //给用户对象的头像属性赋值
   userObject.picture = response
 }
-
-//上传之前调用，验证文件格式和大小
+//上传之前调用,验证文件的格式文件的大小
 const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
   if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png' && rawFile.type !== 'image/gif') {
-    ElMessage.error('请选择正确图片格式!')
+    ElMessage.error('请选择正确的图片格式')
     return false
   } else if (rawFile.size / 1024 / 1024 > 2) {
-    ElMessage.error('文件大小不能超过2MB!')
+    ElMessage.error('文件大小不能大于2MB!')
     return false
   }
   return true
 }
-
 //添加用户抽屉
 const addUser = () => {
   //清空用户对象
@@ -458,7 +456,7 @@ const addUser = () => {
   =userObject.backgroundValue=''
   userObject.status='0'
   userObject.schedulingFlag='1'
-  userObject.sex='3'
+  userObject.sex='2'
 
   addOrEditDrawerTitle.value = '添加用户'
   addOrEditDrawerModal.value = true
@@ -588,9 +586,9 @@ const beforeChange = () => {
 }
 
 // 修改用户状态改变事件
-const updateUserStatus = async (uid, userStatus, username) => {
+const updateUserStatus = async (userId, userStatus, username) => {
   try {
-    const response = await http.put(`/user/update/${uid}/${userStatus}`)
+    const response = await http.put(`/user/update/${userId}/${userStatus}`)
     if (response.data) {
       ElNotification({
         title: '修改成功!',
@@ -635,7 +633,7 @@ const handleBeforeChange = async (uid, value, username) => {
 // 页面加载时获取用户数据
 onMounted(() => {
   getUserData()
-  console.log(userObject.sex);
+  console.log(userObject);
 })
 
 // 获取用户数据
@@ -650,11 +648,16 @@ const getUserData = () => {
     })
     .then((res) => {
       const user = res.data
+      // 将 status 转换为数字类型
+      user.list.forEach(item => {
+            item.status = Number(item.status)
+          })
       if (user.list) {
         pageTotal.value = user.total
         pageNum.value = user.pageNum
         pageSize.value = user.pageSize
         userData.splice(0, userData.length, ...user.list)
+        console.log(userData)
       }
     })
 }
@@ -674,6 +677,26 @@ const getUserData = () => {
   margin-left: 10px;
 }
 .text-center {
+  text-align: center;
+}
+.avatar-uploader .el-upload {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+}
+
+.avatar-uploader .el-upload:hover {
+  border-color: var(--el-color-primary);
+}
+
+.el-icon.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
   text-align: center;
 }
 </style>

@@ -47,13 +47,13 @@
               <el-table-column label="状态" prop="status">
                 <template #default="scope">
                   <el-switch
-                    v-model="scope.row.userStatus"
+                    v-model="scope.row.status"
                     :before-change="
                       () =>
                         handleBeforeChange(
-                          scope.row.userId,
-                          scope.row.userStatus === 0 ? 1 : 0,
-                          scope.row.userName,
+                          scope.row.deptId,
+                          scope.row.status===0 ? 1: 0,
+                          scope.row.deptName,
                         )
                     "
                     :active-value="0"
@@ -62,8 +62,8 @@
                     inactive-text="禁用"
                     class="ml-2"
                     inline-prompt
-                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-                    :loading="rowLoadingMap[scope.row.userId]"
+                    style="--el-switch-on-color:#13ce66 ; --el-switch-off-color: #ff4949"
+                    :loading="rowLoadingMap[scope.row.deptId]"
                   />
                 </template>
               </el-table-column>
@@ -355,13 +355,13 @@ const currentChange = (newPage) => {
 }
 
 // 修改科室状态改变事件
-const updateUserStatus = async (rid, roleStatus, roleName) => {
+const updateUserStatus = async (id, status, name) => {
   try {
-    const response = await http.put(`/dept/update/${rid}/${roleName}`)
+    const response = await http.put(`/dept/update/${id}/${status}`)
     if (response.data) {
       ElNotification({
         title: '修改成功!',
-        message: `科室 ${roleName} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
+        message: `科室 ${name} 的状态已更新为 ${status === 0 ? '正常' : '禁用'}`,
         type: 'success',
         offset: 50,
         duration: 3000,
@@ -392,19 +392,19 @@ const beforeChange = () => {
 }
 
 //按钮切换主逻辑方法
-const handleBeforeChange = async (rid, roleStatus, roleName) => {
+const handleBeforeChange = async (id, status, name) => {
   //将当前开关的动画状态开启
-  rowLoadingMap[rid] = true
+  rowLoadingMap[id] = true
   try {
     //执行beforeChange和更改科室状态
     await beforeChange()
-    await updateUserStatus(rid, roleStatus, roleName)
+    await updateUserStatus(id, status, name)
     return true
   } catch (error) {
     console.error(error.message)
     return false // 阻止状态切换
   } finally {
-    rowLoadingMap[rid] = false
+    rowLoadingMap[id] = false
   }
 }
 
@@ -425,6 +425,10 @@ const getDeptFetch = () => {
     })
     .then((res) => {
       const list = Array.isArray(res.data.list) ? res.data.list : []
+      // 将 status 转换为数字类型
+      list.forEach(item => {
+            item.status = Number(item.status)
+          })
       deptData.splice(0, deptData.length, ...list)
       pageTotal.value = res.data?.total || 0
     })

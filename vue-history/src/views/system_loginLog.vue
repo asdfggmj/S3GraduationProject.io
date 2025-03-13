@@ -47,14 +47,11 @@
               <el-table-column label="登录地址" prop="ipAddr" width="200" />
               <el-table-column label="浏览器" prop="browser" width="200" />
               <el-table-column label="操作系统" prop="os" width="200" />
-              <el-table-column label="登录状态" width="200" >
-              <template #default="scope">
-                  <span>{{ scope.row.schedulingFlag === 0 ? '成功' : '失败' }}</span>
-                </template>
+              <el-table-column label="登录状态" width="200" prop="msg" >
                 </el-table-column>
-              <el-table-column label="用户类型" width="200" >
+              <el-table-column label="用户类型" width="200" prop="loginType" >
                 <template #default="scope">
-                  <span>{{ scope.row.schedulingFlag === 0 ? '系统用户' : '患者用户' }}</span>
+                  <span>{{ scope.row.loginType === '0' ? '系统用户' : '患者用户' }}</span>
                 </template>
                 </el-table-column>
               <el-table-column label="登录时间" prop="loginTime" width="200" />
@@ -103,27 +100,11 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 //从cookie获取authorization
 const cookie=useCookies();
 const auhtorization=cookie.get('authorization')
-
+const loginLogData=reactive([]) //登录日志数据
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const userName = ref('') //用户名称
-
-//登录日志数据
-const loginLogData = reactive([
-  {
-    infoId:'',
-    userName:'',
-    loginAccount:'',
-    ipAddr:'',
-    loginLocation:'',
-    browser:'',
-    status:'',
-    msg:'',
-    loginTime:'',
-    loginType:''
-  }
-])
 
 const infoIds = ref([]) //选中的编号数组
 
@@ -209,6 +190,7 @@ const currentChange = (newPage) => {
 // 页面加载时获取登录数据
 onMounted(() => {
   getLoginInfoData()
+
 })
 
 // 获取登录日志记录数据
@@ -230,6 +212,7 @@ const getLoginInfoData = () => {
         loginLogData.splice(0, loginLogData.length, ...loginLog.list)
       }
     })
+    //console.log(loginLogData)
   }
 
 

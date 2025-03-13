@@ -53,16 +53,20 @@
                 v-model="scope.row.status"
                 :before-change="
                   () =>
-                    handleBeforeChange(scope.row.id, scope.row.status === 1 ? 0 : 1, scope.row.name)
+                    handleBeforeChange(
+                      scope.row.menuId,
+                      scope.row.status === 0 ? 1 : 0,
+                      scope.row.menuName
+                    )
                 "
-                :active-value="1"
-                :inactive-value="0"
-                active-text="正常"
-                inactive-text="禁用"
-                class="ml-2"
-                inline-prompt
-                style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-                :loading="rowLoadingMap[scope.row.id]"
+                     :active-value="0"
+                    :inactive-value="1"
+                    active-text="正常"
+                    inactive-text="禁用"
+                    class="ml-2"
+                    inline-prompt
+                    style="--el-switch-on-color:#13ce66 ; --el-switch-off-color: #ff4949"
+                :loading="rowLoadingMap[scope.row.menuId]"
               />
             </template>
           </el-table-column>
@@ -347,13 +351,13 @@ const handleBeforeChange = async (menuId, menuStatus, menuName) => {
 
 // 修改菜单状态改变事件
 const updateMenuStatus = async (menuId, menuStatus, menuName) => {
-  menuId = menuId.parseInt(menuId);
+  //menuId = menuId.parseInt(menuId);
   try {
     const response = await http.put(`/menu/update/${menuId}/${menuStatus}`)
     if (response.data) {
       ElNotification({
         title: '修改成功!',
-        message: `菜单 ${menuName} 的状态已更新为 ${menuStatus === 1 ? '启用' : '禁用'}`,
+        message: `菜单 ${menuName} 的状态已更新为 ${menuStatus === 0 ? '启用' : '禁用'}`,
         type: 'success',
         offset: 50,
         duration: 3000,
@@ -372,6 +376,8 @@ const updateMenuStatus = async (menuId, menuStatus, menuName) => {
     })
     throw error
   }
+  //刷新
+  //getMenus()
 }
 
 //上一页
@@ -422,7 +428,12 @@ const getMenus = async () => {
       },
     })
     // menuData.value = response.data
-    menuData.value = buildMenuTree(response.data.data.list) //处理为树形结构
+    const list = Array.isArray(response.data.data.list) ? response.data.data.list : []
+    // 将 status 转换为数字类型
+    list.forEach(item => {
+        item.status = Number(item.status)
+      })
+    menuData.value = buildMenuTree(list) //处理为树形结构
     pageTotal.value = response.data.total?.total || 0
   } catch (error) {
     console.error('获取菜单失败', error)

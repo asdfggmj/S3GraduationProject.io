@@ -44,12 +44,12 @@
               <el-table-column label="状态" prop="status">
                 <template #default="scope">
                   <el-switch
-                    v-model="scope.row.userStatus"
+                  v-model="scope.row.status"
                     :before-change="
                       () =>
                         handleBeforeChange(
                           scope.row.roleId,
-                          scope.row.roleStatus === 0 ? 1 : 0,
+                          scope.row.status,
                           scope.row.roleName,
                         )
                     "
@@ -59,7 +59,7 @@
                     inactive-text="禁用"
                     class="ml-2"
                     inline-prompt
-                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+                    style="--el-switch-on-color:#13ce66 ; --el-switch-off-color: #ff4949"
                     :loading="rowLoadingMap[scope.row.roleId]"
                   />
                 </template>
@@ -421,7 +421,7 @@ const beforeChange = () => {
 // 修改角色状态改变事件
 const updateUserStatus = async (rid, roleStatus, roleName) => {
   try {
-    const response = await http.put(`/role/update/${rid}/${roleName}`)
+    const response = await http.put(`/role/update/${rid}/${roleStatus}`)
     if (response.data) {
       ElNotification({
         title: '修改成功!',
@@ -448,10 +448,10 @@ const updateUserStatus = async (rid, roleStatus, roleName) => {
 
 //按钮切换主逻辑方法
 const handleBeforeChange = async (rid, roleStatus, roleName) => {
-  //将当前开关的动画状态开启
-  rowLoadingMap[rid] = true
+ //将当前开关的动画状态开启
+ rowLoadingMap[rid] = true
   try {
-    //执行beforeChange和更改角色状态
+    //执行beforeChange和更改用户状态
     await beforeChange()
     await updateUserStatus(rid, roleStatus, roleName)
     return true
@@ -476,6 +476,10 @@ const getRoleFetch = () => {
     })
     .then((res) => {
       const list = Array.isArray(res.data.list) ? res.data.list : []
+      // 将 status 转换为数字类型
+    list.forEach(item => {
+        item.status = Number(item.status)
+      })
       roleData.splice(0, roleData.length, ...list)
       pageTotal.value = res.data?.total || 0
     })

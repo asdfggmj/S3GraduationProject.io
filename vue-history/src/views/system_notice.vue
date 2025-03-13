@@ -59,23 +59,23 @@
               <el-table-column label="状态" prop="status">
                 <template #default="scope">
                   <el-switch
-                    v-model="scope.row.userStatus"
+                    v-model="scope.row.status"
                     :before-change="
                       () =>
                         handleBeforeChange(
-                          scope.row.userId,
-                          scope.row.userStatus === 0 ? 1 : 0,
-                          scope.row.userName,
+                          scope.row.noticeId,
+                          scope.row.status === 0 ? 1 : 0,
+                          scope.row.noticeTitle,
                         )
                     "
-                    :active-value="0"
+                   :active-value="0"
                     :inactive-value="1"
                     active-text="正常"
                     inactive-text="禁用"
                     class="ml-2"
                     inline-prompt
-                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-                    :loading="rowLoadingMap[scope.row.userId]"
+                    style="--el-switch-on-color:#13ce66 ; --el-switch-off-color: #ff4949"
+                    :loading="rowLoadingMap[scope.row.noticeId]"
                   />
                 </template>
               </el-table-column>
@@ -148,8 +148,8 @@
           </el-form-item>
           <el-form-item label="状态">
             <el-radio-group v-model="noticeObject.status">
-              <el-radio value="0" >正常</el-radio>
-              <el-radio value="1">停用</el-radio>
+              <el-radio value="0">正常</el-radio>
+              <el-radio value="1">禁用</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="内容">
@@ -158,7 +158,7 @@
         </el-form>
       </el-col>
     </el-row>
-    <el-divider />
+    <el-divier />
     <el-row class="text-center">
       <el-col>
         <el-button @click="handleSubmit" type="primary">提交</el-button>
@@ -166,6 +166,7 @@
       </el-col>
     </el-row>
   </el-drawer>
+
 
 </template>
 
@@ -198,11 +199,7 @@ const noticeObject = reactive({
   noticeType: '0',
   noticeContent: '',
   status: '0',
-  remark: '',
-  createBy: '',
-  createTime: '',
-  updateBy: '',
-  udateTime: ''
+  remark: ''
 })
 
 const noticeIds = ref([]) //选中的编号数组
@@ -396,13 +393,13 @@ const currentChange = (newPage) => {
 }
 
 // 修改通知状态改变事件
-const updateUserStatus = async (rid, roleStatus, roleName) => {
+const updateUserStatus = async (id, roleStatus, roleName) => {
   try {
-    const response = await http.put(`/notice/update/${rid}/${roleName}`)
+    const response = await http.put(`/notice/update/${id}/${roleStatus}`)
     if (response.data) {
       ElNotification({
         title: '修改成功!',
-        message: `通知 ${roleName} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
+        message: `编号为 ${id} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
         type: 'success',
         offset: 50,
         duration: 3000,
@@ -466,6 +463,10 @@ const getNoticeFetch = () => {
     })
     .then((res) => {
       const list = Array.isArray(res.data.list) ? res.data.list : []
+      // 将 status 转换为数字类型
+      list.forEach(item => {
+        item.status = Number(item.status)
+      })
       noticeData.splice(0, noticeData.length, ...list)
       pageTotal.value = res.data?.total || 0
     })

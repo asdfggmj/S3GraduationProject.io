@@ -58,9 +58,9 @@
                     :before-change="
                       () =>
                         handleBeforeChange(
-                          scope.row.userId,
-                          scope.row.userStatus === 0 ? 1 : 0,
-                          scope.row.userName,
+                          scope.row.checkItemId,
+                          scope.row.status,
+                          scope.row.checkItemName,
                         )
                     "
                     :active-value="0"
@@ -69,8 +69,8 @@
                     inactive-text="禁用"
                     class="ml-2"
                     inline-prompt
-                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-                    :loading="rowLoadingMap[scope.row.status]"
+                    style="--el-switch-on-color:#13ce66 ; --el-switch-off-color: #ff4949"
+                    :loading="rowLoadingMap[scope.row.checkItemId]"
                   />
                 </template>
               </el-table-column>
@@ -370,9 +370,14 @@ const beforeChangeAddOrEditDrawer = () => {
 }
 
 // 修改检查费用状态改变事件
-const updateUserStatus = async (rid, roleStatus, roleName) => {
+const updateUserStatus = async (id, roleStatus, roleName) => {
+  if(roleStatus==0){
+    roleStatus=1
+  }else{
+    roleStatus=0
+  }
   try {
-    const response = await http.put(`/checkItem/update/${rid}/${roleName}`)
+    const response = await http.put(`/checkItem/update/${id}/${roleStatus}`)
     if (response.data) {
       ElNotification({
         title: '修改成功!',
@@ -396,7 +401,6 @@ const updateUserStatus = async (rid, roleStatus, roleName) => {
     throw error
   }
 }
-
 //判断修改检查费用状态前逻辑，判断检查费用id是否相同，如果相同拦截并不让更改，否则放行
 const beforeChange = () => {
   return new Promise((resolve) => {
@@ -452,6 +456,10 @@ const getAnnouncementFetch = () => {
     })
     .then((res) => {
       const list = Array.isArray(res.data.list) ? res.data.list : []
+      // 将 status 转换为数字类型
+      list.forEach(item => {
+        item.status = Number(item.status)
+      })
       inspectionFeeData.splice(0, inspectionFeeData.length, ...list)
       pageTotal.value = res.data?.total || 0
     })

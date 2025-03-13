@@ -54,13 +54,13 @@
               <el-table-column label="状态" prop="status">
                 <template #default="scope">
                   <el-switch
-                    v-model="scope.row.userStatus"
+                    v-model="scope.row.status"
                     :before-change="
                       () =>
                         handleBeforeChange(
-                          scope.row.userId,
-                          scope.row.userStatus === 0 ? 1 : 0,
-                          scope.row.userName,
+                          scope.row.regItemId,
+                          scope.row.status,
+                          scope.row.regItemName,
                         )
                     "
                     :active-value="0"
@@ -69,7 +69,7 @@
                     inactive-text="禁用"
                     class="ml-2"
                     inline-prompt
-                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+                    style="--el-switch-on-color:#13ce66 ; --el-switch-off-color: #ff4949"
                     :loading="rowLoadingMap[scope.row.regItemId]"
                   />
                 </template>
@@ -357,12 +357,18 @@ const currentChange = (newPage) => {
 
 // 修改检查费用状态改变事件
 const updateUserStatus = async (rid, roleStatus, roleName) => {
+  alert(roleStatus)
+  if(roleStatus==0){
+    roleStatus=1
+  }else{
+    roleStatus=0
+  }
   try {
-    const response = await http.put(`/registeredItem/update/${rid}/${roleName}`)
+    const response = await http.put(`/registeredItem/update/${rid}/${roleStatus}`)
     if (response.data) {
       ElNotification({
         title: '修改成功!',
-        message: `检查费用 ${roleName} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
+        message: `挂号费用 ${roleName} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
         type: 'success',
         offset: 50,
         duration: 3000,
@@ -426,8 +432,13 @@ const getAnnouncementFetch = () => {
     })
     .then((res) => {
       const list = Array.isArray(res.data.list) ? res.data.list : []
+      // 将 status 转换为数字类型
+      list.forEach(item => {
+        item.status = Number(item.status)
+      })
       registrationFeeData.splice(0, registrationFeeData.length, ...list)
       pageTotal.value = res.data?.total || 0
+
     })
 }
 </script>

@@ -47,21 +47,20 @@
             :border="false"
             >
             <el-table-column type="expand">
-            <template #default="props">
-              <div m="4">
-                <p m="t-0 b-2">操作模块: {{ props.row.title }}</p>
-                <p m="t-0 b-2">登陆信息: {{ props.row.operName+"//"+props.row.operIp+"//"+props.row.operLocation}}</p>
-                <!-- <br/> -->
-                <p m="t-0 b-2">请求地址: {{ props.row.operUrl }}</p>
-                <p m="t-0 b-2">操作方法: {{ props.row.method }}</p>
-                <!-- <br/> -->
-                <p m="t-0 b-2">请求参数: {{ props.row.operParam }}</p>
-                <p m="t-0 b-2">返回参数: {{ props.row.jsonResult }}</p>
-                <!-- <br/> -->
-                <p m="t-0 b-2">操作状态: {{ props.row.status==0?'正常':'异常' }}</p>
-                <p m="t-0 b-2">操作时间: {{ props.row.operTime }}</p>
-                <!-- <br/> -->
-                <p m="t-0 b-2">异常信息: {{ props.row.erroMsg }}</p>
+            <template #default="props" >
+              <div m="6" style="margin-left: 40px;">
+                <p m="t-0 b-2"><b>操作模块:</b> {{ props.row.title }}</p>
+                <p m="t-0 b-2"><b>登陆信息:</b> {{ props.row.operName+"//"+props.row.operIp+"//"+props.row.operLocation}}</p>
+                <p m="t-0 b-2"><b>请求地址: </b>{{ props.row.operUrl }}</p>
+                <p m="t-0 b-2"><b>操作方法: </b>{{ props.row.method }}</p>
+
+                <p m="t-0 b-2"><b>请求参数:</b> {{ props.row.operParam }}</p>
+                <p m="t-0 b-2"><b>返回参数:</b> {{ props.row.jsonResult }}</p>
+
+                <p m="t-0 b-2"><b>操作状态:</b>{{ props.row.status==0?'正常':'异常' }}</p>
+                <p m="t-0 b-2"><b>操作时间:</b> {{ props.row.operTime }}</p>
+
+                <p m="t-0 b-2"><b>异常信息:</b> {{ props.row.erroMsg }}</p>
               </div>
             </template>
           </el-table-column>
@@ -277,33 +276,7 @@ const getOperLogData = () => {
         //operLogData.splice(0, operLogData.length, ...buildMenuTree(res.data.data.list)); // 处理为树形结构
       }
     })
-  }
-
-  // // 递归构造树形菜单
-  // const buildMenuTree = (operList) => {
-  //   const tree = [];
-
-  // operList.forEach((item) => {
-  //   // 父节点：操作日志的概要信息
-  //   const parentNode = {
-  //     ...item,
-  //     children: [], // 初始化子节点
-  //   };
-
-  //   // 子节点：操作日志的详细信息
-  //   const childNode = {
-  //     title: '详细信息', // 子节点显示为详细信息
-  //   };
-
-  //   // 将子节点添加到父节点的 children 中
-  //   parentNode.children.push(childNode);
-
-  //   // 将父节点添加到树中
-  //   tree.push(parentNode);
-  // });
-
-//   return tree;
-// };
+}
 
 
 </script>
