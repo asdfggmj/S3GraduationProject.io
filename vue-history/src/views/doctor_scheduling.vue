@@ -170,6 +170,7 @@
                 v-model="row.schedulingType[index]"
                 @focus="getAllShiftTypeDataFetch"
                 placeholder="请选择排班类型"
+                clearable
               >
                 <el-option
                   v-for="item in shiftTypeData"

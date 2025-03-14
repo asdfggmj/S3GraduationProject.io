@@ -1,88 +1,93 @@
 <template>
-  <el-row>
-    <el-col :span="24" style="text-align: right">
-      <el-card shadow="always">
-        <el-button type="primary" @click="lastWeek">
-          <el-icon><ArrowLeftBold /></el-icon>
-          <span>上一周</span>
-        </el-button>
-        <el-button type="success" @click="thisWeek">当前周</el-button>
-        <el-button type="primary" @click="nextWeek">
-          <el-icon><ArrowRightBold /></el-icon>
-          <span>下一周</span>
-        </el-button>
-      </el-card>
-    </el-col>
-  </el-row>
-  <!-- 第二行 -->
-  <el-row class="mt-10px">
-    <el-col>
-      <el-card shadow="always">
-        <el-row>
-          <el-col :span="24" style="text-align: center">
-            <el-text>{{ weekDates[0] + '(周一)' + '到' + weekDates[6] + '(周日)' }}</el-text>
-          </el-col>
-        </el-row>
-      </el-card>
-    </el-col>
-  </el-row>
-  <!-- 第三行 -->
-  <el-row class="mt-10px">
-    <el-col>
-      <el-card shadow="always">
-        <el-row>
-          <el-col :span="24">
-            <el-table
-              border
-              :data="aScheduleData"
-              :span-method="objectSpanMethod"
-              row-key="userId"
-              max-height="500"
-            >
-              <el-table-column
-                label="医生"
-                prop="userName"
-                align="center"
-                width="120"
-                fixed="left"
-              />
-              <el-table-column
-                label="科室"
-                prop="deptName"
-                align="center"
-                width="120"
-                fixed="left"
-              />
-              <el-table-column
-                label="时间段"
-                prop="subsectionType"
-                align="center"
-                width="120"
-                fixed="left"
+  <el-empty v-if="aScheduleData.length === 0" :image-size="200" description="您不需要参与排班" />
+  <div v-else>
+    <el-row>
+      <el-col :span="24" style="text-align: right">
+        <el-card shadow="always">
+          <el-button type="primary" @click="lastWeek">
+            <el-icon><ArrowLeftBold /></el-icon>
+            <span>上一周</span>
+          </el-button>
+          <el-button type="success" @click="thisWeek">当前周</el-button>
+          <el-button type="primary" @click="nextWeek">
+            <el-icon><ArrowRightBold /></el-icon>
+            <span>下一周</span>
+          </el-button>
+        </el-card>
+      </el-col>
+    </el-row>
+    <!-- 第二行 -->
+    <el-row class="mt-10px">
+      <el-col>
+        <el-card shadow="always">
+          <el-row>
+            <el-col :span="24" style="text-align: center">
+              <el-text>{{ weekDates[0] + '(周一)' + '到' + weekDates[6] + '(周日)' }}</el-text>
+            </el-col>
+          </el-row>
+        </el-card>
+      </el-col>
+    </el-row>
+    <!-- 第三行 -->
+    <el-row class="mt-10px">
+      <el-col>
+        <el-card shadow="always">
+          <el-row>
+            <el-col :span="24">
+              <el-table
+                border
+                :data="aScheduleData"
+                :span-method="objectSpanMethod"
+                row-key="userId"
+                max-height="500"
               >
-                <template #default="scope">
-                  <span>{{ timesDataMap[scope.row.subsectionType] }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column
-                v-for="(date, index) in weekDates"
-                :key="index"
-                :label="`${date}(周${['一', '二', '三', '四', '五', '六', '日'][index]}) `"
-                width="160"
-              >
-                <template #default="{ row }">
-                  <span v-if="row.schedulingType[index]">
-                    {{ schedulingTypeMap[row.schedulingType[index]] || row.schedulingType[index] }}
-                  </span>
-                  <span v-else>--</span>
-                </template>
-              </el-table-column>
-            </el-table>
-          </el-col>
-        </el-row>
-      </el-card>
-    </el-col>
-  </el-row>
+                <el-table-column
+                  label="医生"
+                  prop="userName"
+                  align="center"
+                  width="120"
+                  fixed="left"
+                />
+                <el-table-column
+                  label="科室"
+                  prop="deptName"
+                  align="center"
+                  width="120"
+                  fixed="left"
+                />
+                <el-table-column
+                  label="时间段"
+                  prop="subsectionType"
+                  align="center"
+                  width="120"
+                  fixed="left"
+                >
+                  <template #default="scope">
+                    <span>{{ timesDataMap[scope.row.subsectionType] }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  v-for="(date, index) in weekDates"
+                  :key="index"
+                  :label="`${date}(周${['一', '二', '三', '四', '五', '六', '日'][index]}) `"
+                  width="160"
+                >
+                  <template #default="{ row }">
+                    <span v-if="row.schedulingType[index]">
+                      {{
+                        schedulingTypeMap[row.schedulingType[index]] || row.schedulingType[index]
+                      }}
+                    </span>
+                    <span v-else>--</span>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-col>
+          </el-row>
+        </el-card>
+      </el-col>
+    </el-row>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -186,7 +191,6 @@ const objectSpanMethod = ({ row, column, rowIndex, columnIndex }) => {
       return [0, 0] // 不显示该单元格
     }
   }
-
   return [1, 1] // 默认单元格
 }
 </script>

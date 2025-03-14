@@ -131,6 +131,7 @@ import router from '@/router'
 import { useUserStore } from '@/stores/user'
 import { Close, Switch } from '@element-plus/icons-vue'
 import { useCookies } from '@vueuse/integrations/useCookies'
+import { all } from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -195,6 +196,7 @@ const loginOut = () => {
     router.push('/login')
     ElMessage.success('手动退出了系统')
     cookie.remove('Authorization')
+    localStorage.removeItem('activeMenu')
   })
 }
 

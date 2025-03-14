@@ -169,7 +169,7 @@ const router = createRouter({
             {
               path: 'patient',
               name: 'patient',
-              component: () => import('@/views/history_patient.vue'),
+              component: () => import('@/views/doctor_patient.vue'),
               meta: { title: '医疗一体站管理系统--患者库', breadcrumb: '患者库' }
             },
           ]

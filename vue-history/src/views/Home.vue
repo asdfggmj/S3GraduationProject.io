@@ -52,10 +52,25 @@
       </el-card>
     </el-col>
   </el-row>
-  <!-- 分隔符 -->
-  <el-divider />
-  <!-- 第二行 -->
-  <el-row :gutter="20">
+  <el-row class="mt-10px">
+    <el-col>
+      <el-card shadow="always">
+        <el-carousel indicator-position="outside" height="300px">
+          <el-carousel-item v-for="(item, index) in photoList" :key="index">
+            <h3 text="2xl" justify="center">
+              <el-image :src="item">
+                <template #placeholder>
+                  <div class="image-slot">Loading<span class="dot">...</span></div>
+                </template>
+              </el-image>
+            </h3>
+          </el-carousel-item>
+        </el-carousel>
+      </el-card>
+    </el-col>
+  </el-row>
+  <!-- 第三行 -->
+  <el-row class="mt-10px" :gutter="20">
     <el-col :span="6">
       <el-card>
         <el-statistic title="今日就诊数" :value="outputValue" suffix="人" />
@@ -90,6 +105,12 @@ import Weather from '@/components/_weather.vue'
 import { useUserStore } from '@/stores/user'
 import { time } from 'echarts'
 
+const photoList = [
+  'src/assets/image/p1.jpg',
+  'src/assets/image/p2.jpg',
+  'src/assets/image/p3.jpg',
+  'src/assets/image/p4.jpg',
+]
 const userStore = useUserStore()
 const userObject = ref({}) //用户对象
 // 用于存储当前时间
@@ -181,5 +202,8 @@ doctorScale.value = 49
 @import url('https://at.alicdn.com/t/c/font_4844128_w3aqyqxebd8.css');
 .mt-4px {
   margin-top: 4px;
+}
+.mt-10px {
+  margin-top: 10px;
 }
 </style>

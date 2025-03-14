@@ -9,7 +9,8 @@
             <div class="flex gap-4 mb-4">
               <span>身份证号</span>
               <el-input
-                v-model="idCode"
+                clearable
+                v-model="idCard"
                 style="width: 320px; margin-left: 20px"
                 placeholder="请输入身份证号"
               />
@@ -33,25 +34,25 @@
   <el-row>
     <el-col>
       <el-card shadow="always" class="mb-10px">
-        <el-form :model="patientForm" label-width="auto">
+        <el-form :model="hisPatient" label-width="auto">
           <el-row>
             <el-col :span="5">
               <el-form-item label="身份证号">
-                <el-input v-model="patientForm.idCode" />
+                <el-input v-model="hisPatient.idCard" placeholder="输入或导入身份证" />
               </el-form-item>
               <el-form-item label="患者姓名">
-                <el-input v-model="patientForm.name" />
+                <el-input v-model="hisPatient.name" placeholder="输入或导入名字" />
               </el-form-item>
             </el-col>
             <el-col :span="5" class="ml-20px">
               <el-form-item label="患者电话">
-                <el-input v-model="patientForm.phone" />
+                <el-input v-model="hisPatient.phone" placeholder="输入或导入电话" />
               </el-form-item>
               <el-form-item label="出生日期">
                 <el-date-picker
-                  v-model="patientForm.birthday"
+                  v-model="hisPatient.birthday"
                   type="date"
-                  placeholder="出生日期"
+                  placeholder="选择或导入出生日期"
                   format="YYYY-MM-DD"
                   date-format="MMM DD, YYYY"
                   time-format="HH:mm"
@@ -60,10 +61,10 @@
             </el-col>
             <el-col :span="5" class="ml-20px">
               <el-form-item label="患者年龄">
-                <el-input-number v-model="patientForm.age" :min="1" :max="200" />
+                <el-input-number v-model="hisPatient.age" disabled :min="1" :max="200" />
               </el-form-item>
               <el-form-item label="患者性别">
-                <el-radio-group v-model="patientForm.sex">
+                <el-radio-group v-model="hisPatient.sex">
                   <el-radio value="0">男</el-radio>
                   <el-radio value="1">女</el-radio>
                   <el-radio value="2">未知</el-radio>
@@ -73,10 +74,10 @@
             <el-col :span="8">
               <el-form-item label="患者地址">
                 <el-input
-                  v-model="patientForm.address"
+                  v-model="hisPatient.address"
                   :rows="4"
                   type="textarea"
-                  placeholder="患者地址"
+                  placeholder="输入或导入患者地址"
                   resize="none"
                 />
               </el-form-item>
@@ -92,7 +93,7 @@
       <el-card shadow="always" class="mb-10px">
         <el-row justify="space-between">
           <el-col :span="10">
-            <el-radio-group v-model="selectedItemId">
+            <el-radio-group v-model="hisRegistration.regItemId">
               <el-radio-button
                 v-for="item in registeredItems"
                 :key="item.regItemId"
@@ -105,7 +106,7 @@
           </el-col>
           <el-col :span="5">
             <span class="mr-20px">挂号费：{{ getSelectedItemFee }}￥</span>
-            <el-button type="danger">
+            <el-button type="danger" @click="joinFeeFetch">
               <el-icon><Pointer /></el-icon>
               <span>挂号收费</span>
             </el-button>
@@ -123,8 +124,10 @@
           <el-col :span="4" class="mr-20px">
             <el-form-item label="所属科室">
               <el-select
+                clearable
                 v-model="selectedDeptId"
                 @focus="getAllDeptDataFetch"
+                @change="getTodaySchedulingFetch"
                 placeholder="请选择所属科室"
                 style="width: 240px"
               >
@@ -141,15 +144,17 @@
           <el-col :span="4" class="mr-20px">
             <el-form-item label="挂号类型">
               <el-select
+                clearable
                 v-model="querySelectedItemId"
                 placeholder="请选择挂号类型"
                 style="width: 240px"
+                @change="getTodaySchedulingFetch"
               >
                 <el-option
-                  v-for="item in queryRegisteredItems"
-                  :key="item.regItemId"
-                  :label="item.regItemName"
-                  :value="item.regItemId"
+                  v-for="item in regTypeMap"
+                  :key="item.dictValue"
+                  :label="item.dictLabel"
+                  :value="item.dictValue"
                 />
               </el-select>
             </el-form-item>
@@ -158,8 +163,10 @@
           <el-col :span="4" class="mr-20px">
             <el-form-item label="挂号时段">
               <el-select
+                clearable
                 v-model="selectedTimeDataId"
                 @focus="getAllTimesDataFetch"
+                @change="getTodaySchedulingFetch"
                 placeholder="请选择挂号时段"
                 style="width: 240px"
               >
@@ -176,14 +183,22 @@
           <el-col :span="4" class="mr-20px">
             <el-form-item label="挂号时间">
               <el-date-picker
+                clearable
                 v-model="queryRegTime"
+                :disabled-date="disabledDate"
+                @change="getTodaySchedulingFetch"
                 type="date"
                 placeholder="挂号时间"
-                format="YYYY-MM-DD"
-                date-format="MMM DD, YYYY"
-              />
+              >
+                <!-- <template #default="{ cell }">
+                  <div class="cell" :class="{ current: cell.isCurrent, today: isToday(cell.text) }">
+                    <span class="text">{{ cell.text }}</span>
+                  </div>
+                </template> -->
+              </el-date-picker>
             </el-form-item>
           </el-col>
+          <!-- 按钮组 -->
           <el-col :span="4">
             <el-form-item>
               <el-button type="primary" @click="getTodaySchedulingFetch()">
@@ -197,12 +212,24 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <!-- 表格行 -->
         <el-row>
           <el-col>
-            <el-table :data="registeredData" border>
+            <el-table
+              :data="registeredData"
+              border
+              style="height: 260px; max-height: 300px"
+              highlight-current-row
+              @current-change="handleRowClickByDeptId"
+              :ref="registeredData.deptId"
+              row-key="deptId"
+            >
               <el-table-column prop="deptId" label="部门编号" />
               <el-table-column prop="deptName" label="部门名称" />
-              <el-table-column prop="currentNumber" label="当前号数" />
+              <el-table-column prop="currentNumber" label="当前已挂号数" />
+              <template #empty>
+                <el-empty description="当日没有数据" :image-size="100" />
+              </template>
             </el-table>
           </el-col>
         </el-row>
@@ -215,7 +242,7 @@
               :total="pageTotal"
               :pager-count="11"
               :page-size="pageSize"
-              :page-sizes="[3, 6, 10]"
+              :page-sizes="[5, 10, 20]"
               :current-page="pageNum"
               @size-change="sizeChange"
               @current-change="currentChange"
@@ -270,6 +297,7 @@
           />
         </el-col>
       </el-row>
+      <!-- 按钮 -->
       <el-row class="mt-10px" style="text-align: right">
         <el-col>
           <el-button type="primary" @click="selectedPatientFetch">确定</el-button>
@@ -281,53 +309,149 @@
 
 <script setup lang="ts">
 import http from '@/http'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, onMounted, ref } from 'vue'
+import { dayjs, ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { computed, onMounted, reactive, ref } from 'vue'
 
-const queryRegTime = ref(null) //挂号时间
-const queryTypeKeyword = ref(null) //搜索关键词
-const selectedTimeDataId = ref(null) //选中的时段ID
+const queryRegTime = ref('') //挂号时间
+const queryTypeKeyword = ref('') //搜索关键词
+const selectedTimeDataId = ref('') //选中的时段ID
 const timeData = ref([]) //时段ID
-const selectedDeptId = ref(null) //选中的科室ID
+const selectedDeptId = ref('') //选中的科室ID
 const deptData = ref([]) //科室数据
-const querySelectedItemId = ref(null) //搜索选中的挂号类型
+const querySelectedItemId = ref('') //搜索选中的挂号类型
 const queryRegisteredItems = ref([]) //搜索挂号数据类型
-const selectedItemId = ref(1) //选中的挂号编号
+// const selectedItemId = ref(1) //选中的挂号费用ID
 const registeredItems = ref([])
 const pageNum = ref(1) //当前页
-const pageSize = ref(3) //每页显示的数据
+const pageSize = ref(5) //每页显示的数据
 const pageTotal = ref(0) //总个数
-const idCode = ref('') //身份证号
-const patientForm = ref({
-  idCode: '',
+const idCard = ref('') //身份证号
+const hisPatient = reactive({
+  idCard: '',
   name: '',
   phone: '',
   age: 0,
   sex: '0',
-  birthday: '',
+  birthDay: '',
   address: '',
-}) //患者信息
+}) // 患者信息
 const loadPatientDrawerVisible = ref(false) //加载患者信息抽屉显示控制
 const patientData = ref([]) //加载的患者信息
 const selectedPatientIdCode = ref('') //加载患者信息的选中身份证号
 const selectedPatient = ref(null) // 选中的患者信息
 const registeredData = ref([]) //当天挂号数据
+const regTypeMap = ref([]) //挂号类型MAP
+//挂号信息对象
+const hisRegistration = reactive({
+  deptId: '',
+  regItemId: 1,
+  regItemAmount: '',
+  schedulingType: '',
+  subsectionType: '',
+})
+
+//重置患者对象
+const resetPatient = () => {
+  Object.assign(hisPatient, {
+    idCard: '',
+    name: '',
+    phone: '',
+    age: 0,
+    sex: '0',
+    birthday: '',
+    address: '',
+  })
+}
+
+//重置挂号对象
+const resetRegistration = () => {
+  Object.assign(hisRegistration, {
+    deptId: '',
+    regItemId: 1,
+    regItemAmount: '',
+    schedulingType: '',
+    subsectionType: '',
+  })
+}
+
+// 判断是否是今天
+// const isToday = (dateText) => {
+//   return dateText == dayjs().date() // 只匹配日期，不匹配年月
+// }
+// 禁用今天之前的日期
+const disabledDate = (time) => {
+  return dayjs(time).isBefore(dayjs().startOf('day'))
+}
+//使用dayjs序列化时间
+const formatDate = (date) => {
+  return date ? dayjs(date).format('YYYY-MM-DD') : ''
+}
+
+//挂号收费点击事件
+const joinFeeFetch = () => {
+  if (querySelectedItemId.value === '') {
+    ElMessage.warning('请选择挂号类型！')
+    return
+  }
+  if (selectedTimeDataId.value === '') {
+    ElMessage.warning('请选择挂号时段！')
+    return
+  }
+  if (hisRegistration.deptId === '') {
+    ElMessage.warning('请选择挂号部门！')
+    return
+  }
+  //为表单赋挂号费
+  hisRegistration.regItemAmount = getSelectedItemFee.value
+  //赋值挂号类型
+  hisRegistration.schedulingType = querySelectedItemId.value
+  //赋值挂号时段
+  hisRegistration.subsectionType = selectedTimeDataId.value
+  //封装数据并且赋值身份证号
+  const requestData = {
+    hisRegistration: hisRegistration,
+    hisPatient: hisPatient,
+  }
+  //发送异步请求
+  http
+    .post('/regList/add', requestData)
+    .then((res) => {
+      if (res.data.data === true) {
+        ElNotification({
+          title: '挂号成功！',
+          message: `挂号流水号：${res.data.data.registrationId}，请通知患者前往缴费`,
+          type: 'success',
+          offset: 50,
+          duration: 3000,
+        })
+        //重置对象
+        resetRegistration()
+        resetPatient()
+      }
+    })
+    .catch((error) => {
+      ElNotification({
+        title: '挂号失败！',
+        message: `错误信息：${error}`,
+        type: 'error',
+        offset: 50,
+        duration: 3000,
+      })
+    })
+}
 
 //获取当天的所有排班信息
 const getTodaySchedulingFetch = () => {
-  console.log('选中的科室ID' + selectedDeptId.value)
-  console.log('选中的挂号类型' + querySelectedItemId.value)
-  console.log('选中的挂号时段' + selectedTimeDataId.value)
-  console.log('选中的挂号时间' + queryRegTime.value)
-
   http
-    .post('/doctors/getScheduleData', {
-      deptId: selectedDeptId.value,
-      regTypeId: querySelectedItemId.value,
-      timePeriod: selectedTimeDataId.value,
-      date: queryRegTime.value,
-      pageNum: pageNum.value,
-      pageSize: pageSize.value,
+    .get('/doctors/getScheduleData', {
+      params: {
+        deptId: selectedDeptId.value,
+        regTypeId: querySelectedItemId.value,
+        timePeriod: selectedTimeDataId.value,
+        date: formatDate(queryRegTime.value),
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+      },
     })
     .then((res) => {
       registeredData.value = res.data.data?.list || [] // 防止 list 为空时报错
@@ -343,32 +467,60 @@ const handleRowClick = (row) => {
   selectedPatientIdCode.value = ''
   selectedPatientIdCode.value = row.idCard
 }
+//点击某行时，记录选中的部门编号
+const handleRowClickByDeptId = (row) => {
+  //清空
+  hisRegistration.deptId = ''
+  //赋值
+  hisRegistration.deptId = row.deptId
+}
 
 //根据身份证查询赋值患者信息
 const selectedPatientFetch = () => {
-  selectedPatient.value = []
+  selectedPatient.value = null // 重置为 null，而不是空数组
+
   if (!selectedPatientIdCode.value) {
     ElMessage.warning('你还没有选择患者啊！')
     return
   }
 
-  selectedPatient.value = patientData.value.find(
+  // 在 patientData 中查找身份证匹配的患者
+  const foundPatient = patientData.value.find(
     (patient) => patient.idCard === selectedPatientIdCode.value,
   )
 
-  if (!selectedPatient.value) {
+  if (!foundPatient) {
     ElMessage.warning('未找到该患者信息!')
-  } else {
-    Object.assign(patientForm.value, {
-      idCode: selectedPatient.value.idCard,
-      name: selectedPatient.value.name,
-      phone: selectedPatient.value.phone,
-      birthday: selectedPatient.value.birthDay,
-      sex: selectedPatient.value.sex,
-      address: selectedPatient.value.address,
-    })
-    loadPatientDrawerVisible.value = false // 关闭弹窗
+    return
   }
+
+  // 计算准确年龄
+  const birthDate = new Date(foundPatient.birthDay) // 生日字符串转 Date 对象
+  const now = new Date()
+  let age = now.getFullYear() - birthDate.getFullYear()
+  if (
+    now.getMonth() < birthDate.getMonth() ||
+    (now.getMonth() === birthDate.getMonth() && now.getDate() < birthDate.getDate())
+  ) {
+    age-- // 还没过生日，减去 1 岁
+  }
+
+  // 赋值给 selectedPatient
+  selectedPatient.value = foundPatient
+
+  // 将患者信息填充到表单
+  Object.assign(hisPatient, {
+    idCard: foundPatient.idCard,
+    name: foundPatient.name,
+    phone: foundPatient.phone,
+    birthday: foundPatient.birthDay,
+    sex: foundPatient.sex,
+    address: foundPatient.address,
+    age: age,
+  })
+
+  loadPatientDrawerVisible.value = false // 关闭弹窗
+  patientData.value = []
 }
 
 //加载患者
@@ -396,7 +548,7 @@ const handlePatientDrawerClose = () => {
 const getAllTimesDataFetch = () => {
   if (timeData.value.length === 0) {
     queryTypeKeyword.value = 'his_subsection_type'
-    http.get(`/dict/get/${queryTypeKeyword.value}`).then((res) => {
+    http.get(`/dictData/get/${queryTypeKeyword.value}`).then((res) => {
       timeData.value = res.data.data
     })
   }
@@ -405,7 +557,9 @@ const getAllTimesDataFetch = () => {
 //重置查询条件
 const resetQuery = () => {
   selectedDeptId.value = null
-  selectedItemId.value = 1
+  //挂号时段和挂号类型
+  selectedTimeDataId.value = querySelectedItemId.value = ''
+  getTodaySchedulingFetch()
 }
 
 //获取所有科室
@@ -419,16 +573,27 @@ const getAllDeptDataFetch = () => {
 
 //计算选中的挂号费用
 const getSelectedItemFee = computed(() => {
-  const selectedItem = registeredItems.value.find((item) => item.regItemId === selectedItemId.value)
+  const selectedItem = registeredItems.value.find(
+    (item) => item.regItemId === hisRegistration.regItemId,
+  )
   return selectedItem ? selectedItem.regItemFee : 0
 })
 
 onMounted(() => {
   getRegItemFetch()
   getTodaySchedulingFetch()
+  queryRegTime.value = formatDate(Date.now())
+  getScheduleRegItemFetch()
 })
 
-//获取挂号类型
+//获取排班挂号类型
+const getScheduleRegItemFetch = () => {
+  http.get('/dictData/get/his_scheduling_type').then((res) => {
+    regTypeMap.value = res.data.data
+  })
+}
+
+//获取展示挂号类型
 const getRegItemFetch = () => {
   http.get('/registeredItem/list').then((res) => {
     registeredItems.value = res.data.list
@@ -438,43 +603,65 @@ const getRegItemFetch = () => {
 
 //根据身份者号获取患者信息
 const getPatientFetch = () => {
-  if (patientForm.value.idCode === '') {
+  if (!idCard.value) {
     ElMessage.warning('身份证不可为空')
     return
   }
-  http.get(`/patient/get/${idCode.value}`).then((res) => {
-    if (res.data.data === null || res.data.data === '') {
-      ElMessage.warning('未查询到该患者，请手动添加信息')
-    } else {
-      ElMessage.success(`查询到1个患者`)
-      patientForm.value.idCode = res.data.data.idCard
-      patientForm.value.phone = res.data.data.phone
-      patientForm.value.sex = res.data.data.sex
-      patientForm.value.name = res.data.data.name
-      const birthDate = new Date(res.data.data.birthDay) // 将生日字符串转换为 Date 对象
-      const currentYear = new Date().getFullYear() // 获取当前年份
-      const birthYear = birthDate.getFullYear() // 获取出生年份
-      patientForm.value.age = currentYear - birthYear // 计算年龄
-      patientForm.value.birthday = res.data.data.birthDay
-      patientForm.value.address = res.data.data.address
-    }
-  })
+
+  http
+    .get(`/patient/get/${idCard.value}`)
+    .then((res) => {
+      const patientData = res.data.data
+
+      if (!patientData) {
+        ElMessage.warning('未查询到该患者，请手动添加信息')
+        return
+      }
+
+      ElMessage.success(`查询到 1 个患者`)
+
+      // 计算准确年龄
+      const birthDate = new Date(patientData.birthDay) // 生日字符串转 Date 对象
+      const now = new Date()
+      let age = now.getFullYear() - birthDate.getFullYear()
+      if (
+        now.getMonth() < birthDate.getMonth() ||
+        (now.getMonth() === birthDate.getMonth() && now.getDate() < birthDate.getDate())
+      ) {
+        age-- // 还没过生日，减去 1 岁
+      }
+
+      // 批量更新 hisPatient，确保 Vue 能正确响应变化
+      Object.assign(hisPatient, {
+        idCard: patientData.idCard,
+        phone: patientData.phone,
+        sex: patientData.sex,
+        name: patientData.name,
+        age: age,
+        birthday: patientData.birthDay,
+        address: patientData.address,
+      })
+    })
+    .catch((error) => {
+      ElMessage.error('查询失败，请稍后重试')
+      console.error(error)
+    })
 }
 
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
-  // getUserData()
+  getTodaySchedulingFetch()
 }
 
 //下一页
 const currentChange = (newPage) => {
   pageNum.value = newPage
-  // getUserData()
+  getTodaySchedulingFetch()
 }
 </script>
 
-<style>
+<style lang="css" scoped>
 .mr-20px {
   margin-right: 20px;
 }
