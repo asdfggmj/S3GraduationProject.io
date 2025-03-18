@@ -399,7 +399,7 @@ const viewMedicalCases = () => {
 
 //获取患者信息状态数据
 const getMessageStatusData = () => {
-  http.get('/dict/get/his_patient_msg_final').then((res) => {
+  http.get('/dictData/get/his_patient_msg_final').then((res) => {
     const statusData = res.data.data || []
     messageStatusMap.value = statusData.reduce((map, item) => {
       map[Number(item.dictValue)] = item.dictLabel
@@ -410,7 +410,7 @@ const getMessageStatusData = () => {
 
 //获取性别数据
 const getSexData = () => {
-  http.get('/dict/get/sys_user_sex').then((res) => {
+  http.get('/dictData/get/sys_user_sex').then((res) => {
     const sexData = res.data.data || []
     sexDataMap.value = sexData.reduce((map, item) => {
       map[Number(item.dictValue)] = item.dictLabel
