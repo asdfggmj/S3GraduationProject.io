@@ -292,7 +292,7 @@ const joinFee = (regId, money) => {
     type: 'warning',
   }).then(() => {
     http
-      .get(`/regList/status/${regId}/1`)
+      .put(`/regList/status/${regId}/1`)
       .then((res) => {
         if (res.status === 200) {
           ElNotification({
@@ -324,11 +324,12 @@ const backFee = (regId) => {
     type: 'warning',
   }).then(() => {
     http
-      .get(`/regList/status/${regId}/4`)
+      .put(`/regList/status/${regId}/4`)
       .then((res) => {
         if (res.status === 200) {
           ElNotification({
             title: '退费成功！',
+            message: '注意钱款去向',
             type: 'success',
             offset: 50,
             duration: 3000,
@@ -428,7 +429,7 @@ const getRegListFetch = () => {
 </script>
 
 <style>
-@import url('https://at.alicdn.com/t/c/font_4844128_v8p50ve8kk9.css');
+@import url('https://at.alicdn.com/t/c/font_4844128_0pn97os92c2i.css');
 .mr-20px {
   margin-right: 20px;
 }

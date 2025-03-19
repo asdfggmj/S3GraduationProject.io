@@ -73,23 +73,23 @@
               <el-table-column label="用户状态" prop="status">
                 <template #default="scope">
                   <el-switch
-                    v-model="scope.row.userStatus"
+                    v-model="scope.row.status"
                     :before-change="
                       () =>
                         handleBeforeChange(
                           scope.row.userId,
-                          scope.row.userStatus===0 ? 1 : 0,
+                          scope.row.status === '0' ? '1' : '0',
                           scope.row.userName,
                         )
                     "
-                     :active-value="0"
-                     :inactive-value="1"
+                    active-value="0"
+                    inactive-value="1"
                     active-text="正常"
                     inactive-text="禁用"
                     class="ml-2"
                     inline-prompt
-                    style="--el-switch-on-color:#13ce66 ; --el-switch-off-color: #ff4949"
-                :loading="rowLoadingMap[scope.row.userId]"
+                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+                    :loading="rowLoadingMap[scope.row.userId]"
                   />
                 </template>
               </el-table-column>
@@ -208,26 +208,26 @@
               <el-radio value="2">未知</el-radio>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="头像:" label-width="140px" style="margin-left:-40px">
+          <el-form-item label="头像:" label-width="140px" style="margin-left: -40px">
             <el-upload
-            class="avatar-uploader"
-            action="https://localhost:8080/user/uploadImg"
-            :show-file-list="false"
-            :on-success="handleAvatarSuccess"
-            :before-upload="beforeAvatarUpload"
-            :headers="{Authorization: auhtorization }"
-          >
-            <img v-if="imageUrl" :src="imageUrl" class="avatar" />
-            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-          </el-upload>
-      </el-form-item>
+              class="avatar-uploader"
+              action="https://localhost:8080/user/uploadImg"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess"
+              :before-upload="beforeAvatarUpload"
+              :headers="{ Authorization: auhtorization }"
+            >
+              <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+              <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+            </el-upload>
+          </el-form-item>
           <el-form-item label="状态">
             <el-radio-group v-model="userObject.status">
               <el-radio value="0">正常</el-radio>
               <el-radio value="1">禁用</el-radio>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="是否参与排班" style="margin-left:30px">
+          <el-form-item label="是否参与排班" style="margin-left: 30px">
             <el-radio-group v-model="userObject.schedulingFlag">
               <el-radio value="0">是</el-radio>
               <el-radio value="1">否</el-radio>
@@ -396,8 +396,8 @@ const userObject = reactive({
 })
 
 //从cookie获取authorization
-const cookie=useCookies();
-const auhtorization=cookie.get('Authorization')
+const cookie = useCookies()
+const auhtorization = cookie.get('Authorization')
 
 //获取科室数据
 const getAllDept = () => {
@@ -435,7 +435,7 @@ const getAllRank = () => {
 }
 
 //获取科室名称
-const  getDeptName=(deptId)=>{
+const getDeptName = (deptId) => {
   //查询所有科室
   getAllDept()
   const dept = deptData.find((item) => item.deptId === deptId)
@@ -462,12 +462,9 @@ const currentChange = (newPage) => {
 }
 
 //实现添加用户头像文件上传
-const imageUrl = ref('')//上传成功的图片路径
+const imageUrl = ref('') //上传成功的图片路径
 //上传成功调用
-const handleAvatarSuccess: UploadProps['onSuccess'] = (
-  response,
-  uploadFile
-) => {
+const handleAvatarSuccess: UploadProps['onSuccess'] = (response, uploadFile) => {
   imageUrl.value = URL.createObjectURL(uploadFile.raw!)
   //给用户对象的头像属性赋值
   userObject.picture = response
@@ -679,7 +676,7 @@ const handleBeforeChange = async (uid, value, username) => {
 // 页面加载时获取用户数据
 onMounted(() => {
   getUserData()
-  console.log(userObject);
+  console.log(userObject)
 })
 
 // 获取用户数据
@@ -695,9 +692,9 @@ const getUserData = () => {
     .then((res) => {
       const user = res.data
       // 将 status 转换为数字类型
-      user.list.forEach(item => {
-            item.status = Number(item.status)
-          })
+      user.list.forEach((item) => {
+        item.status = Number(item.status)
+      })
       if (user.list) {
         pageTotal.value = user.total
         pageNum.value = user.pageNum

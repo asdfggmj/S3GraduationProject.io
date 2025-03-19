@@ -74,9 +74,17 @@
                   />
                 </template>
               </el-table-column>
-              <el-table-column label="创建时间" prop="createTime" width="200" />
+              <el-table-column label="创建时间" prop="createTime" width="200">
+                <template #default="scope">
+                  <span>{{ formatDate(scope.row.createTime) }}</span>
+                </template>
+              </el-table-column>
               <el-table-column label="创建人" prop="createBy" width="120" />
-              <el-table-column label="最后一次修改时间" prop="updateTime" width="200" />
+              <el-table-column label="最后一次修改时间" prop="updateTime" width="200">
+                <template #default="scope">
+                  <span>{{ formatDate(scope.row.updateTime) }}</span>
+                </template>
+              </el-table-column>
               <el-table-column label="修改人" prop="updateBy" width="120" />
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="160">
@@ -184,7 +192,7 @@
 
 <script setup lang="ts">
 import http from '@/http'
-import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { dayjs, ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 
 const pageNum = ref(1) //当前页
@@ -206,6 +214,11 @@ const producterForm = reactive({
   keywords: '',
 }) //表单数据
 const producterIds = ref([]) //选中的编号数组
+
+//使用dayjs序列化时间
+const formatDate = (date) => {
+  return date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : '--'
+}
 
 // 监听多选
 const handleSelectionChange = (val) => {
@@ -268,14 +281,15 @@ const handleClose = () => {
 
 //清除表单数据
 const clearProducterForm = () => {
-  producterForm.producterId = 0
-  producterForm.producterName =
-    producterForm.producterCode =
-    producterForm.producterAddress =
-    producterForm.producterTel =
-    producterForm.producterPerson =
-    producterForm.keywords =
-      ''
+  Object.assign(producterForm, {
+    producterId: 0,
+    producterName: '',
+    producterCode: '',
+    producterAddress: '',
+    producterTel: '',
+    producterPerson: '',
+    keywords: '',
+  })
 }
 
 //删除厂家方法

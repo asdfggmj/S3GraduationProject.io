@@ -228,7 +228,7 @@
             >
               <el-table-column prop="deptId" label="部门编号" />
               <el-table-column prop="deptName" label="部门名称" />
-              <el-table-column prop="currentNumber" label="当前已挂号数" />
+              <el-table-column prop="visitCount" label="当前已挂号数" />
               <template #empty>
                 <el-empty description="当日没有数据" :image-size="100" />
               </template>
@@ -356,10 +356,10 @@ const hisRegistration = reactive({
 const ruleFormRef = ref<FormInstance | null>(null)
 const queryFormRef = ref(null) // 绑定表单的 ref
 const queryForm = reactive({
-  selectedDeptId: '',
-  querySelectedItemId: '',
-  selectedTimeDataId: '',
-  queryRegTime: '',
+  selectedDeptId: '', //所属科室
+  querySelectedItemId: '', //挂号类型
+  selectedTimeDataId: '', //挂号时段
+  queryRegTime: '', //挂号时间
 })
 
 //患者规则验证
@@ -392,58 +392,39 @@ const rules = reactive<FormRules>({
 //挂号选项规则验证
 
 //挂号收费点击事件
-const joinFeeFetch = () => {
+const joinFeeFetch = async () => {
   if (!ruleFormRef.value || !queryFormRef.value) return
 
   // 同时校验两个表单
-  Promise.all([ruleFormRef.value.validate(), queryFormRef.value.validate()])
-    .then((results) => {
-      const [ruleFormValid, queryFormValid] = results
-      if (ruleFormValid && queryFormValid) {
-        // 赋值挂号费、挂号类型、挂号时段
-        hisRegistration.regItemAmount = getSelectedItemFee.value || 0
-        hisRegistration.schedulingType = queryForm.querySelectedItemId
-        hisRegistration.subsectionType = queryForm.selectedTimeDataId
+  try {
+    await ruleFormRef.value.validate()
+    await queryFormRef.value.validate()
 
-        // 组装数据
-        const requestData = {
-          hisRegistration: { ...hisRegistration },
-          hisPatient: { ...hisPatient },
-        }
+    hisRegistration.regItemAmount = getSelectedItemFee.value || 0
+    hisRegistration.schedulingType = queryForm.querySelectedItemId
+    hisRegistration.subsectionType = queryForm.selectedTimeDataId
 
-        // 发送请求
-        http
-          .post('/regList/add', requestData)
-          .then((res) => {
-            if (res.data.data) {
-              ElNotification({
-                title: '挂号成功！',
-                message: `请通知患者前往缴费`,
-                type: 'success',
-                offset: 50,
-                duration: 3000,
-              })
-              resetQueryForm()
-              resetRegistration()
-              resetPatient()
-            }
-          })
-          .catch((error) => {
-            ElNotification({
-              title: '挂号失败！',
-              message: `错误信息：${error.message || error}`,
-              type: 'error',
-              offset: 50,
-              duration: 3000,
-            })
-          })
-      } else {
-        ElMessage.warning('请检查表单输入')
-      }
-    })
-    .catch(() => {
-      ElMessage.error('表单校验失败，请检查输入')
-    })
+    const requestData = {
+      hisRegistration: { ...hisRegistration },
+      hisPatient: { ...hisPatient },
+    }
+
+    const res = await http.post('/regList/add', requestData)
+    if (res.data.data) {
+      ElNotification({
+        title: '挂号成功！',
+        message: `请通知患者前往缴费`,
+        type: 'success',
+        offset: 50,
+        duration: 3000,
+      })
+      resetQueryForm()
+      resetRegistration()
+      resetPatient()
+    }
+  } catch (error) {
+    ElMessage.error('表单校验失败，请检查输入')
+  }
 }
 
 //重置患者对象
@@ -523,51 +504,58 @@ const handleRowClickByDeptId = (row) => {
   hisRegistration.deptId = row.deptId
 }
 
+//根据身份证号计算出生日期和年龄的方法
+const getBirthdayAndAgeFromIdCard = (idCard) => {
+  if (!idCard || idCard.length !== 18) {
+    return { birthday: '', age: 0 }
+  }
+
+  // 提取出生日期 (身份证 6-14 位)
+  const year = idCard.substring(6, 10)
+  const month = idCard.substring(10, 12)
+  const day = idCard.substring(12, 14)
+  const birthday = `${year}-${month}-${day}`
+
+  // 计算年龄
+  const birthDate = new Date(year, month - 1, day)
+  const today = new Date()
+  let age = today.getFullYear() - birthDate.getFullYear()
+
+  // 判断是否过了生日
+  const thisYearBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
+  if (today < thisYearBirthday) {
+    age--
+  }
+
+  return { birthday, age }
+}
+
 //根据身份证查询赋值患者信息
 const selectedPatientFetch = () => {
   selectedPatient.value = null // 重置为 null，而不是空数组
 
   if (!selectedPatientIdCode.value) {
-    ElMessage.warning('你还没有选择患者啊！')
-    return
+    return ElMessage.warning('你还没有选择患者啊！')
   }
 
   // 在 patientData 中查找身份证匹配的患者
-  const foundPatient = patientData.value.find(
-    (patient) => patient.idCard === selectedPatientIdCode.value,
-  )
+  const foundPatient = patientData.value.find((p) => p.idCard === selectedPatientIdCode.value)
 
   if (!foundPatient) {
-    ElMessage.warning('未找到该患者信息!')
-    return
+    return ElMessage.warning('未找到该患者信息!')
   }
 
-  // 计算准确年龄
-  const birthDate = new Date(foundPatient.birthDay) // 生日字符串转 Date 对象
-  const now = new Date()
-  let age = now.getFullYear() - birthDate.getFullYear()
-  if (
-    now.getMonth() < birthDate.getMonth() ||
-    (now.getMonth() === birthDate.getMonth() && now.getDate() < birthDate.getDate())
-  ) {
-    age-- // 还没过生日，减去 1 岁
-  }
-
-  // 赋值给 selectedPatient
-  selectedPatient.value = foundPatient
+  const { birthday, age } = getBirthdayAndAgeFromIdCard(foundPatient.idCard)
 
   // 将患者信息填充到表单
   Object.assign(hisPatient, {
-    idCard: foundPatient.idCard,
-    name: foundPatient.name,
-    phone: foundPatient.phone,
-    birthDay: foundPatient.birthDay,
-    sex: foundPatient.sex,
-    address: foundPatient.address,
+    ...foundPatient,
+    birthDay: birthday,
     age: age,
   })
 
-  loadPatientDrawerVisible.value = false // 关闭弹窗
+  selectedPatient.value = foundPatient
+  loadPatientDrawerVisible.value = false
   patientData.value = []
 }
 
@@ -650,50 +638,29 @@ const getRegItemFetch = () => {
 }
 
 //根据身份者号获取患者信息
-const getPatientFetch = () => {
-  if (!idCard.value) {
-    ElMessage.warning('身份证不可为空')
-    return
+const getPatientFetch = async () => {
+  if (!idCard.value) return ElMessage.warning('身份证不可为空')
+
+  try {
+    const res = await http.get(`/patient/get/${idCard.value}`)
+    const patientData = res.data.data
+
+    if (!patientData) {
+      return ElMessage.warning('未查询到该患者，请手动添加信息')
+    }
+
+    const { birthday, age } = getBirthdayAndAgeFromIdCard(patientData.idCard)
+
+    Object.assign(hisPatient, {
+      ...patientData,
+      birthDay: birthday,
+      age: age,
+    })
+
+    ElMessage.success(`查询到 1 个患者`)
+  } catch (error) {
+    ElMessage.error('查询失败，请稍后重试')
   }
-
-  http
-    .get(`/patient/get/${idCard.value}`)
-    .then((res) => {
-      const patientData = res.data.data
-
-      if (!patientData) {
-        ElMessage.warning('未查询到该患者，请手动添加信息')
-        return
-      }
-
-      ElMessage.success(`查询到 1 个患者`)
-
-      // 计算准确年龄
-      const birthDate = new Date(patientData.birthDay) // 生日字符串转 Date 对象
-      const now = new Date()
-      let age = now.getFullYear() - birthDate.getFullYear()
-      if (
-        now.getMonth() < birthDate.getMonth() ||
-        (now.getMonth() === birthDate.getMonth() && now.getDate() < birthDate.getDate())
-      ) {
-        age-- // 还没过生日，减去 1 岁
-      }
-
-      // 批量更新 hisPatient，确保 Vue 能正确响应变化
-      Object.assign(hisPatient, {
-        idCard: patientData.idCard,
-        phone: patientData.phone,
-        sex: patientData.sex,
-        name: patientData.name,
-        age: age,
-        birthday: patientData.birthDay,
-        address: patientData.address,
-      })
-    })
-    .catch((error) => {
-      ElMessage.error('查询失败，请稍后重试')
-      console.error(error)
-    })
 }
 
 //上一页
