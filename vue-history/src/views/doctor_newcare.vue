@@ -7,7 +7,6 @@
           <el-col>
             <el-form :model="patientData" label-width="auto">
               <el-form-item label="患者姓名">
-                <!-- <el-input v-model="patientData.name" placeholder="请输入患者姓名" disabled ></el-input> -->
                 <el-input v-model="patientData.name" disabled placeholder="请输入患者姓名">
                   <template #append>
                     <el-tooltip
@@ -75,7 +74,9 @@
                 <el-table></el-table>
               </el-tab-pane>
               <el-tab-pane label="历史病例">
-                <el-table></el-table>
+                <el-table :data="historyCare" border>
+                  <el-table-column label=""></el-table-column>
+                </el-table>
               </el-tab-pane>
             </el-tabs>
           </el-col>
@@ -102,7 +103,7 @@
                   <i class="iconfont icon-baocun" style="margin-right: 6px"></i>
                   <span>保存病例</span>
                 </el-button>
-                <el-button type="danger">
+                <el-button type="danger" @click="finishCare">
                   <i class="iconfont icon-shouye" style="margin-right: 6px"></i>
                   <span>就诊完成</span>
                 </el-button>
@@ -239,9 +240,9 @@
     <el-tabs v-model="activeName" type="card" stretch @tab-click="handleTabClick">
       <el-tab-pane label="待就诊列表" name="first">
         <el-table :data="regListData" border style="width: 100%">
-          <el-table-column label="患者姓名" prop="name" width="100" />
-          <el-table-column label="身份证号" prop="idCard" width="200" />
-          <el-table-column label="挂号类型" prop="schedulingType" width="100">
+          <el-table-column label="患者姓名" prop="name" />
+          <el-table-column label="身份证号" prop="idCard" />
+          <el-table-column label="挂号类型" prop="schedulingType">
             <template #default="scope">
               {{ schedulingTypeMap[scope.row.schedulingType] }}
             </template>
@@ -268,10 +269,10 @@
 
       <el-tab-pane label="就诊中列表" name="second">
         <el-table :data="regListData" border style="width: 100%">
-          <el-table-column label="患者姓名" prop="name" width="100" />
-          <el-table-column label="身份证号" prop="idCard" width="200" />
-          <el-table-column label="挂号类型" prop="regItemId" width="100" />
-          <el-table-column label="过敏史" prop="allergyInfo" width="120" />
+          <el-table-column label="患者姓名" prop="name" />
+          <el-table-column label="身份证号" prop="idCard" />
+          <el-table-column label="挂号类型" prop="regItemId" />
+          <el-table-column label="过敏史" prop="allergyInfo" />
           <el-table-column label="操作" width="100" fixed="right">
             <template #default="scope">
               <el-button
@@ -289,10 +290,10 @@
 
       <el-tab-pane label="就诊完成列表" name="third">
         <el-table :data="regListData" border style="width: 100%">
-          <el-table-column label="患者姓名" prop="name" width="100" />
-          <el-table-column label="身份证号" prop="idCard" width="200" />
-          <el-table-column label="挂号类型" prop="regItemId" width="100" />
-          <el-table-column label="过敏史" prop="allergyInfo" width="120" />
+          <el-table-column label="患者姓名" prop="name" />
+          <el-table-column label="身份证号" prop="idCard" />
+          <el-table-column label="挂号类型" prop="regItemId" />
+          <el-table-column label="过敏史" prop="allergyInfo" />
           <el-table-column label="操作" width="100" fixed="right">
             <template #default="scope">
               <el-button
@@ -499,6 +500,45 @@ const currentTableData = ref([]) // **用于存储当前表格数据**
 const tableColumns = ref([]) // **用于存储当前表格列**
 const selectedRows = ref([]) // 存储选中的行
 const careOrderItemObj = ref([]) // 存储用药和检查项目
+
+//就诊完成
+const finishCare = () => {
+  http.put(`/regList/status/${patientData.regId}/3`).then((res) => {
+    if (res.data.data === true && res.data.code === 200) {
+      Object.assign(patientData, {
+        patientId: '',
+        regId: '',
+        phone: '',
+        name: '',
+        age: 0,
+        sex: '0',
+        birthDay: '',
+        idCard: '',
+        address: '',
+        allergyInfo: '',
+        isFinal: '',
+        password: '',
+        openId: '',
+      })
+      Object.assign(careHistoryData, {
+        chId: '', //病例编号
+        patientId: '', //患者ID
+        patientName: '', //患者名
+        regId: '', //挂号编号
+        careDate: '', //就诊时间
+        deptId: '', //部门编号
+        deptName: '', //部门名
+        receiveType: '', //接诊类型  初诊  复诊
+        isContagious: '', //是否传染  否 是
+        caseTitle: '', //主诉
+        caseResult: '', //诊断信息
+        doctorTips: '', //医生建议
+        remark: '', //备注
+      })
+      ElMessage.success('操作成功!!')
+    }
+  })
+}
 
 // **不同数据类型的列配置**
 //检查费用列

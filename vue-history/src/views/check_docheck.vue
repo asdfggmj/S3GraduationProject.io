@@ -7,7 +7,16 @@
         <el-row justify="space-between">
           <el-col :span="12">
             <el-text class="mr-20px">检查项目</el-text>
-            <el-segmented v-model="selectedCheckItem" :options="checkItemList" />
+            <el-radio-group v-model="checkedRegItem">
+              <el-radio-button
+                v-for="item in registeredItems"
+                :key="item.regItemId"
+                :label="item.regItemName"
+                :value="item.regItemId"
+              >
+                {{ item.regItemName }}
+              </el-radio-button>
+            </el-radio-group>
           </el-col>
         </el-row>
         <el-row class="mt-10px">
@@ -76,7 +85,7 @@
         </el-row>
         <el-row>
           <el-col :span="24">
-            <el-button type="primary" class="mt-10px w-100max">
+            <el-button type="primary" class="mt-10px w-100max" @click="startRegItemFetch">
               <el-icon><Plus /></el-icon>
               <span>开始检查</span>
             </el-button>
@@ -91,7 +100,8 @@
 import http from '@/http'
 import { onMounted, reactive, ref } from 'vue'
 
-const selectedCheckItem = ref(1) //选中的检查项目
+const registeredItems = ref([]) //检查项目列表
+const checkedRegItem = ref(1) //选中的检查项目
 const checkItemList = ref([]) // 存储动态获取的检查项
 const careOrderItemList = ref([]) //  所有已支付的检查项目
 const checkedData = reactive({
@@ -101,10 +111,24 @@ const checkedData = reactive({
   remark: '',
 })
 
+//开始检查方法
+const startRegItemFetch = () => {
+  console.log(checkedRegItem.value)
+}
+
+//获取展示检查项目
+const getRegItemFetch = () => {
+  http.get('/registeredItem/list').then((res) => {
+    registeredItems.value = res.data.list
+  })
+}
+
 //单选改变事件
 const handleCurrentChange = (value) => {
   checkedData.itemName = value.itemName
   checkedData.remark = value.remark
+  checkedData.regId = value.patientId
+  checkedData.patientName = value.patientName
 }
 
 //获取检查和用药项目数据
@@ -120,7 +144,7 @@ const getCheckItemFetchData = () => {
 
 //获取所有检查项目
 const getCareOrderItemFetch = () => {
-  http.get('/doCheck/getCareOrderItem').then((res) => {
+  http.get('/dictData/getCareOrderItem').then((res) => {
     careOrderItemList.value = res.data
   })
 }
@@ -129,6 +153,7 @@ const getCareOrderItemFetch = () => {
 onMounted(() => {
   getCheckItemFetchData()
   getCareOrderItemFetch()
+  getRegItemFetch()
 })
 </script>
 

@@ -123,7 +123,7 @@ onMounted(() => {
 const getDictFetch = () => {
   //获取字典数据
   http
-    .get('/dict/type', {
+    .get('/dictData/type', {
       params: {
         pageNum: pageNum.value,
         pageSize: pageSize.value,

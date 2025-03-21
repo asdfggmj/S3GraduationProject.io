@@ -421,6 +421,7 @@ const joinFeeFetch = async () => {
       resetQueryForm()
       resetRegistration()
       resetPatient()
+      getTodaySchedulingFetch()
     }
   } catch (error) {
     ElMessage.error('表单校验失败，请检查输入')
@@ -472,7 +473,6 @@ const formatDate = (date) => {
 
 //获取当天的所有排班信息
 const getTodaySchedulingFetch = () => {
-
   http
     .get('/doctors/getScheduleData', {
       params: {

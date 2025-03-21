@@ -1,36 +1,88 @@
-<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <!-- 第一行 -->
-  <el-row>
-    <el-col :span="24">
-      <el-card shadow="always" class="mb-10px">
-        <el-row justify="space-between">
-          <el-col :span="12">
-            <el-button type="primary" @click="addProducter">
-              <el-icon><Plus /></el-icon>
-              <span>新增厂家</span>
-            </el-button>
-            <el-button type="danger" @click="deletes" :disabled="producterIds.length === 0">
-              <el-icon><Minus /></el-icon>
-              <span>删除选中</span>
-            </el-button>
-          </el-col>
-          <!-- 模糊查询 -->
-          <el-col :span="5">
+  <el-card shadow="always">
+    <el-form>
+      <el-row justify="space-between">
+        <el-col :span="4">
+          <el-form-item label="厂家名称">
             <el-input
-              v-model="keyWord"
-              @change="searchDict"
-              placeholder="请输入厂家名回车以查询"
+              placeholder="请输入厂家名字"
               clearable
-              size=""
+              @input="debouncedGetProviderFetch"
+              v-model="queryForm.producterName"
             />
-          </el-col>
-        </el-row>
-      </el-card>
-    </el-col>
-  </el-row>
+          </el-form-item>
+        </el-col>
+        <el-col :span="4">
+          <el-form-item label="关键字">
+            <el-input
+              placeholder="请输入厂家关键字"
+              clearable
+              @input="debouncedGetProviderFetch"
+              v-model="queryForm.keywords"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="4">
+          <el-form-item label="电话">
+            <el-input
+              placeholder="请输入厂家电话"
+              clearable
+              @input="debouncedGetProviderFetch"
+              v-model="queryForm.producterTel"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="4">
+          <el-form-item label="状态">
+            <el-select
+              @change="debouncedGetProviderFetch"
+              v-model="queryForm.status"
+              placeholder="请选择状态"
+              style="width: 240px"
+              clearable
+            >
+              <el-option label="正常" value="0" />
+              <el-option label="禁用" value="1" />
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="4">
+          <el-button-group>
+            <el-button type="primary" @click="getProucterFetch">
+              <el-icon><Search /></el-icon>
+              <span>搜索</span>
+            </el-button>
+            <el-button type="danger" @click="resetQueryFetch">
+              <el-icon><Refresh /></el-icon>
+              <span>重置</span>
+            </el-button>
+          </el-button-group>
+        </el-col>
+      </el-row>
+    </el-form>
+  </el-card>
+
   <!-- 第二行 -->
-  <el-row>
+  <el-card shadow="always" class="mt-10px">
+    <el-row justify="space-between">
+      <el-col :span="12">
+        <el-button-group>
+          <el-button type="primary" @click="addProducter">
+            <el-icon><Plus /></el-icon>
+            <span>新增厂家</span>
+          </el-button>
+          <el-button type="danger" @click="deletes" :disabled="producterIds.length === 0">
+            <el-icon><Minus /></el-icon>
+            <span>删除选中</span>
+          </el-button>
+        </el-button-group>
+      </el-col>
+    </el-row>
+  </el-card>
+
+  <!-- 第三行 -->
+  <el-row class="mt-10px">
     <el-col :span="24">
       <el-card shadow="always">
         <!-- 表格 -->
@@ -194,6 +246,7 @@
 import http from '@/http'
 import { dayjs, ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
+import debounce from 'lodash/debounce'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
@@ -214,6 +267,22 @@ const producterForm = reactive({
   keywords: '',
 }) //表单数据
 const producterIds = ref([]) //选中的编号数组
+const queryForm = reactive({
+  producterName: '', //厂家名字
+  status: '', //状态
+  producterTel: '', //电话
+  keywords: '', //关键字
+}) //查询条件表单
+
+//重置查询条件
+const resetQueryFetch = () => {
+  Object.assign(queryForm, {
+    producterName: '', //厂家名字
+    status: '', //状态
+    producterTel: '', //电话
+    keywords: '', //关键字
+  })
+}
 
 //使用dayjs序列化时间
 const formatDate = (date) => {
@@ -269,14 +338,10 @@ const submitAddOrUpdate = () => {
 
 //关闭前询问
 const handleClose = () => {
-  ElMessageBox.confirm('你确定要关闭该界面吗?数据不会做任何保存!')
-    .then(() => {
-      addOrUpdateProducterDialogVisible.value = false
-      clearProducterForm()
-    })
-    .catch(() => {
-      // catch error
-    })
+  ElMessageBox.confirm('你确定要关闭该界面吗?数据不会做任何保存!').then(() => {
+    addOrUpdateProducterDialogVisible.value = false
+    clearProducterForm()
+  })
 }
 
 //清除表单数据
@@ -384,12 +449,6 @@ const handleBeforeChange = async (producterId, statusId, producterName) => {
   }
 }
 
-//模糊查询
-const searchDict = (keyWordInput) => {
-  keyWord.value = keyWordInput
-  getProucterFetch()
-}
-
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
@@ -414,7 +473,10 @@ const getProucterFetch = () => {
       params: {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
-        keyWord: keyWord.value,
+        producterName: queryForm.producterName, //厂家名字
+        status: queryForm.status, //状态
+        producterTel: queryForm.producterTel, //电话
+        keywords: queryForm.keywords, //关键字
       },
     })
     .then((res) => {
@@ -423,6 +485,8 @@ const getProucterFetch = () => {
       pageTotal.value = res.data?.total || 0
     })
 }
+// 防抖处理
+const debouncedGetProviderFetch = debounce(getProucterFetch, 500)
 </script>
 
 <style>

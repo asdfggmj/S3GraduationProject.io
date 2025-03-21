@@ -57,22 +57,30 @@
       <el-card shadow="always" class="mb-10px">
         <el-row justify="space-between">
           <el-col :span="12">
-            <el-button type="primary" @click="addPurchase">
-              <i class="iconfont icon-xinzengcaigou" style="margin-right: 6px" />
-              <span>新增采购</span>
-            </el-button>
-            <el-button type="danger">
-              <i class="iconfont icon-zuofei" style="margin-right: 6px" :disabled="" />
-              <span>作废</span>
-            </el-button>
-            <el-button type="success">
-              <i class="iconfont icon-tijiaoruku" style="margin-right: 6px" :disabled="" />
-              <span>提交审核</span>
-            </el-button>
-            <el-button type="success">
-              <i class="iconfont icon-rukuqueren" style="margin-right: 6px" :disabled="" />
-              <span>提交入库</span>
-            </el-button>
+            <el-button-group>
+              <el-button type="primary" @click="addPurchase">
+                <i class="iconfont icon-xinzengcaigou" style="margin-right: 6px" />
+                <span>新增采购</span>
+              </el-button>
+
+              <!-- 作废按钮 -->
+              <el-button type="danger" :disabled="!canVoid" @click="voidStatus">
+                <i class="iconfont icon-zuofei" style="margin-right: 6px" />
+                <span>作废</span>
+              </el-button>
+
+              <!-- 提交审核按钮 -->
+              <el-button type="success" :disabled="!canSubmitReview" @click="submitForReview">
+                <i class="iconfont icon-tijiaoruku" style="margin-right: 6px" />
+                <span>提交审核</span>
+              </el-button>
+
+              <!-- 提交入库按钮 -->
+              <el-button type="success" :disabled="!canSubmitStorage" @click="submitForStorage">
+                <i class="iconfont icon-rukuqueren" style="margin-right: 6px" />
+                <span>提交入库</span>
+              </el-button>
+            </el-button-group>
           </el-col>
         </el-row>
       </el-card>
@@ -91,18 +99,22 @@
               style="width: 100%"
               max-height="500"
               row-key="purchaseId"
+              @selection-change="purchaseDataHandleSelectionChange"
             >
               <el-table-column fixed type="selection" width="55" />
               <el-table-column fixed label="单据编号" prop="purchaseId" width="220">
                 <template #default="scope">
-                  <el-button type="primary" link @click="checkDictData(scope.row.purchaseId)">{{
-                    scope.row.purchaseId
-                  }}</el-button>
+                  <el-button
+                    type="primary"
+                    link
+                    @click="checkPurchaseItemData(scope.row.purchaseId)"
+                    >{{ scope.row.purchaseId }}</el-button
+                  >
                 </template>
               </el-table-column>
               <el-table-column label="供应商" prop="providerId" width="200">
                 <template #default="scope">
-                  {{ providerMap[scope.row.providerId] || '未知或已禁用的公司' }}
+                  {{ providerMap[scope.row.providerId] || '--' }}
                 </template>
               </el-table-column>
               <el-table-column label="采购批发总额" prop="purchaseTradeTotalAmount" width="200" />
@@ -114,12 +126,12 @@
               <el-table-column label="申请人" prop="applyUserName" width="80" />
               <el-table-column label="入库操作人" prop="storageOptUser" width="120">
                 <template #default="scope">
-                  <span>{{ scope.row.storageOptUser || '未知' }}</span>
+                  <span>{{ scope.row.storageOptUser || '--' }}</span>
                 </template>
               </el-table-column>
               <el-table-column label="入库操作时间" prop="storageOptTime" width="200">
                 <template #default="scope">
-                  <span>{{ scope.row.storageOptTime || '未知' }}</span>
+                  <span>{{ scope.row.storageOptTime || '--' }}</span>
                 </template>
               </el-table-column>
               <el-table-column label="创建时间" prop="createTime" width="200">
@@ -135,7 +147,7 @@
               </el-table-column>
               <el-table-column label="修改人" prop="updateBy" width="120">
                 <template #default="scope">
-                  <span>{{ scope.row.updateBy || '未知' }}</span>
+                  <span>{{ scope.row.updateBy || '--' }}</span>
                 </template>
               </el-table-column>
             </el-table>
@@ -460,6 +472,54 @@
       </div>
     </template>
   </el-dialog>
+
+  <!-- 查看详细信息对话框 -->
+  <el-dialog
+    v-model="purchaseItemForm.purchaseItemDialogVisible"
+    :title="purchaseItemForm.purchaseItemTitle"
+    width="1000"
+    destroy-on-close
+  >
+    <!-- 内容主体 -->
+    <el-row>
+      <el-col>
+        <el-table border :data="purchaseItemList">
+          <el-table-column label="详细ID" prop="itemId" width="220" />
+          <el-table-column label="单据号" prop="purchaseId" width="220" />
+          <el-table-column label="药品名称" prop="medicinesName" width="100" />
+          <el-table-column label="药品分类" prop="medicinesType" width="100" />
+          <el-table-column label="处方类型" prop="prescriptionType" width="100" />
+          <el-table-column label="生产厂家" prop="producterId" width="100" />
+          <el-table-column label="规格" prop="conversion">
+            <template #default="scope">
+              {{ scope.row.conversion + scope.row.unit }}
+            </template>
+          </el-table-column>
+          <el-table-column label="采购数量" prop="purchaseNumber" width="100" />
+          <el-table-column label="批发价" prop="tradePrice" />
+          <el-table-column label="批发额" prop="tradeTotalAmount">
+            <template #default="scope">
+              {{ parseFloat(scope.row.tradeTotalAmount).toFixed(2) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="批次号" prop="batchNumber" />
+          <el-table-column label="备注" prop="remark" />
+          <el-table-column label="关键字" prop="keywords" />
+        </el-table>
+      </el-col>
+    </el-row>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-row justify="center">
+          <el-col :span="1">
+            <el-button type="primary" @click="purchaseItemForm.purchaseItemDialogVisible = false">
+              关闭
+            </el-button>
+          </el-col>
+        </el-row>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -493,24 +553,7 @@ const addPurchaseData = reactive({
   status: '', //状态
   purchaseTradeTotalAmount: 0, //总批发额
 }) //新增采购对象基本信息--->对应入库订单表
-const checkedAddMedicinesDataList = ref([
-  // {
-  //   purchaseId: '', //单据号
-  //   purchaseNumber: 0, //采购数量
-  //   tradePrice: 0, //批发价
-  //   tradeTotalAmount: 0, //批发额
-  //   batchNumber: '', //药品生产批次号
-  //   remark: '', //备注
-  //   medicinesId: '', //药品ID
-  //   medicinesName: '', //药品名称
-  //   medicinesType: '', //药品分类
-  //   prescriptionType: '', //处方类型
-  //   producterId: '', //生产厂家ID
-  //   conversion: '', //换算量
-  //   unit: '', //单位
-  //   keywords: '', //关键字
-  // },
-]) //选中的新增采购对象新增药品数据
+const checkedAddMedicinesDataList = ref([]) //选中的新增采购对象新增药品数据
 const medicinesTableData = reactive([
   {
     medicinesId: '', //药品ID
@@ -540,6 +583,91 @@ const batchSettingForm = reactive({
   batchNumber: '', //批次号
   remark: '', //备注
 }) //入库订单明细表的批量设置
+const purchaseIds = ref([]) // 选中的采购单 ID
+const purchaseItemForm = reactive({
+  purchaseItemDialogVisible: false, //控制显示
+  purchaseItemTitle: '', //标题
+}) //查看入库详细信息对象
+const purchaseItemList = ref([]) //详细信息的列表
+
+// 通用的状态变更方法
+const changeStatus = (status, successMessage) => {
+  ElMessage.success(`正在${successMessage}...`)
+  http
+    .post(`/purchase/status/${status}`, purchaseIds)
+    .then((res) => {
+      if (res.data.data === true && res.data.code === 200) {
+        ElMessage.success(`${successMessage}成功！`)
+        // 可以在这里更新前端的状态（例如，更新表格数据的状态）
+        // 你可以选择在这里更新 `purchaseData` 或执行其他需要的操作
+      } else {
+        ElMessage.error(`${successMessage}失败！`)
+      }
+    })
+    .catch((error) => {
+      ElMessage.error(`${successMessage}失败，请检查网络或联系管理员！`)
+      console.error(error)
+    })
+}
+
+// 提交入库
+const submitForStorage = () => {
+  changeStatus(6, '提交入库')
+}
+
+// 提交审核
+const submitForReview = () => {
+  changeStatus(2, '提交审核')
+}
+
+// 作废
+const voidStatus = () => {
+  changeStatus(5, '作废')
+}
+
+//查看入库单的详细信息
+const checkPurchaseItemData = (purId) => {
+  //根据单号查询所有详细信息
+  http.get(`/purchaseItem/get/${purId}`).then((res) => {
+    purchaseItemList.value = res.data.data
+  })
+  //解构对象赋值
+  Object.assign(purchaseItemForm, {
+    purchaseItemDialogVisible: true, //控制显示
+    purchaseItemTitle: `查看${purId}的入库详细信息`, //标题
+  })
+}
+
+// 选中的采购单列表
+const selectedPurchaseOrders = computed(() =>
+  purchaseData.filter((item) => purchaseIds.value.includes(item.purchaseId)),
+)
+
+// 是否可以作废（未提交 0 / 待审核 1 / 审核失败 4）
+const canVoid = computed(
+  () =>
+    selectedPurchaseOrders.value.length > 0 &&
+    selectedPurchaseOrders.value.every((item) => ['0', '1', '4'].includes(item.status)),
+)
+
+// 是否可以提交审核（所有选中的订单必须是 "未提交（0）"）
+const canSubmitReview = computed(
+  () =>
+    selectedPurchaseOrders.value.length > 0 &&
+    selectedPurchaseOrders.value.every((item) => item.status === '0'),
+)
+
+// 是否可以提交入库（所有选中的订单必须是 "审核通过（2）"）
+const canSubmitStorage = computed(
+  () =>
+    selectedPurchaseOrders.value.length > 0 &&
+    selectedPurchaseOrders.value.every((item) => item.status === '2'),
+)
+
+// 监听表格的选择事件
+const purchaseDataHandleSelectionChange = (val) => {
+  purchaseIds.value = val.map((item) => item.purchaseId)
+}
 
 // 计算总批发额
 const totalTradeAmount = computed(() => {
