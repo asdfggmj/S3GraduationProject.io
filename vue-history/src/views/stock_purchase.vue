@@ -1,31 +1,31 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <!-- 第一行 -->
+  <!-- 第一行(搜索行) -->
   <el-card shadow="always">
     <el-form :model="queryForm">
-      <el-row>
-        <el-form-item style="margin-right: 6px" label="供应商名称">
-          <el-col>
+      <el-row justify="space-between">
+        <el-col :span="5">
+          <el-form-item style="margin-right: 6px" label="供应商名称">
             <el-input
               v-model="queryForm.providerId"
               @input="debouncedGetProviderFetch"
               placeholder="请输入供应商名称"
               clearable
             />
-          </el-col>
-        </el-form-item>
-        <el-form-item style="margin-right: 6px" label="申请人">
-          <el-col>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item style="margin-right: 6px" label="申请人">
             <el-input
               v-model="queryForm.applyUserName"
               @input="debouncedGetProviderFetch"
               placeholder="请输入申请人名字"
               clearable
             />
-          </el-col>
-        </el-form-item>
-        <el-form-item style="margin-right: 6px" label="状态">
-          <el-col>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item style="margin-right: 6px" label="状态">
             <el-select
               @change="debouncedGetProviderFetch"
               v-model="queryForm.status"
@@ -33,25 +33,31 @@
               style="width: 240px"
               clearable
             >
-              <el-option label="正常" value="0" />
-              <el-option label="禁用" value="1" />
+              <el-option
+                v-for="item in purchaseStatusDataMap"
+                :key="item.dictValue"
+                :label="item.dictLabel"
+                :value="item.dictValue"
+              />
             </el-select>
-          </el-col>
-        </el-form-item>
-        <el-col :span="4">
-          <el-button type="primary" @click="getPurchaseFetch">
-            <el-icon><Search /></el-icon>
-            <span>搜索</span>
-          </el-button>
-          <el-button type="danger" @click="resetQueryFetch">
-            <el-icon><Refresh /></el-icon>
-            <span>重置</span>
-          </el-button>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-button-group>
+            <el-button type="primary" @click="getPurchaseFetch">
+              <el-icon><Search /></el-icon>
+              <span>搜索</span>
+            </el-button>
+            <el-button type="danger" @click="resetQueryFetch">
+              <el-icon><Refresh /></el-icon>
+              <span>重置</span>
+            </el-button>
+          </el-button-group>
         </el-col>
       </el-row>
     </el-form>
   </el-card>
-  <!-- 第二行 -->
+  <!-- 第二行(按钮行) -->
   <el-row class="mt-10px">
     <el-col :span="24">
       <el-card shadow="always" class="mb-10px">
@@ -86,7 +92,7 @@
       </el-card>
     </el-col>
   </el-row>
-  <!-- 第二行 -->
+  <!-- 第三行(数据展示行) -->
   <el-row>
     <el-col :span="24">
       <el-card shadow="always">
@@ -99,6 +105,7 @@
               style="width: 100%"
               max-height="500"
               row-key="purchaseId"
+              ref="tableRef"
               @selection-change="purchaseDataHandleSelectionChange"
             >
               <el-table-column fixed type="selection" width="55" />
@@ -117,10 +124,16 @@
                   {{ providerMap[scope.row.providerId] || '--' }}
                 </template>
               </el-table-column>
-              <el-table-column label="采购批发总额" prop="purchaseTradeTotalAmount" width="200" />
+              <el-table-column label="采购批发总额" prop="purchaseTradeTotalAmount" width="200">
+                <template #default="scope">
+                  <span>{{ parseFloat(scope.row.purchaseTradeTotalAmount).toFixed(2) }}</span>
+                </template>
+              </el-table-column>
               <el-table-column label="状态" prop="status" width="120">
                 <template #default="scope">
-                  {{ purchaseDataMap[scope.row.status] }}
+                  <el-tag :type="statusColorFetch(scope.row.status)">
+                    {{ purchaseDataMap[scope.row.status] }}
+                  </el-tag>
                 </template>
               </el-table-column>
               <el-table-column label="申请人" prop="applyUserName" width="80" />
@@ -131,7 +144,7 @@
               </el-table-column>
               <el-table-column label="入库操作时间" prop="storageOptTime" width="200">
                 <template #default="scope">
-                  <span>{{ scope.row.storageOptTime || '--' }}</span>
+                  <span>{{ formatDate(scope.row.storageOptTime) || '--' }}</span>
                 </template>
               </el-table-column>
               <el-table-column label="创建时间" prop="createTime" width="200">
@@ -185,10 +198,24 @@
     <el-card shadow="always">
       <el-row justify="end">
         <el-col :span="6">
-          <el-button type="primary" @click="addMedicinesFetch">添加药品</el-button>
-          <el-button type="success" @click="batckSettingFetch">批量设置</el-button>
-          <el-button type="warning" @click="temporaryStorageFetch">暂存</el-button>
-          <el-button type="danger" @click="submitForReviewFetch">提交审核</el-button>
+          <el-button-group>
+            <el-button type="primary" @click="addMedicinesFetch">
+              <el-icon><Plus /></el-icon>
+              <span>添加药品</span>
+            </el-button>
+            <el-button type="success" @click="batckSettingFetch">
+              <el-icon><Setting /></el-icon>
+              <span>批量设置</span>
+            </el-button>
+            <el-button type="warning" @click="temporaryStorageFetch">
+              <i class="iconfont icon-baocun" style="margin-right: 6px"></i>
+              <span>暂存</span>
+            </el-button>
+            <el-button type="danger" @click="submitForReviewFetch">
+              <i class="iconfont icon-tijiaoruku" style="margin-right: 6px"></i>
+              <span>提交审核</span>
+            </el-button>
+          </el-button-group>
         </el-col>
       </el-row>
     </el-card>
@@ -326,18 +353,20 @@
           <el-form-item label="关键字">
             <el-input
               placeholder="请输入关键字"
-              @change="getAllMedicinesFetch"
+              @input="debouncedGetMedicinesFetch"
               v-model="medicinesQueryForm.keywords"
+              clearable
             />
           </el-form-item>
         </el-col>
         <el-col :span="6">
           <el-form-item label="药品类型">
             <el-select
+              clearable
               v-model="medicinesQueryForm.medicinesType"
               placeholder="请选择药品类型"
               style="width: 240px"
-              @change="getAllMedicinesFetch"
+              @change="debouncedGetMedicinesFetch"
             >
               <el-option
                 v-for="item in medicinesDataMap"
@@ -351,10 +380,11 @@
         <el-col :span="6">
           <el-form-item label="处方类型">
             <el-select
+              clearable
               v-model="medicinesQueryForm.prescriptionType"
               placeholder="请选择处方类型"
               style="width: 240px"
-              @change="getAllMedicinesFetch"
+              @change="debouncedGetMedicinesFetch"
             >
               <el-option
                 v-for="item in prescriptionTypeDataMap"
@@ -525,9 +555,10 @@
 <script setup lang="ts">
 import http from '@/http'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import debounce from 'lodash/debounce'
-import { dayjs, ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { formatDate } from '@/utils/dateUtils'
+import { debounce } from '@/utils/debounceUtils'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
@@ -589,40 +620,134 @@ const purchaseItemForm = reactive({
   purchaseItemTitle: '', //标题
 }) //查看入库详细信息对象
 const purchaseItemList = ref([]) //详细信息的列表
+const purchaseStatusDataMap = ref({}) //入库状态map
+const purchaseStatusData = ref([])
+const tableRef = ref(null) // 绑定 el-table 的 ref
+
+watch(
+  () => checkedAddMedicinesDataList.value, // 监听 checkedAddMedicinesDataList 的变化
+  (newValue) => {
+    newValue.forEach((item) => {
+      // 给每个条目赋默认值
+      item.purchaseId = addPurchaseData.purchaseId // 单据号
+      item.purchaseNumber = item.purchaseNumber || 0 // 采购数量，默认是 0
+      item.tradePrice = item.tradePrice || 0 // 批发价格，默认是 0
+      item.batchNumber = batchSettingForm.batchNumber // 批次号
+      item.remark = batchSettingForm.remark // 备注
+    })
+  },
+  { deep: true }, // 深度监听，确保监听嵌套对象
+)
+
+//获取入库状态的异步方法
+const getPurchaseStatusFetch = () => {
+  http.get('/dictData/get/his_order_status').then((res) => {
+    const purchaseData = res.data.data || []
+    purchaseStatusDataMap.value = purchaseData
+
+    purchaseStatusData.value = purchaseData.reduce((map, item) => {
+      map[Number(item.dictValue)] = item.dictLabel
+      return map
+    }, {})
+  })
+}
+
+//表格不同的状态颜色
+const statusColorFetch = (statusId) => {
+  switch (statusId) {
+    case '1': // 未提交
+      return 'warning'
+    case '2': // 待审核
+      return 'warning'
+    case '3': // 审核通过
+      return 'success'
+    case '4': // 审核不通过
+      return 'danger'
+    case '5': // 作废
+      return 'danger'
+    case '6': // 入库成功
+      return 'success' // 默认颜色
+    default:
+      return 'info' // 其他情况
+  }
+}
 
 // 通用的状态变更方法
 const changeStatus = (status, successMessage) => {
-  ElMessage.success(`正在${successMessage}...`)
-  http
-    .post(`/purchase/status/${status}`, purchaseIds)
-    .then((res) => {
-      if (res.data.data === true && res.data.code === 200) {
-        ElMessage.success(`${successMessage}成功！`)
-        // 可以在这里更新前端的状态（例如，更新表格数据的状态）
-        // 你可以选择在这里更新 `purchaseData` 或执行其他需要的操作
-      } else {
-        ElMessage.error(`${successMessage}失败！`)
-      }
-    })
-    .catch((error) => {
-      ElMessage.error(`${successMessage}失败，请检查网络或联系管理员！`)
-      console.error(error)
-    })
+  return new Promise((resolve, reject) => {
+    ElMessage.success(`正在${successMessage}...`)
+    http
+      .post(`/purchase/status/${status}`, purchaseIds.value)
+      .then((res) => {
+        if (res.data.data === true && res.data.code === 200) {
+          ElMessage.success(`${successMessage}成功！`)
+          //清空选中的ID
+          // purchaseIds.value = []
+          if (tableRef.value) {
+            tableRef.value.clearSelection() // 取消选中状态
+          }
+          //重新查询数据
+          getPurchaseFetch()
+          resolve(res.data.code)
+        } else {
+          ElMessage.error(`${successMessage}失败！`)
+          reject(new Error(`${successMessage}失败`))
+        }
+      })
+      .catch((error) => {
+        ElMessage.error(`${successMessage}失败，请检查网络或联系管理员！`)
+        console.error(error)
+      })
+  })
 }
 
 // 提交入库
 const submitForStorage = () => {
-  changeStatus(6, '提交入库')
+  ElMessageBox.confirm(`你确定要提交${purchaseIds.value.length}条数据吗?`, '操作保护', {
+    cancelButtonText: '否',
+    confirmButtonText: '是',
+  }).then(() => {
+    changeStatus(6, '提交入库')
+      .then((code) => {
+        if (code === 200) {
+          console.log('入库成功，执行后续操作')
+          http.post('/inventoryLog/add', purchaseIds.value).then((res) => {
+            if (res.data.data === true && res.data.code === 200) {
+              purchaseIds.value = []
+              ElMessage.success('入库成功!!')
+            }
+          })
+        } else {
+          console.log('提交入库失败，回退状态')
+          changeStatus(3, '回退')
+        }
+      })
+      .catch((err) => {
+        console.error('变更状态失败:', err)
+      })
+  })
 }
 
 // 提交审核
 const submitForReview = () => {
-  changeStatus(2, '提交审核')
+  ElMessageBox.confirm(`你确定要提交${purchaseIds.value.length}条数据吗?`, '操作保护', {
+    cancelButtonText: '否',
+    confirmButtonText: '是',
+  }).then(() => {
+    changeStatus(2, '提交审核')
+    purchaseIds.value = []
+  })
 }
 
 // 作废
 const voidStatus = () => {
-  changeStatus(5, '作废')
+  ElMessageBox.confirm(`你确定要作废${purchaseIds.value.length}条数据吗?`, '操作保护', {
+    cancelButtonText: '否',
+    confirmButtonText: '是',
+  }).then(() => {
+    changeStatus(5, '作废')
+    purchaseIds.value = []
+  })
 }
 
 //查看入库单的详细信息
@@ -643,25 +768,25 @@ const selectedPurchaseOrders = computed(() =>
   purchaseData.filter((item) => purchaseIds.value.includes(item.purchaseId)),
 )
 
-// 是否可以作废（未提交 0 / 待审核 1 / 审核失败 4）
+// 是否可以作废（未提交 1 / 待审核 2 / 审核失败 4）
 const canVoid = computed(
   () =>
     selectedPurchaseOrders.value.length > 0 &&
-    selectedPurchaseOrders.value.every((item) => ['0', '1', '4'].includes(item.status)),
+    selectedPurchaseOrders.value.every((item) => ['1', '2', '4'].includes(item.status)),
 )
 
 // 是否可以提交审核（所有选中的订单必须是 "未提交（0）"）
 const canSubmitReview = computed(
   () =>
     selectedPurchaseOrders.value.length > 0 &&
-    selectedPurchaseOrders.value.every((item) => item.status === '0'),
+    selectedPurchaseOrders.value.every((item) => item.status === '1'),
 )
 
-// 是否可以提交入库（所有选中的订单必须是 "审核通过（2）"）
+// 是否可以提交入库（所有选中的订单必须是 "审核通过（3）"）
 const canSubmitStorage = computed(
   () =>
     selectedPurchaseOrders.value.length > 0 &&
-    selectedPurchaseOrders.value.every((item) => item.status === '2'),
+    selectedPurchaseOrders.value.every((item) => item.status === '3'),
 )
 
 // 监听表格的选择事件
@@ -753,11 +878,12 @@ const submitForReviewFetch = () => submitOrder('2')
 
 //重置查询条件
 const resetQueryFetch = () => {
-  Object.assign(medicinesQueryForm, {
-    keywords: '', //关键字
-    medicinesType: '', //药品类型
-    prescriptionType: '', //处方类型
+  Object.assign(queryForm, {
+    providerId: '', //供应商ID
+    applyUserName: '', //申请人名称
+    status: '', //单据状态
   })
+  getPurchaseFetch()
 }
 
 //赋值batchSettingForm
@@ -845,10 +971,13 @@ const getAllMedicinesFetch = () => {
         keywords: medicinesQueryForm.keywords,
         medicinesType: medicinesQueryForm.medicinesType,
         prescriptionType: medicinesQueryForm.prescriptionType,
+        status: '0',
       },
     })
     .then((res) => {
       const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
+
+      // 先清空，再替换数据
       medicinesTableData.splice(0, medicinesTableData.length, ...list)
       medicinesPageTotal.value = res.data.data?.total || 0
     })
@@ -874,8 +1003,6 @@ const handleClose = () => {
 
 //新增采购
 const addPurchase = () => {
-  console.log('checkedAddMedicinesDataList', checkedAddMedicinesDataList.value)
-
   //获取当前的用户名
   let username = userStore.getUser.data.data.userName
 
@@ -913,11 +1040,6 @@ const getPurchaseTypeFetch = () => {
   })
 }
 
-//使用dayjs序列化时间
-const formatDate = (date) => {
-  return date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : '--'
-}
-
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
@@ -937,6 +1059,7 @@ onMounted(() => {
   getProducterFetch()
   getMedicinesTypeFetch()
   getPrescriptionTypeFetch()
+  getPurchaseStatusFetch()
 })
 
 //获取入库订单数据
@@ -959,10 +1082,11 @@ const getPurchaseFetch = () => {
 }
 // 防抖处理
 const debouncedGetProviderFetch = debounce(getPurchaseFetch, 500)
+const debouncedGetMedicinesFetch = debounce(getAllMedicinesFetch, 500)
 </script>
 
 <style>
-@import url('https://at.alicdn.com/t/c/font_4844128_0pn97os92c2i.css');
+@import url('https://at.alicdn.com/t/c/font_4844128_m6ae2d62u5.css');
 .mr-20px {
   margin-right: 20px;
 }

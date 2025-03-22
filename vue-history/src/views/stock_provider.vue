@@ -1,42 +1,42 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <!-- 第一行 -->
-  <el-card>
+  <el-card shadow="always">
     <!-- 查询行 -->
     <el-form :model="queryForm">
-      <el-row>
-        <el-form-item style="margin-right: 6px" label="供应商名称">
-          <el-col>
+      <el-row justify="space-between">
+        <el-col :span="5">
+          <el-form-item style="margin-right: 6px" label="供应商名称">
             <el-input
               v-model="queryForm.providerName"
               @input="debouncedGetProviderFetch"
               placeholder="请输入供应商名称"
               clearable
             />
-          </el-col>
-        </el-form-item>
-        <el-form-item style="margin-right: 6px" label="联系人">
-          <el-col>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item style="margin-right: 6px" label="联系人">
             <el-input
               v-model="queryForm.contactName"
               @input="debouncedGetProviderFetch"
               placeholder="请输入联系人"
               clearable
             />
-          </el-col>
-        </el-form-item>
-        <el-form-item style="margin-right: 6px" label="联系人电话">
-          <el-col>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item style="margin-right: 6px" label="联系人电话">
             <el-input
               v-model="queryForm.contactTel"
               @input="debouncedGetProviderFetch"
               placeholder="请输入联系人电话"
               clearable
             />
-          </el-col>
-        </el-form-item>
-        <el-form-item style="margin-right: 6px" label="状态">
-          <el-col>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item style="margin-right: 6px" label="状态">
             <el-select
               @change="debouncedGetProviderFetch"
               v-model="queryForm.status"
@@ -47,147 +47,136 @@
               <el-option label="正常" value="0" />
               <el-option label="禁用" value="1" />
             </el-select>
-          </el-col>
-        </el-form-item>
+          </el-form-item>
+        </el-col>
         <el-col :span="4">
-          <el-button type="primary" @click="getProviderFetch">
-            <el-icon><Search /></el-icon>
-            <span>搜索</span>
-          </el-button>
-          <el-button type="danger" @click="resetQueryFetch">
-            <el-icon><Refresh /></el-icon>
-            <span>重置</span>
-          </el-button>
+          <el-button-group>
+            <el-button type="primary" @click="getProviderFetch">
+              <el-icon><Search /></el-icon>
+              <span>搜索</span>
+            </el-button>
+            <el-button type="danger" @click="resetQueryFetch">
+              <el-icon><Refresh /></el-icon>
+              <span>重置</span>
+            </el-button>
+          </el-button-group>
         </el-col>
       </el-row>
     </el-form>
   </el-card>
-  <el-row class="mt-10px">
-    <el-col :span="24">
-      <el-card shadow="always" class="mb-10px">
-        <!-- 按钮行 -->
-        <el-row justify="space-between" class="mt-10px">
-          <el-col :span="12">
-            <el-button type="primary" @click="addProvider">
-              <el-icon><Plus /></el-icon>
-              <span>新增供应商</span>
-            </el-button>
-            <el-button type="danger" @click="deletes" :disabled="providerIds.length === 0">
-              <el-icon><Minus /></el-icon>
-              <span>删除选中</span>
-            </el-button>
-          </el-col>
-        </el-row>
-      </el-card>
-    </el-col>
-  </el-row>
+
+  <el-card shadow="always" class="mt-10px">
+    <!-- 按钮行 -->
+    <el-row justify="space-between" class="mt-10px">
+      <el-col :span="12">
+        <el-button-group>
+          <el-button type="primary" @click="addProvider">
+            <el-icon><Plus /></el-icon>
+            <span>新增供应商</span>
+          </el-button>
+          <el-button type="danger" @click="deletes" :disabled="providerIds.length === 0">
+            <el-icon><Minus /></el-icon>
+            <span>删除选中</span>
+          </el-button>
+        </el-button-group>
+      </el-col>
+    </el-row>
+  </el-card>
   <!-- 第二行 -->
-  <el-row>
-    <el-col :span="24">
-      <el-card shadow="always">
-        <!-- 表格 -->
-        <el-row class="mt-10px">
-          <el-col>
-            <el-table
-              :data="dictData"
-              style="width: 100%"
-              max-height="500"
-              row-key="providerId"
-              border
-              @selection-change="handleSelectionChange"
-            >
-              <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="供应商编号" prop="providerId" width="120" />
-              <el-table-column label="供应商名称" prop="providerName" width="200" />
-              <el-table-column label="联系人" prop="contactName" width="200" />
-              <el-table-column label="联系人手机号" prop="contactMobile" width="200" />
-              <el-table-column label="联系人电话号" prop="contactTel" width="200" />
-              <el-table-column label="银行账号" prop="bankAccount" width="200" />
-              <el-table-column label="地址" prop="providerAddress" width="200" />
-              <el-table-column label="状态" prop="status" width="80" fixed="right">
-                <template #default="scope">
-                  <el-switch
-                    v-model="scope.row.status"
-                    :before-change="
-                      () =>
-                        handleBeforeChange(
-                          scope.row.providerId,
-                          scope.row.status === '0' ? '1' : '0',
-                          scope.row.providerName,
-                        )
-                    "
-                    active-value="0"
-                    inactive-value="1"
-                    active-text="正常"
-                    inactive-text="禁用"
-                    class="ml-2"
-                    inline-prompt
-                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-                    :loading="rowLoadingMap[scope.row.providerId]"
-                  />
-                </template>
-              </el-table-column>
-              <el-table-column label="创建时间" prop="createTime" width="200">
-                <template #default="scope">
-                  <span>{{ formatDate(scope.row.createTime) }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column label="创建人" prop="createBy" width="120" />
-              <el-table-column label="最后一次修改时间" prop="updateTime" width="200">
-                <template #default="scope">
-                  <span>{{ formatDate(scope.row.updateTime) }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column label="修改人" prop="updateBy" width="120">
-                <template #default="scope">
-                  {{ scope.row.updateBy || '暂无修改' }}
-                </template>
-              </el-table-column>
-              <!-- 按钮组 -->
-              <el-table-column label="操作" fixed="right" width="160">
-                <template #default="scope">
-                  <el-button-group>
-                    <el-button
-                      type="success"
-                      size="small"
-                      @click="editProvider(scope.row.providerId)"
-                    >
-                      <el-icon><Edit /></el-icon>
-                      <span>编辑</span>
-                    </el-button>
-                    <el-button
-                      type="danger"
-                      size="small"
-                      @click="delProvider(scope.row.providerId)"
-                    >
-                      <el-icon><Delete /></el-icon>
-                      <span>删除</span>
-                    </el-button>
-                  </el-button-group>
-                </template>
-              </el-table-column>
-            </el-table>
-          </el-col>
-        </el-row>
-        <!-- 分页行 -->
-        <el-row class="mt-10px">
-          <el-col :span="24">
-            <el-pagination
-              background
-              layout="total,sizes,prev, pager, next,jumper"
-              :total="pageTotal"
-              :pager-count="11"
-              :page-size="pageSize"
-              :page-sizes="[10, 20, 50]"
-              :current-page="pageNum"
-              @size-change="sizeChange"
-              @current-change="currentChange"
-            />
-          </el-col>
-        </el-row>
-      </el-card>
-    </el-col>
-  </el-row>
+  <el-card shadow="always" class="mt-10px">
+    <!-- 表格 -->
+    <el-row>
+      <el-col>
+        <el-table
+          :data="dictData"
+          style="width: 100%"
+          max-height="500"
+          row-key="providerId"
+          border
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column fixed type="selection" width="55" />
+          <el-table-column label="供应商编号" prop="providerId" width="120" />
+          <el-table-column label="供应商名称" prop="providerName" width="200" />
+          <el-table-column label="联系人" prop="contactName" width="200" />
+          <el-table-column label="联系人手机号" prop="contactMobile" width="200" />
+          <el-table-column label="联系人电话号" prop="contactTel" width="200" />
+          <el-table-column label="银行账号" prop="bankAccount" width="200" />
+          <el-table-column label="地址" prop="providerAddress" width="200" />
+          <el-table-column label="状态" prop="status" width="80" fixed="right">
+            <template #default="scope">
+              <el-switch
+                v-model="scope.row.status"
+                :before-change="
+                  () =>
+                    handleBeforeChange(
+                      scope.row.providerId,
+                      scope.row.status === '0' ? '1' : '0',
+                      scope.row.providerName,
+                    )
+                "
+                active-value="0"
+                inactive-value="1"
+                active-text="正常"
+                inactive-text="禁用"
+                class="ml-2"
+                inline-prompt
+                style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+                :loading="rowLoadingMap[scope.row.providerId]"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" prop="createTime" width="200">
+            <template #default="scope">
+              <span>{{ formatDate(scope.row.createTime) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建人" prop="createBy" width="120" />
+          <el-table-column label="最后一次修改时间" prop="updateTime" width="200">
+            <template #default="scope">
+              <span>{{ formatDate(scope.row.updateTime) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="修改人" prop="updateBy" width="120">
+            <template #default="scope">
+              {{ scope.row.updateBy || '暂无修改' }}
+            </template>
+          </el-table-column>
+          <!-- 按钮组 -->
+          <el-table-column label="操作" fixed="right" width="160">
+            <template #default="scope">
+              <el-button-group>
+                <el-button type="success" size="small" @click="editProvider(scope.row.providerId)">
+                  <el-icon><Edit /></el-icon>
+                  <span>编辑</span>
+                </el-button>
+                <el-button type="danger" size="small" @click="delProvider(scope.row.providerId)">
+                  <el-icon><Delete /></el-icon>
+                  <span>删除</span>
+                </el-button>
+              </el-button-group>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-col>
+    </el-row>
+    <!-- 分页行 -->
+    <el-row class="mt-10px">
+      <el-col :span="24">
+        <el-pagination
+          background
+          layout="total,sizes,prev, pager, next,jumper"
+          :total="pageTotal"
+          :pager-count="11"
+          :page-size="pageSize"
+          :page-sizes="[10, 20, 50]"
+          :current-page="pageNum"
+          @size-change="sizeChange"
+          @current-change="currentChange"
+        />
+      </el-col>
+    </el-row>
+  </el-card>
 
   <!-- 修改和添加对话框 -->
   <el-dialog

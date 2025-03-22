@@ -1,7 +1,7 @@
 <template>
   <!-- 第一行 -->
   <el-card shadow="always">
-    <el-form>
+    <el-form :model="queryForm" label-width="auto">
       <el-row justify="space-between">
         <el-col :span="4">
           <el-form-item label="厂家名称">
@@ -251,7 +251,6 @@ import debounce from 'lodash/debounce'
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
-const keyWord = ref('') //关键字
 const producterData = reactive([]) //科室数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
 const addOrUpdateProducterDialogVisible = ref(false) //添加或修改厂家信息对话框控制显示

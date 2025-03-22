@@ -1,25 +1,133 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <!-- 第一行 -->
-  <el-row>
+  <el-card>
+    <el-form :model="queryForm" label-width="auto">
+      <el-row :gutter="20">
+        <el-col :span="5">
+          <el-form-item label="药品名称">
+            <el-input
+              placeholder="请输入药品名称"
+              clearable
+              @input="debouncedGetProviderFetch"
+              v-model="queryForm.medicinesName"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item label="关键字">
+            <el-input
+              placeholder="请输入关键字"
+              clearable
+              @input="debouncedGetProviderFetch"
+              v-model="queryForm.keywords"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item label="药品类型">
+            <el-select
+              v-model="queryForm.medicinesType"
+              @change="debouncedGetProviderFetch"
+              clearable
+              placeholder="请选择药品类型"
+            >
+              <el-option
+                v-for="item in medicinesDataMap"
+                :key="item.dictValue"
+                :label="item.dictLabel"
+                :value="item.dictValue"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item label="生产厂家">
+            <el-select
+              v-model="queryForm.producterId"
+              clearable
+              @change="debouncedGetProviderFetch"
+              placeholder="请选择生产厂家"
+            >
+              <el-option
+                v-for="item in producterList"
+                :key="item.producterId"
+                :label="item.producterName"
+                :value="item.producterId"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="5">
+          <el-form-item label="处方类型">
+            <el-select
+              v-model="queryForm.prescriptionType"
+              @change="debouncedGetProviderFetch"
+              clearable
+              placeholder="请选择处方类型"
+            >
+              <el-option
+                v-for="item in prescriptionTypeDataMap"
+                :key="item.dictValue"
+                :label="item.dictLabel"
+                :value="item.dictValue"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item label="状态">
+            <el-select
+              @change="debouncedGetProviderFetch"
+              v-model="queryForm.status"
+              placeholder="请选择状态"
+              style="width: 240px"
+              clearable
+            >
+              <el-option label="正常" value="0" />
+              <el-option label="禁用" value="1" />
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-button-group>
+            <el-button type="primary" @click="getMedicinesFetch">
+              <el-icon><Search /></el-icon>
+              <span>搜索</span>
+            </el-button>
+            <el-button type="danger" @click="resetQueryFetch">
+              <el-icon><Refresh /></el-icon>
+              <span>重置</span>
+            </el-button>
+          </el-button-group>
+        </el-col>
+      </el-row>
+    </el-form>
+  </el-card>
+  <!-- 第二行 -->
+  <el-row class="mt-10px">
     <el-col :span="24">
       <el-card shadow="always" class="mb-10px">
         <el-row justify="space-between">
           <el-col :span="12">
-            <el-button type="primary" @click="addMedicines">
-              <el-icon><Plus /></el-icon>
-              <span>新增药品</span>
-            </el-button>
-            <el-button type="danger" @click="deletes" :disabled="medicinalIds.length === 0">
-              <el-icon><Minus /></el-icon>
-              <span>删除选中</span>
-            </el-button>
+            <el-button-group>
+              <el-button type="primary" @click="addMedicines">
+                <el-icon><Plus /></el-icon>
+                <span>新增药品</span>
+              </el-button>
+              <el-button type="danger" @click="deletes" :disabled="medicinalIds.length === 0">
+                <el-icon><Minus /></el-icon>
+                <span>删除选中</span>
+              </el-button>
+            </el-button-group>
           </el-col>
         </el-row>
       </el-card>
     </el-col>
   </el-row>
-  <!-- 第二行 -->
+  <!-- 第三行 -->
   <el-row>
     <el-col :span="24">
       <el-card shadow="always">
@@ -50,13 +158,13 @@
                 </template>
               </el-table-column>
               <el-table-column label="关键词" prop="keywords" width="100" />
-              <el-table-column label="单位" prop="unit" width="100" />
               <el-table-column label="处方价格" prop="prescriptionPrice" width="100">
                 <template #default="scope">
                   <span>{{ Number(scope.row.prescriptionPrice).toFixed(2) }}</span>
                 </template>
               </el-table-column>
               <el-table-column label="换算量" prop="conversion" width="100" />
+              <el-table-column label="单位" prop="unit" width="100" />
               <el-table-column label="库存量" prop="medicinesStockNum" width="100" />
               <el-table-column label="预警值" prop="medicinesStockDangerNum" width="100" />
               <el-table-column label="状态" prop="status" width="100" fixed="right">
@@ -255,11 +363,11 @@
 import http from '@/http'
 import { dayjs, ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
+import debounce from 'lodash/debounce'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
-const keyWord = ref('') //关键字
 const medicinesData = reactive([]) //药品数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
 const medicinesDataMap = ref({}) //存储药品类型字典
@@ -285,6 +393,27 @@ const medicinesForm = reactive({
 }) //药品表单数据
 const producterList = ref([]) //生产厂家数组
 const medicinalIds = ref([]) //选中的编号数组
+const queryForm = reactive({
+  medicinesName: '', //药品名字
+  status: '', //状态
+  medicinesType: '', //药品类型
+  keywords: '', //关键字
+  prescriptionType: '', //处方类型
+  producterId: '', //生产厂家
+}) //查询条件表单
+
+//重置查询条件
+const resetQueryFetch = () => {
+  Object.assign(queryForm, {
+    medicinesName: '', //药品名字
+    status: '', //状态
+    medicinesType: '', //药品类型
+    keywords: '', //关键字
+    prescriptionType: '', //处方类型
+    producterId: '', //生产厂家
+  })
+  getMedicinesFetch()
+}
 
 //批量删除
 const deletes = async () => {
@@ -364,6 +493,7 @@ const delMedicinesFetch = (mid) => {
 const getProducterIdNameFetch = () => {
   http.get('/producter/getIdName').then((res) => {
     producterList.value = res.data.data
+    console.log(producterList)
   })
 }
 
@@ -523,6 +653,7 @@ onMounted(() => {
   getMedicinesFetch()
   getPrescriptionTypeFetch()
   getMedicinesTypeFetch()
+  getProducterIdNameFetch()
 })
 
 //获取药品信息
@@ -532,7 +663,12 @@ const getMedicinesFetch = () => {
       params: {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
-        keyWord: keyWord.value,
+        medicinesName: queryForm.medicinesName,
+        keywords: queryForm.keywords,
+        medicinesType: queryForm.medicinesType,
+        prescriptionType: queryForm.prescriptionType,
+        producterId: queryForm.producterId,
+        status: queryForm.status,
       },
     })
     .then((res) => {
@@ -541,6 +677,9 @@ const getMedicinesFetch = () => {
       pageTotal.value = res.data.data?.total || 0
     })
 }
+
+// 防抖处理
+const debouncedGetProviderFetch = debounce(getMedicinesFetch, 500)
 </script>
 
 <style>
