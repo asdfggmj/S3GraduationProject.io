@@ -682,12 +682,15 @@ const changeStatus = (status, successMessage) => {
         if (res.data.data === true && res.data.code === 200) {
           ElMessage.success(`${successMessage}成功！`)
           //清空选中的ID
-          // purchaseIds.value = []
+          purchaseIds.value = []
+
+          // 取消选中状态
           if (tableRef.value) {
-            tableRef.value.clearSelection() // 取消选中状态
+            tableRef.value.clearSelection()
           }
           //重新查询数据
           getPurchaseFetch()
+
           resolve(res.data.code)
         } else {
           ElMessage.error(`${successMessage}失败！`)
@@ -697,35 +700,47 @@ const changeStatus = (status, successMessage) => {
       .catch((error) => {
         ElMessage.error(`${successMessage}失败，请检查网络或联系管理员！`)
         console.error(error)
+        reject(error)
       })
   })
 }
 
 // 提交入库
-const submitForStorage = () => {
-  ElMessageBox.confirm(`你确定要提交${purchaseIds.value.length}条数据吗?`, '操作保护', {
-    cancelButtonText: '否',
-    confirmButtonText: '是',
-  }).then(() => {
-    changeStatus(6, '提交入库')
-      .then((code) => {
-        if (code === 200) {
-          console.log('入库成功，执行后续操作')
-          http.post('/inventoryLog/add', purchaseIds.value).then((res) => {
-            if (res.data.data === true && res.data.code === 200) {
-              purchaseIds.value = []
-              ElMessage.success('入库成功!!')
-            }
-          })
-        } else {
-          console.log('提交入库失败，回退状态')
-          changeStatus(3, '回退')
-        }
-      })
-      .catch((err) => {
-        console.error('变更状态失败:', err)
-      })
-  })
+const submitForStorage = async () => {
+  if (!purchaseIds.value.length) {
+    ElMessage.warning('请选择需要提交的数据！')
+    return
+  }
+
+  const idsCopy = [...purchaseIds.value] // 复制一份
+
+  try {
+    await ElMessageBox.confirm(`你确定要提交 ${idsCopy.length} 条数据吗?`, '操作保护', {
+      cancelButtonText: '否',
+      confirmButtonText: '是',
+    })
+
+    const statusCode = await changeStatus(6, '提交入库')
+
+    if (statusCode === 200) {
+      console.log('入库成功，执行后续操作', idsCopy)
+
+      const res = await http.post('/inventoryLog/add', idsCopy)
+
+      if (res.data.data === true && res.data.code === 200) {
+        ElMessage.success('入库成功!!')
+      } else {
+        await changeStatus(3, '回退')
+        ElMessage.error('入库失败，已回退状态')
+      }
+    } else {
+      await changeStatus(3, '回退')
+      ElMessage.error('提交入库失败，已回退状态')
+    }
+  } catch (error) {
+    console.error('操作失败:', error)
+    ElMessage.error('操作取消或发生错误')
+  }
 }
 
 // 提交审核

@@ -443,7 +443,6 @@ const deletes = async () => {
 
 // 监听多选
 const handleSelectionChange = (val) => {
-  console.log('当前选中的数据:', val) // ✅ 确保这里不是空的
   medicinalIds.value = val
 }
 
