@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <!-- 第一行 -->
   <el-row>
@@ -124,13 +123,12 @@
 
 <script setup lang="ts">
 import http from '@/http'
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
-const registrationFeeData = reactive([]) //科室数据
 const resultVisible = ref(false) //查看结果对话框控制显示
 const checkItemList = ref([]) // 存储获取的检查项
 const checkedRegItem = ref(1) //选中的检查项目
