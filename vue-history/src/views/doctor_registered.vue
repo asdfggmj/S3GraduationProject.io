@@ -38,7 +38,11 @@
           <el-row>
             <el-col :span="5">
               <el-form-item label="身份证号" prop="idCard">
-                <el-input v-model="hisPatient.idCard" placeholder="输入或导入身份证" />
+                <el-input
+                  v-model="hisPatient.idCard"
+                  placeholder="输入或导入身份证"
+                  @change="getBirthdayAndAgeFromIdCard"
+                />
               </el-form-item>
               <el-form-item label="患者姓名" prop="name">
                 <el-input v-model="hisPatient.name" placeholder="输入或导入名字" />

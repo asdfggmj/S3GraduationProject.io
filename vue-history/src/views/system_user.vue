@@ -211,7 +211,7 @@
           <el-form-item label="头像:" label-width="140px" style="margin-left: -40px">
             <el-upload
               class="avatar-uploader"
-              action="https://localhost:8080/user/uploadImg"
+              :http-request="uploadUserHeader"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
               :before-upload="beforeAvatarUpload"
@@ -299,6 +299,17 @@ let rids = ref([])
 let roleData = ref([])
 //授权的用户编号
 let uid = ref('')
+
+const uploadUserHeader = (file) => {
+  const formData = new FormData()
+  formData.append('file', file.file)
+
+  http.post('http://localhost:8080/file/user/uploadImg', formData).then((res) => {
+    if (res.data.code === 200) {
+      ElMessage.success('头像更改成功!')
+    }
+  })
+}
 
 //使用dayjs序列化时间
 const formatDate = (date) => {
@@ -468,6 +479,8 @@ const handleAvatarSuccess: UploadProps['onSuccess'] = (response, uploadFile) => 
   imageUrl.value = URL.createObjectURL(uploadFile.raw!)
   //给用户对象的头像属性赋值
   userObject.picture = response
+  console.log(userObject.picture)
+  console.log(imageUrl.value)
 }
 //上传之前调用,验证文件的格式文件的大小
 const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {

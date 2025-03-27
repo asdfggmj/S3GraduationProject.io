@@ -404,6 +404,8 @@ const editScheduling = (row) => {
   //给选中的医生变量ID赋值
   selectedDoctorId.value = row.userId
   //根据用户编号获取排班数据
+  console.log('医生ID', selectedDoctorId.value)
+
   http
     .get('/doctors/ScheduleList', {
       params: {

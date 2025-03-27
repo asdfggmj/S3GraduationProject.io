@@ -7,7 +7,17 @@
         <el-row justify="space-between">
           <el-col :span="12">
             <el-text class="mr-20px">检查项目</el-text>
-            <el-segmented v-model="trigger" :options="options" />
+            <el-radio-group v-model="checkedRegItem">
+              <el-radio-button
+                v-for="item in checkItemList"
+                :key="item.value"
+                :value="item.value"
+                @change="getCareOrderItemFetch(item.value)"
+              >
+                {{ item.label }}
+                <!-- 确保显示文本 -->
+              </el-radio-button>
+            </el-radio-group>
           </el-col>
           <!-- 模糊查询 -->
           <el-col :span="8">
@@ -25,16 +35,20 @@
         <el-row class="mt-10px">
           <el-col>
             <el-table
-              :data="registrationFeeData"
+              :data="checkResultFinishList"
               style="width: 100%"
               max-height="500"
               row-key="dictId"
+              border
             >
-              <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="检查单号" prop="regItemId" width="120" />
-              <el-table-column label="项目名称" prop="regItemName" width="180" />
-              <el-table-column label="患者姓名" prop="regItemFee" />
-              <el-table-column label="检查状态" prop="createTime" width="200" />
+              <el-table-column label="检查项ID" prop="itemId" width="220" />
+              <el-table-column label="项目名称" prop="checkItemName" width="180" />
+              <el-table-column label="价格" prop="price">
+                <template #default="scope">
+                  {{ parseFloat(scope.row.price).toFixed(2) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="检查描述" prop="resultMsg" width="200" />
               <el-table-column label="检查结果" prop="createBy" width="200" />
               <el-table-column label="创建时间" prop="updateTime" width="200" />
               <!-- 按钮组 -->
@@ -110,7 +124,6 @@
 
 <script setup lang="ts">
 import http from '@/http'
-import { ElMessage } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 
 const pageNum = ref(1) //当前页
@@ -118,45 +131,47 @@ const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
 const registrationFeeData = reactive([]) //科室数据
-const rowLoadingMap = reactive({}) //是否处于加载状态
 const resultVisible = ref(false) //查看结果对话框控制显示
+const checkItemList = ref([]) // 存储获取的检查项
+const checkedRegItem = ref(1) //选中的检查项目
+const checkResultFinishList = ref([]) //存储检查结果列表
 
-const trigger = ref<'乙肝五项' | '乙肝五项'>('乙肝五项')
-const options = ['乙肝五项', '血常规', 'CT', 'X光']
+//获取所有检查费用的ID和名字
+const getCheckItemFetchData = async () => {
+  const res = await http.get('/checkItem/getCheckIdAndName')
+  checkItemList.value = (res.data.data || []).map((item) => ({
+    label: item.checkItemName, // 文本
+    value: item.checkItemId, // 绑定的值
+  }))
+}
 
 //查看检查结果
 const seeResult = () => {
   resultVisible.value = true
 }
 
-//模糊查询
-const searchRegistrationFee = (keyWordInput) => {
-  keyWord.value = keyWordInput
-  ElMessage.info(keyWord.value)
-  // getUserData()
-}
-
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
-  getAnnouncementFetch()
+  getCheckResultFinishFetch()
 }
 
 //下一页
 const currentChange = (newPage) => {
   pageNum.value = newPage
-  getAnnouncementFetch()
+  getCheckResultFinishFetch()
 }
 
 //页面加载时挂载
 onMounted(() => {
-  getAnnouncementFetch()
+  getCheckResultFinishFetch()
+  getCheckItemFetchData()
 })
 
-const getAnnouncementFetch = () => {
-  //获取检查费用数据
+//获取检查结果
+const getCheckResultFinishFetch = () => {
   http
-    .get('/registeredItem/list', {
+    .get('/checkResult/get/1', {
       params: {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
@@ -164,9 +179,7 @@ const getAnnouncementFetch = () => {
       },
     })
     .then((res) => {
-      const list = Array.isArray(res.data.list) ? res.data.list : []
-      registrationFeeData.splice(0, registrationFeeData.length, ...list)
-      pageTotal.value = res.data?.total || 0
+      checkResultFinishList.value = res.data.data
     })
 }
 </script>
