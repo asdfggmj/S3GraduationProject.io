@@ -58,33 +58,36 @@
                 <p m="t-0 b-2"><b>返回参数:</b> {{ props.row.jsonResult }}</p>
 
                 <p m="t-0 b-2"><b>操作状态:</b>{{ props.row.status==0?'正常':'异常' }}</p>
-                <p m="t-0 b-2"><b>操作时间:</b> {{ props.row.operTime }}</p>
+                <p m="t-0 b-2"><b>操作时间:</b> {{ props.row.operTime.replace('T',' ') }}</p>
 
                 <p m="t-0 b-2"><b>异常信息:</b> {{ props.row.erroMsg }}</p>
               </div>
             </template>
           </el-table-column>
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="日志ID" prop="operId" width="120" />
-              <el-table-column label="系统模块" prop="title" width="120" />
-              <el-table-column label="操作类型" props="bussinessType" >
+              <el-table-column label="日志ID" prop="operId" width="100" />
+              <el-table-column label="系统模块" prop="title" width="200" />
+              <el-table-column label="操作类型" props="bussinessType" width="150">
                 <template #default="scope">
                   <span>{{ getBusinessTypeText(scope.row.bussinessType) }}</span>
                 </template>
                 </el-table-column>
-              <el-table-column label="请求方式" prop="requestMethod" width="200" />
-              <el-table-column label="操作人员" prop="operName" width="200" />
-              <el-table-column label="主机" prop="operIp" width="200" />
-              <el-table-column label="操作地点" prop="operLocation" width="200" />
-              <el-table-column label="操作状态" prop="status" width="200" >
+              <el-table-column label="请求方式" prop="requestMethod" width="150" />
+              <el-table-column label="操作人员" prop="operName" width="150" />
+              <el-table-column label="主机" prop="operIp" width="150" />
+              <el-table-column label="操作地点" prop="operLocation" width="120" />
+              <el-table-column label="操作状态" prop="status" width="120" >
                 <template #default="scope">
                   <span>{{ scope.row.status==0?'成功':'失败' }}</span>
                 </template>
                 </el-table-column>
-              <el-table-column label="操作时间" prop="operTime" width="200" />
-
+              <el-table-column label="操作时间" prop="operTime" width="200" >
+                <template #default="scope">
+                  {{ scope.row.operTime.replace('T',' ') }}
+                </template>
+              </el-table-column>
               <!-- 按钮组 -->
-              <el-table-column label="操作" fixed="right" width="240">
+              <el-table-column label="操作" fixed="right" width="150">
                 <template #default="scope">
                   <el-button-group>
                     <el-button type="danger" size="small" @click="delOperateLog(scope.row.operId,scope.row.title)">

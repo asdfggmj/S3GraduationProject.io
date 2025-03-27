@@ -74,7 +74,11 @@
                   />
                 </template>
               </el-table-column>
-              <el-table-column label="创建时间" prop="createTime" width="200" />
+              <el-table-column prop="createTime" label="创建时间" >
+                <template #default="scope">
+                  {{ scope.row.createTime.replace('T',' ') }}
+                </template>
+              </el-table-column>
               <el-table-column label="创建人" prop="createTime" width="200" />
               <el-table-column label="最后一次修改时间" prop="updateTime" width="200" />
               <el-table-column label="修改人" prop="updateBy" width="200" />

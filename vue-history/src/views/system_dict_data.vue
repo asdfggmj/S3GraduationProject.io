@@ -72,9 +72,17 @@
                 </template>
               </el-table-column>
               <el-table-column label="备注" prop="remark" width="200" />
-              <el-table-column label="创建时间" prop="createTime" width="200" />
+              <el-table-column label="创建时间" prop="createTime" width="200" >
+                <template #default="scope">
+                  {{ scope.row.createTime.replace('T',' ') }}
+                </template>
+              </el-table-column>
               <el-table-column label="创建人" prop="createBy" width="120" />
-              <el-table-column label="最后一次修改时间" prop="updateTime" width="200" />
+              <el-table-column label="最后一次修改时间" prop="updateTime" width="200">
+                <template #default="scope">
+                  {{ scope.row.updateTime.replace('T',' ') }}
+                </template>
+              </el-table-column>
               <el-table-column label="修改人" prop="updateBy" width="120" />
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="160">
