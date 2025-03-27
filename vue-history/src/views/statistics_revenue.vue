@@ -108,7 +108,7 @@
 import PieChart from '@/components/pie_chart.vue'
 import { ElMessage } from 'element-plus'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { format } from 'date-fns'
+import { formatDate } from '@/utils/dateUtils'
 import http from '@/http'
 import * as echarts from 'echarts'
 
@@ -244,8 +244,8 @@ const searchByDate = () => {
   // } else {
   if (valueDate.value.length !== 0) {
     // 格式化日期为 yyyy-MM-dd
-    pickdata.startDate = format(new Date(valueDate.value[0]), 'yyyy-MM-dd')
-    pickdata.endDate = format(new Date(valueDate.value[1]), 'yyyy-MM-dd')
+    pickdata.startDate = formatDate(new Date(valueDate.value[0]), 'yyyy-MM-dd')
+    pickdata.endDate = formatDate(new Date(valueDate.value[1]), 'yyyy-MM-dd')
   }
   //刷新
   getData()
