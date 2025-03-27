@@ -51,8 +51,8 @@
                 show-summary>
                   <el-table-column label="项目ID" prop="checkItemId" />
                   <el-table-column label="项目名称" prop="checkItemName" />
-                  <el-table-column label="项目价格" prop="price" />
-                  <el-table-column label="患者姓名" prop="name" />
+                  <el-table-column label="项目价格" prop="unitPrice" />
+                  <el-table-column label="患者姓名" prop="paientName" />
                   <el-table-column label="检查状态">
                     <template #default="scope">
                       <span>{{ scope.row.resultStatus=='0'?'检测中':'检测完成' }}</span>
@@ -97,12 +97,12 @@
             </el-row>
             <el-row>
               <el-col>
-                <el-table :data="statisticsData" border :summary-method="getTotalStatistics"
+                <el-table :data="listData" border :summary-method="getTotal"
                 show-summary>
                   <el-table-column label="项目ID" prop="checkItemId" />
                   <el-table-column label="项目名称" prop="checkItemName" />
                   <el-table-column label="总金额" prop="totalPrice" />
-                  <el-table-column label="检查次数" prop="totalNum" />
+                  <el-table-column label="检查次数" prop="checkNum" />
                 </el-table>
               </el-col>
             </el-row>
@@ -132,13 +132,12 @@
 <script setup lang="ts">
 import http from '@/http'
 import { format } from 'date-fns'
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const listData = ref([])//检查项目页面数据
-const statisticsData = ref([])//检查项目统计页面数据
 const valueDate = ref([])    //日期范围数组
 const pickdata = reactive({ //开始日期和结束日期
   startDate: '',
@@ -146,18 +145,34 @@ const pickdata = reactive({ //开始日期和结束日期
 })
 const itemName=ref('')//项目名称
 const paientName=ref('')//患者名称
-const activeName = ref('first')
+const activeName = ref('first')//当前激活的标签页
+
+// 监听activeName变换，判断当前是哪个标签
+// watch(activeName, (newVal) => {
+//   //清空
+//   valueDate.value = [];
+//   pickdata.startDate = '';
+//   pickdata.endDate = '';
+//   itemName.value='';
+//   paientName.value='';
+//   // 根据标签页加载数据
+//   if (newVal === 'first') {
+//       getItem()
+//   } else if (newVal === 'second') {
+//       getStatisticsItem()
+//   }
+// });
 
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
-  getData()
+  activeName.value=='first'?getItem():getStatisticsItem()
 }
 
 //下一页
 const currentChange = (newPage) => {
   pageNum.value = newPage
-  getData()
+  activeName.value=='first'?getItem():getStatisticsItem()
 }
 
 // 搜索按钮，获取日期选择器
@@ -175,7 +190,7 @@ const searchByDate = () => {
     pickdata.endDate = format(new Date(valueDate.value[1]), 'yyyy-MM-dd')
     }
     //刷新
-    getData()
+    activeName.value=='first'?getItem():getStatisticsItem()
   //}
 }
 
@@ -187,20 +202,20 @@ const reset = () => {
   itemName.value='';
   paientName.value='';
 
-  // 重置后重新请求默认数据（即使当天数据为空，也会覆盖旧数据）
-  getData();
+  // 重置后重新请求默认数据（即使当天数据为空，也会覆盖旧数据
+  activeName.value=='first'?getItem():getStatisticsItem()
 }
 
 //页面挂载
 onMounted(() => {
   //获取页面数据
-  getData()
+  getItem()
 })
 
 //获取检查列表页面数据
-const getData=()=>{
+const getItem=()=>{
   //发送后端异步请求
-http.get("statistics/listCheckItem",{
+http.get("statistics/itemCheck",{
     params:{
       pageNum: pageNum.value,
       pageSize: pageSize.value,
@@ -214,9 +229,14 @@ http.get("statistics/listCheckItem",{
   .then((res)=>{
     listData.value=res.data.data.list
     pageTotal.value = res.data.data?.total || 0
+
     })
-      //发送后端异步请求
-http.get("statistics/statisticsCheckItem",{
+}
+
+//获取检查列表统计页面数据
+const getStatisticsItem=()=>{
+  //发送后端异步请求
+http.get("statistics/statisticsCheck",{
     params:{
       pageNum: pageNum.value,
       pageSize: pageSize.value,
@@ -227,13 +247,16 @@ http.get("statistics/statisticsCheckItem",{
     }
   )
   .then((res)=>{
-    statisticsData.value=res.data.data.list
-    pageTotal.value = res.data.data?.total || 0
+    console.log(res.data.data);
+
+    listData.value=res.data.data
+    // pageTotal.value = res.data.data?.total || 0
     })
+    //lconsole.log(listData.value)
 }
 
 
-//计算检查项目合计数据
+//计算合计数据
 const getTotal = (param) => {
   const { columns, data } = param;
     const sums = [];
@@ -242,30 +265,9 @@ const getTotal = (param) => {
             sums[index] = '合计';
             return;
         }
-        if (column.property === 'price') {
-            // 处理空数据：如果 data 为空，返回 0
-            const values = data.length > 0
-                ? data.map(item => Number(item[column.property]))
-                : [0];
-            sums[index] = values.reduce((prev, curr) => prev + curr, 0);
-        } else {
-            sums[index] = '';
-        }
-    });
-    return sums;
-}
-
-//计算检查项目统计合计数据
-const getTotalStatistics = (param) => {
-  const { columns, data } = param;
-    const sums = [];
-    columns.forEach((column, index) => {
-        if (index === 0) {
-            sums[index] = '合计';
-            return;
-        }
-        if (column.property === 'totalPrice' ||
-            column.property === 'totalNum') {
+        if (column.property === 'unitPrice'||
+            column.property === 'totalPrice'||
+            column.property === 'checkNum') {
             // 处理空数据：如果 data 为空，返回 0
             const values = data.length > 0
                 ? data.map(item => Number(item[column.property]))

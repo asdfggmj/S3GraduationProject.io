@@ -1,23 +1,24 @@
-<!-- 退费查询 -->
+<!-- 退费列表 -->
 <template>
   <!-- 卡片1 -->
   <el-card shadow="always">
     <el-row>
       <el-col :span="6">
         <el-form-item label="挂号单号">
-          <el-input placeholder="请输入挂号单号" />
+          <el-input v-model="regId" placeholder="请输入挂号单号" />
         </el-form-item>
       </el-col>
       <el-col :span="6" style="margin-left: 6px">
         <el-form-item label="患者姓名">
-          <el-input placeholder="请输入患者姓名" />
+          <el-input v-model="paientName" placeholder="请输入患者姓名" />
         </el-form-item>
       </el-col>
       <el-col :span="4" style="margin-left: 6px">
-        <el-button type="primary">
+        <el-button type="primary" @click="getOrder">
           <el-icon><Search /></el-icon>
           <span>查询</span>
         </el-button>
+        <el-button type="info" @click="reset">重置</el-button>
       </el-col>
     </el-row>
   </el-card>
@@ -25,38 +26,60 @@
   <el-card class="mt-10px" shadow="always">
     <el-row>
       <el-col>
-        <el-table :data="chargeListData">
-          <el-table-column prop="ddh" label="订单号" />
-          <el-table-column prop="ghdh" label="挂号单号" />
-          <el-table-column prop="name" label="患者姓名" />
-          <el-table-column prop="total" label="总金额" />
-          <el-table-column prop="payType" label="支付类型" />
-          <el-table-column prop="orderStatus" label="订单状态" />
-          <el-table-column prop="createTime" label="创建时间" />
-          <el-table-column label="操作" fixed="right" width="400">
+        <el-table :data="backListData" border>
+          <el-table-column type="expand">
+            <template #default="props">
+              <div m="4">
+                <el-card shadow="never" style="border: 1px solid white;">
+                  <el-table
+                    :data="props.row.orderBackFeeItemList"
+                    stripe
+                    border
+                    style="width: 100%"
+                  >
+                  <el-table-column label="详情ID" prop="itemId" />
+                  <el-table-column label="处方ID" prop="coId" />
+                  <el-table-column label="名称" prop="itemName" />
+                  <el-table-column label="价格" prop="itemPrice" />
+                  <el-table-column label="数量" prop="itemNum" />
+                  <el-table-column label="小计" prop="itemAmount" />
+                  <el-table-column label="类型" prop="itemType">
+                    <template #default="scope">
+                      {{ scope.row.itemType==1?'检查':'药品' }}
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="status" label="状态" >
+                    <template #default="scope">
+                      <span v-if="scope.row.status==0">未支付</span>
+                      <span v-if="scope.row.status==1">已支付</span>
+                      <span v-if="scope.row.status==2">已退费</span>
+                      <span v-if="scope.row.status==3">已完成</span>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </el-card>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="backId" label="退费订单号" />
+          <el-table-column prop="regId" label="挂号单号" />
+          <el-table-column prop="patientName" label="患者姓名" />
+          <el-table-column prop="backAmount" label="退费总金额" />
+          <el-table-column prop="backType" label="退费方式" >
             <template #default="scope">
-              <el-button-group>
-                <el-button type="primary">
-                  <i class="iconfont icon-chakan" style="margin-right: 6px"></i>
-                  <span>查看详细</span>
-                </el-button>
-                <el-button type="primary">
-                  <i class="iconfont icon-_xianjin" style="margin-right: 6px"></i>
-                  <span>现金收费</span>
-                </el-button>
-                <el-button type="primary">
-                  <i class="iconfont icon-zhifubaozhifu" style="margin-right: 6px"></i>
-                  <span>支付宝收费</span>
-                </el-button>
-                <el-button type="primary">
-                  <i class="iconfont icon-weixin" style="margin-right: 6px"></i>
-                  <span>微信收费</span>
-                </el-button>
-                <el-button type="primary">
-                  <i class="iconfont icon-yinlian" style="margin-right: 6px"></i>
-                  <span>银联收费</span>
-                </el-button>
-              </el-button-group>
+              {{ scope.row.payType==1?'支付宝':'现金' }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="backStatus" label="订单状态" >
+            <template #default="scope">
+              <span v-if="scope.row.orderStatus==0">未退费</span>
+              <span v-if="scope.row.orderStatus==1">退费成功</span>
+              <span v-if="scope.row.orderStatus==2">退费失败</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="createTime" label="创建时间" >
+            <template #default="scope">
+              {{ scope.row.createTime.replace('T',' ') }}
             </template>
           </el-table-column>
         </el-table>
@@ -79,22 +102,78 @@
       </el-col>
     </el-row>
   </el-card>
-  <el-dialog
-    v-model="payforVisible"
-    title="使用[微信]扫码支付"
-    width="500"
-    :before-close="handleClose"
-  >
-    <el-card shadow="hover">
-      <el-row>
-        <el-col :span="12">订单号：</el-col>
-        <el-row :span="12">总金额：</el-row>
-      </el-row>
-    </el-card>
-    <el-card class="mt-10px">
-      <el-row>
-        <el-col :span="24">二维码</el-col>
-      </el-row>
-    </el-card>
-  </el-dialog>
 </template>
+
+<script setup lang="ts">
+import http from '@/http'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, onMounted, reactive, ref } from 'vue'
+
+const pageNum = ref(1) //当前页
+const pageSize = ref(10) //每页显示的数据
+const pageTotal = ref(0) //总个数
+const odc=ref('')//名称
+const paientName=ref('')//患者名称
+const backListData = reactive([])//退费列表数据
+const payforVisible = ref(false)//二维码显示
+let regId=ref('');//挂号编号
+let payType=ref('')//支付类型
+let amount=ref(0)//订单总金额
+
+// 重置按钮，清空数据
+const reset = () => {
+  paientName.value=''
+  regId.value=''
+  getOrder()
+}
+
+
+//上一页
+const sizeChange = (newPageSize) => {
+  pageSize.value = newPageSize
+  getOrder()
+}
+
+//下一页
+const currentChange = (newPage) => {
+  pageNum.value = newPage
+  getOrder()
+}
+
+//页面挂载
+onMounted(() => {
+  //获取页面数据
+  getOrder()
+})
+
+//获取退费列表页面数据
+const getOrder=()=>{
+  //发送后端异步请求
+http.get("orderBackfee/list",{
+    params:{
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+      regId:regId.value,
+      patientName:paientName.value
+      }
+    }
+  )
+  .then((res)=>{
+    backListData.splice(0, backListData.length, ...res.data.data.list)
+    pageTotal.value = res.data.data?.total || 0
+    })
+}
+</script>
+
+<style>
+@import url('https://at.alicdn.com/t/c/font_4844128_4azmggyqmzg.css');
+.mt-10px {
+  margin-top: 10px;
+}
+
+/* 悬停效果 */
+.el-table--expand .el-table__body tr:hover td {
+  background-color: #e8f4ff !important;
+}
+
+</style>
