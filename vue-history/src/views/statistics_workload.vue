@@ -1,6 +1,4 @@
 <!-- 工作量统计 -->
-<!-- 检查项目统计 -->
-<!-- 药品销售统计 -->
 <template>
   <el-row style="text-align: center">
     <el-col :span="24">

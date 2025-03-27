@@ -93,6 +93,8 @@ const submitLogin = () => {
             return
           }
           return ElMessage.error(response.data.message)
+        }).catch((error)=>{
+          ElMessage.error('用户不存在或账号密码错误')
         })
         .finally(() => {
           isLoading.value = false
