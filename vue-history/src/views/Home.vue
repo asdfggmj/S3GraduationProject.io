@@ -58,7 +58,7 @@
         <el-carousel indicator-position="outside" height="300px">
           <el-carousel-item v-for="(item, index) in photoList" :key="index">
             <h3 text="2xl" justify="center">
-              <el-image :src="item">
+              <el-image :src="item" >
                 <template #placeholder>
                   <div class="image-slot">Loading<span class="dot">...</span></div>
                 </template>
@@ -108,7 +108,7 @@ import { time } from 'echarts'
 const photoList = [
   'src/assets/image/p1.jpg',
   'src/assets/image/p2.jpg',
-  'src/assets/image/p3.jpg',
+  'src/assets/image/p5.png',
   'src/assets/image/p4.jpg',
 ]
 const userStore = useUserStore()
