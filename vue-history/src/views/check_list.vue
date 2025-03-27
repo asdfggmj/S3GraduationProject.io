@@ -49,7 +49,11 @@
               </el-table-column>
               <el-table-column label="检查描述" prop="resultMsg" width="200" />
               <el-table-column label="检查结果" prop="createBy" width="200" />
-              <el-table-column label="创建时间" prop="updateTime" width="200" />
+              <el-table-column label="创建时间" prop="updateTime" width="200">
+                <template #default="scope">
+                  {{ formatDate(scope.row.updateTime) }}
+                </template>
+              </el-table-column>
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="160">
                 <template #default="scope">
@@ -124,6 +128,7 @@
 <script setup lang="ts">
 import http from '@/http'
 import { onMounted, ref } from 'vue'
+import { formatDate } from '@/utils/dateUtils'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
@@ -177,7 +182,10 @@ const getCheckResultFinishFetch = () => {
       },
     })
     .then((res) => {
-      checkResultFinishList.value = res.data.data
+      const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
+      checkResultFinishList.value.splice(0, checkResultFinishList.value.length, ...list)
+      pageTotal.value = res.data.data?.total || 0
+      // checkResultFinishList.value = res.data.data
     })
 }
 </script>

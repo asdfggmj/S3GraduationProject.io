@@ -40,9 +40,14 @@
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
-            <el-table :data="dictData" style="width: 100%" max-height="500"
-            row-key="dictCode"
-            @selection-change="handleSelectionChange">
+            <el-table
+              :data="dictData"
+              style="width: 100%"
+              max-height="500"
+              border
+              row-key="dictCode"
+              @selection-change="handleSelectionChange"
+            >
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="字典编码" prop="dictCode" width="100" />
               <el-table-column label="字典标签" prop="dictLabel" width="160" />
@@ -57,7 +62,7 @@
                         handleBeforeChange(
                           scope.row.dictCode,
                           scope.row.status === 0 ? 1 : 0,
-                          scope.row.dictLabel
+                          scope.row.dictLabel,
                         )
                     "
                     :active-value="0"
@@ -66,7 +71,7 @@
                     inactive-text="禁用"
                     class="ml-2"
                     inline-prompt
-                    style="--el-switch-on-color:#13ce66 ; --el-switch-off-color: #ff4949"
+                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
                     :loading="rowLoadingMap[scope.row.dictCode]"
                   />
                 </template>
@@ -80,7 +85,11 @@
               <el-table-column label="操作" fixed="right" width="160">
                 <template #default="scope">
                   <el-button-group>
-                    <el-button type="success" size="small" @click="editDictData(scope.row.dictCode)">
+                    <el-button
+                      type="success"
+                      size="small"
+                      @click="editDictData(scope.row.dictCode)"
+                    >
                       <el-icon><Edit /></el-icon>
                       <span>编辑</span>
                     </el-button>
@@ -124,7 +133,7 @@
     <el-row>
       <el-col :span="20">
         <el-form :model="dictDataObject" label-width="auto" style="max-width: 600px">
-          <el-input v-model="dictDataObject.dictCode" style="display: none;"/>
+          <el-input v-model="dictDataObject.dictCode" style="display: none" />
           <el-form-item label="字典类型">
             <el-input v-model="dictDataObject.dictType" disabled placeholder="请输入数据标签" />
           </el-form-item>
@@ -144,8 +153,8 @@
             </el-radio-group>
           </el-form-item>
           <el-form-item label="备注">
-      <el-input v-model="dictDataObject.remark" type="textarea" />
-    </el-form-item>
+            <el-input v-model="dictDataObject.remark" type="textarea" />
+          </el-form-item>
         </el-form>
       </el-col>
     </el-row>
@@ -176,17 +185,17 @@ const dictTypeStore = useDictTypeStore() //使用字典类别的xx
 const addOrEditDrawerModal = ref(false) //添加或编辑字典数据抽屉
 const addOrEditDrawerTitle = ref('') //添加或编辑字典数据抽屉标题
 const dictType = ref('')
-let dids = ref([])//存储选中的字典数据编号的数组
+let dids = ref([]) //存储选中的字典数据编号的数组
 
 //字典数据对象，用于存储添加或修改的字典数据信息
 const dictDataObject = reactive({
-    dictCode:'',
-    dictSort:'',
-    dictLabel:'',
-    dictValue:'',
-    dictType:'',
-    status:'0',
-    remark:''
+  dictCode: '',
+  dictSort: '',
+  dictLabel: '',
+  dictValue: '',
+  dictType: '',
+  status: '0',
+  remark: '',
 })
 
 //模糊查询
@@ -217,12 +226,11 @@ const batchDelete = async () => {
     //提取id
     const ids = dids.value.map((item) => item.dictCode)
     // 调用 API 批量删除
-    await http.post('/dictData/batchDelete', { ids }).then((res)=>{
-          // 重新查询一遍数据
-          getDictFetch()
-          ElMessage.success('批量删除成功！')
+    await http.post('/dictData/batchDelete', { ids }).then((res) => {
+      // 重新查询一遍数据
+      getDictFetch()
+      ElMessage.success('批量删除成功！')
     })
-
   } catch (error) {
     ElMessage.error('批量删除失败！', error)
   }
@@ -231,12 +239,12 @@ const batchDelete = async () => {
 //添加字典数据抽屉
 const addDictData = () => {
   //清空字典数据对象
-  dictDataObject.dictCode=''
-  dictDataObject.dictLabel=''
-  dictDataObject.dictSort=''
+  dictDataObject.dictCode = ''
+  dictDataObject.dictLabel = ''
+  dictDataObject.dictSort = ''
   dictDataObject.status = '0'
-  dictDataObject.dictType=dictType.value
-  dictDataObject.remark=''
+  dictDataObject.dictType = dictType.value
+  dictDataObject.remark = ''
 
   addOrEditDrawerTitle.value = '添加字典数据'
   addOrEditDrawerModal.value = true
@@ -248,17 +256,17 @@ const editDictData = (dictCode) => {
   addOrEditDrawerTitle.value = '编辑字典数据'
   addOrEditDrawerModal.value = true
   //回调单个字典数据数据
-  http.get("/dictData/getById?id="+dictCode).then((res)=>{
-   if(res.data.data){
-      dictDataObject.dictCode=res.data.data.dictCode
-      dictDataObject.dictLabel=res.data.data.dictLabel
-      dictDataObject.dictSort=res.data.data.dictSort
+  http.get('/dictData/getById?id=' + dictCode).then((res) => {
+    if (res.data.data) {
+      dictDataObject.dictCode = res.data.data.dictCode
+      dictDataObject.dictLabel = res.data.data.dictLabel
+      dictDataObject.dictSort = res.data.data.dictSort
       dictDataObject.status = res.data.data.status
       dictDataObject.dictType = res.data.data.dictType
-      dictDataObject.dictValue=res.data.data.dictValue
-      dictDataObject.remark=res.data.data.remark
+      dictDataObject.dictValue = res.data.data.dictValue
+      dictDataObject.remark = res.data.data.remark
     }
-    })
+  })
   // .catch((error)=>{
   //   //ElMessage.error('获取字典数据数据失败'+error)
   // })
@@ -268,15 +276,15 @@ const editDictData = (dictCode) => {
 const addOrEditDictDataSubmit = () => {
   // console.log("添加的数据"+dictDataObject)
   //后端发送添加字典数据请求
-  http.post("/dictData/addOrEditDictData",dictDataObject).then((res) => {
-    if(res.data.data){
+  http.post('/dictData/addOrEditDictData', dictDataObject).then((res) => {
+    if (res.data.data) {
       if (res.data.data.includes('成功')) {
-      ElMessage.success(res.data.data)
-      addOrEditDrawerModal.value = false
+        ElMessage.success(res.data.data)
+        addOrEditDrawerModal.value = false
+      } else {
+        ElMessage.error(res.data.data)
+      }
     } else {
-      ElMessage.error(res.data.data)
-    }
-    }else{
       ElMessage.error(res.data.data)
     }
     getDictFetch()
@@ -285,32 +293,27 @@ const addOrEditDictDataSubmit = () => {
 
 //删除字典数据
 const delDictData = (roleId) => {
-  ElMessageBox.confirm(
-    "确定删除编码为"+roleId+"的字典数据？",
-    '警告',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
-  )
-  .then(() => {
-      //删除字典数据
-      http.post("dictData/deleteById?od="+roleId).then((res)=>{
-        if(res.data){
-          ElMessage.success('删除成功')
-          getDictFetch()
-        } else {
-      throw new Error('字典数据删除失败')
-    }
-      })
+  ElMessageBox.confirm('确定删除编码为' + roleId + '的字典数据？', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    //删除字典数据
+    http.post('dictData/deleteById?od=' + roleId).then((res) => {
+      if (res.data) {
+        ElMessage.success('删除成功')
+        getDictFetch()
+      } else {
+        throw new Error('字典数据删除失败')
+      }
     })
-    // .catch(() => {
-    //   ElMessage({
-    //     type: 'info',
-    //     message: 'Delete canceled',
-    //   })
-    // })
+  })
+  // .catch(() => {
+  //   ElMessage({
+  //     type: 'info',
+  //     message: 'Delete canceled',
+  //   })
+  // })
 }
 
 //关闭抽屉前提示用户是否关闭
@@ -367,8 +370,8 @@ const beforeChange = () => {
 
 //状态按钮切换主逻辑方法
 const handleBeforeChange = async (rid, roleStatus, roleName) => {
- //将当前开关的动画状态开启
- rowLoadingMap[rid] = true
+  //将当前开关的动画状态开启
+  rowLoadingMap[rid] = true
   try {
     //执行beforeChange和更改字典数据状态
     await beforeChange()
@@ -381,7 +384,6 @@ const handleBeforeChange = async (rid, roleStatus, roleName) => {
     rowLoadingMap[rid] = false
   }
 }
-
 
 //上一页
 const sizeChange = (newPageSize) => {
@@ -400,7 +402,6 @@ onMounted(() => {
   //设置字典类别默认值=>从父页面获取
   dictType.value = dictTypeStore.getDictType.dictType
   getDictFetch()
-
 })
 
 //获取字典数据
@@ -417,7 +418,7 @@ const getDictFetch = () => {
     .then((res) => {
       const list = Array.isArray(res.data.list) ? res.data.list : []
       // 将 status 转换为数字类型
-      list.forEach(item => {
+      list.forEach((item) => {
         item.status = Number(item.status)
       })
       dictData.splice(0, dictData.length, ...list)

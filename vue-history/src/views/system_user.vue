@@ -40,15 +40,15 @@
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
-            <el-table :data="userData" style="width: 100%" max-height="500" row-key="userId">
+            <el-table :data="userData" style="width: 100%" max-height="500" row-key="userId" border>
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="用户头像" property="picture">
+              <el-table-column label="用户头像" property="picture" width="100">
                 <template #default="scope">
                   <el-image style="width: 48px; height: 48px" :src="`${scope.row.picture}`" />
                 </template>
               </el-table-column>
               <el-table-column label="用户姓名" prop="userName" width="120" />
-              <el-table-column label="所属部门">
+              <el-table-column label="所属部门" width="120">
                 <template #default="scope">
                   {{ getDeptName(scope.row.deptId) }}
                   <!-- 根据 deptId 查找科室名称 -->
@@ -68,7 +68,7 @@
                   <span>{{ scope.row.schedulingFlag === 0 ? '是' : '否' }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="级别" prop="userRankValue" />
+              <el-table-column label="级别" prop="userRankValue" width="120" />
               <el-table-column label="教育背景" prop="backgroundValue" />
               <el-table-column label="用户状态" prop="status">
                 <template #default="scope">

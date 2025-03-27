@@ -219,7 +219,13 @@ const addCheckResult = () => {
         fileList.value = [] //清空图片列表
         getCheckResultList() //重新获取数据
         resultVisible.value = false //关闭对话框
-        ElMessage.success('录入成功!!!')
+        //修改用药和检查项目状态为3已完成
+        http.put(`/orderItem/update/3/${itemId.value}`).then((res) => {
+          if (res.data.code === 200 && res.data.data === true) {
+            itemId.value = '' //清空itemId
+            ElMessage.success('录入成功!!!')
+          }
+        })
       }
     })
     .catch(() => {

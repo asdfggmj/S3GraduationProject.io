@@ -46,10 +46,10 @@
               border
             >
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="用户名" prop="userName" width="160" />
-              <el-table-column label="登录账号" prop="loginAccount" width="160" />
-              <el-table-column label="IP" prop="background" width="120" />
-              <el-table-column label="登录地址" prop="ipAddr" width="200" />
+              <el-table-column label="用户名" prop="userName" width="200" />
+              <el-table-column label="登录账号" prop="loginAccount" width="200" />
+              <el-table-column label="IP" prop="ipAddr" width="120" />
+              <el-table-column label="登录地址" prop="" width="200" />
               <el-table-column label="浏览器" prop="browser" width="200" />
               <el-table-column label="操作系统" prop="os" width="200" />
               <el-table-column label="登录状态" width="200" prop="msg"> </el-table-column>
@@ -58,7 +58,9 @@
                   <span>{{ scope.row.loginType === '0' ? '系统用户' : '患者用户' }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="登录时间" prop="loginTime" width="200" />
+              <el-table-column label="登录时间" prop="loginTime" width="200">
+                <template #default="scope">{{ formatDate(scope.row.loginTime) }}</template>
+              </el-table-column>
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="100">
                 <template #default="scope">
@@ -104,6 +106,7 @@ import { Search, Refresh } from '@element-plus/icons-vue'
 import http from '@/http'
 import { useCookies } from '@vueuse/integrations/useCookies'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { formatDate } from '@/utils/dateUtils'
 
 //从cookie获取authorization
 const cookie = useCookies()
