@@ -113,7 +113,7 @@ onMounted(() => {
 
 //获取排班时间段数据
 const getTimesData = () => {
-  http.get('/dict/get/his_subsection_type').then((res) => {
+  http.get('/dictData/get/his_subsection_type').then((res) => {
     const dictData = res.data.data || []
     timesDataMap.value = dictData.reduce((map, item) => {
       map[Number(item.dictValue)] = item.dictLabel
@@ -124,7 +124,7 @@ const getTimesData = () => {
 
 //获取排班类型数据
 const getSchedulingType = () => {
-  http.get('/dict/get/his_scheduling_type').then((res) => {
+  http.get('/dictData/get/his_scheduling_type').then((res) => {
     const dictData = res.data.data || []
 
     schedulingTypeMap.value = dictData.reduce((map, item) => {

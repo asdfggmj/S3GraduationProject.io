@@ -7,13 +7,23 @@
         <el-row justify="space-between">
           <el-col :span="12">
             <el-text class="mr-20px">检查项目</el-text>
-            <el-segmented v-model="selectedCheckItem" :options="checkItemList" />
+            <el-radio-group v-model="checkedRegItem">
+              <el-radio-button
+                v-for="item in checkItemList"
+                :key="item.value"
+                :value="item.value"
+                @change="getCareOrderItemFetch(item.value)"
+              >
+                {{ item.label }}
+                <!-- 确保显示文本 -->
+              </el-radio-button>
+            </el-radio-group>
           </el-col>
         </el-row>
         <el-row class="mt-10px">
           <el-col :span="8">
             <el-form-item label="检查单号">
-              <el-input placeholder="请输入检查单号" />
+              <el-input placeholder="请输入检查单号" v-model="checkItemId" />
             </el-form-item>
           </el-col>
           <el-col :span="2" style="margin-left: 6px"
@@ -42,8 +52,16 @@
               <el-table-column label="详细ID" prop="itemId" width="240" />
               <el-table-column label="项目名称" prop="itemName" width="160" />
               <el-table-column label="数量" prop="num" width="120" />
-              <el-table-column label="单价(元)" prop="price" width="160" />
-              <el-table-column label="总价(元)" prop="amount" width="160" />
+              <el-table-column label="单价(元)" prop="price" width="160">
+                <template #default="scope">
+                  {{ parseFloat(scope.row.price).toFixed(2) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="总价(元)" prop="amount" width="160">
+                <template #default="scope">
+                  {{ parseFloat(scope.row.amount).toFixed(2) }}
+                </template>
+              </el-table-column>
               <el-table-column label="备注" prop="remark" width="220" />
               <el-table-column label="状态" prop="dictLabel" />
             </el-table>
@@ -76,7 +94,12 @@
         </el-row>
         <el-row>
           <el-col :span="24">
-            <el-button type="primary" class="mt-10px w-100max">
+            <el-button
+              type="primary"
+              class="mt-10px w-100max"
+              @click="startRegItemFetch"
+              :disabled="startCheckDisabled"
+            >
               <el-icon><Plus /></el-icon>
               <span>开始检查</span>
             </el-button>
@@ -89,10 +112,13 @@
 
 <script setup lang="ts">
 import http from '@/http'
-import { onMounted, reactive, ref } from 'vue'
+import { debounce } from '@/utils/debounceUtils'
+import { ElMessage } from 'element-plus'
+import { nextTick, onMounted, reactive, ref } from 'vue'
 
-const selectedCheckItem = ref(1) //选中的检查项目
-const checkItemList = ref([]) // 存储动态获取的检查项
+const registeredItems = ref([]) //检查项目列表
+const checkedRegItem = ref(1) //选中的检查项目
+const checkItemList = ref([]) // 存储获取的检查项
 const careOrderItemList = ref([]) //  所有已支付的检查项目
 const checkedData = reactive({
   regId: '',
@@ -100,35 +126,86 @@ const checkedData = reactive({
   itemName: '',
   remark: '',
 })
+const checkItemId = ref('') //检查单号
+const startCheckDisabled = ref(true)
+const checkResultObj = reactive({
+  itemId: '', //处方检查项ID
+  checkItemId: '', //检查项目ID
+  checkItemName: '', //检查项目名
+  price: '', //价格
+  patientId: '', //患者ID
+  patientName: '', //患者名称
+  regId: '', //挂单号
+})
+
+//开始检查方法
+const startRegItemFetch = () => {
+  if (checkResultObj !== null) {
+    http.post('/checkResult/add', checkResultObj).then((res) => {
+      if (res.data.data === true || res.data.code === 200) {
+        ElMessage.success('项目已开始检查!!!')
+        getCheckItemFetchData()
+      }
+    })
+  } else {
+    ElMessage.warning('空')
+  }
+}
+
+//获取指定的已支付检查项目
+const getRegItemFetch = () => {
+  http.get('/registeredItem/list').then((res) => {
+    registeredItems.value = res.data.list
+  })
+}
 
 //单选改变事件
 const handleCurrentChange = (value) => {
+  console.log(value)
+
   checkedData.itemName = value.itemName
   checkedData.remark = value.remark
-}
+  checkedData.regId = value.patientId
+  checkedData.patientName = value.patientName
 
-//获取检查和用药项目数据
-const getCheckItemFetchData = () => {
-  http.get('/checkItem/getCheckIdAndName').then((res) => {
-    const list = Array.isArray(res.data) ? res.data : []
-    checkItemList.value = list.map((item) => ({
-      label: item.checkItemName, // 确保后端返回的字段有 `name`
-      value: item.checkItemId, // 确保后端返回的字段有 `id`
-    }))
+  Object.assign(checkResultObj, {
+    itemId: value.itemId, //处方检查项ID
+    checkItemId: checkedRegItem.value, //检查项目ID
+    checkItemName: value.itemName, //检查项目名
+    price: value.amount, //价格
+    patientId: value.patientId, //患者ID
+    patientName: value.patientName, //患者名称
+    regId: value.regId, //挂单号
+  })
+
+  console.log('checkResultObj', checkResultObj)
+
+  nextTick(() => {
+    startCheckDisabled.value = checkedData.patientName === ''
   })
 }
 
-//获取所有检查项目
-const getCareOrderItemFetch = () => {
-  http.get('/doCheck/getCareOrderItem').then((res) => {
+//获取所有检查费用的ID和名字
+const getCheckItemFetchData = async () => {
+  const res = await http.get('/checkItem/getCheckIdAndName')
+  checkItemList.value = (res.data.data || []).map((item) => ({
+    label: item.checkItemName, // 文本
+    value: item.checkItemId, // 绑定的值
+  }))
+}
+
+//获取所有已支付的检查项目
+const getCareOrderItemFetch = debounce((itemId) => {
+  http.get('/orderItem/getCareOrderItem', { params: { itemId: itemId } }).then((res) => {
     careOrderItemList.value = res.data
   })
-}
+}, 500)
 
 //页面加载时挂载
 onMounted(() => {
   getCheckItemFetchData()
-  getCareOrderItemFetch()
+  getCareOrderItemFetch('1')
+  getRegItemFetch()
 })
 </script>
 

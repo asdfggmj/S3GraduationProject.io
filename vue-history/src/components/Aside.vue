@@ -18,7 +18,7 @@
           <el-sub-menu
             v-for="parentMenu in menuData"
             :key="parentMenu.menuId"
-            :index="parentMenu.menuId"
+            :index="`${parentMenu.menuId}`"
           >
             <template #title>
               <el-icon><Setting /></el-icon>
@@ -28,7 +28,7 @@
             <el-menu-item
               v-for="childrenMenu in parentMenu.childMenus"
               :key="childrenMenu.menuId"
-              :index="childrenMenu.path"
+              :index="`${childrenMenu.path}`"
               >{{ childrenMenu.menuName }}</el-menu-item
             >
           </el-sub-menu>

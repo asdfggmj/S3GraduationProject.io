@@ -37,11 +37,12 @@
         <el-row class="mt-10px">
           <el-col>
             <el-table
-            :data="noticeData"
-            style="width: 100%"
-            max-height="500"
-            row-key="noticeId"
-            @selection-change="handleSelectionChange"
+              :data="noticeData"
+              style="width: 100%"
+              max-height="500"
+              row-key="noticeId"
+              @selection-change="handleSelectionChange"
+              border
             >
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="公告编号" prop="noticeId" width="120" />
@@ -51,7 +52,7 @@
                 width="300"
                 show-overflow-tooltip
               />
-              <el-table-column label="公告类型" prop="dictLabel">
+              <el-table-column label="公告类型" prop="dictLabel" width="100">
                 <template #default="scope">
                   <el-tag :type="noticeTag(scope.row.dictLabel)">{{ scope.row.dictLabel }}</el-tag>
                 </template>
@@ -68,13 +69,13 @@
                           scope.row.noticeTitle,
                         )
                     "
-                   :active-value="0"
+                    :active-value="0"
                     :inactive-value="1"
                     active-text="正常"
                     inactive-text="禁用"
                     class="ml-2"
                     inline-prompt
-                    style="--el-switch-on-color:#13ce66 ; --el-switch-off-color: #ff4949"
+                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
                     :loading="rowLoadingMap[scope.row.noticeId]"
                   />
                 </template>
@@ -134,8 +135,8 @@
     </el-col>
   </el-row>
 
-   <!-- 添加科室和编辑科室抽屉 -->
-   <el-drawer
+  <!-- 添加科室和编辑科室抽屉 -->
+  <el-drawer
     v-model="addOrEditDrawerModal"
     :title="addOrEditDrawerTitle"
     size="30%"
@@ -144,7 +145,7 @@
     <el-row>
       <el-col :span="20">
         <el-form :model="noticeObject" label-width="auto" style="max-width: 600px">
-          <el-input v-model="noticeObject.noticeId" style="display: none;"/>
+          <el-input v-model="noticeObject.noticeId" style="display: none" />
           <el-form-item label="公告名称">
             <el-input v-model="noticeObject.noticeTitle" placeholder="请输入公告标题" />
           </el-form-item>
@@ -161,8 +162,8 @@
             </el-radio-group>
           </el-form-item>
           <el-form-item label="内容">
-      <el-input v-model="noticeObject.remark" type="textarea" />
-    </el-form-item>
+            <el-input v-model="noticeObject.remark" type="textarea" />
+          </el-form-item>
         </el-form>
       </el-col>
     </el-row>
@@ -174,8 +175,6 @@
       </el-col>
     </el-row>
   </el-drawer>
-
-
 </template>
 
 <script setup lang="ts">
@@ -183,6 +182,7 @@ import http from '@/http'
 import { Action, ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ClickOutside as vClickOutside } from 'element-plus'
+import { formatDate } from '@/utils/dateUtils'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
@@ -207,7 +207,7 @@ const noticeObject = reactive({
   noticeType: '0',
   noticeContent: '',
   status: '0',
-  remark: ''
+  remark: '',
 })
 
 const noticeIds = ref([]) //选中的编号数组
@@ -251,7 +251,6 @@ const searchNotice = (keyWordInput) => {
   getNoticeFetch()
 }
 
-
 //添加通知抽屉
 const addNotice = () => {
   //清空通知对象
@@ -270,7 +269,7 @@ const addNotice = () => {
 const addNoticeSubmit = () => {
   // console.log("添加的数据"+noticeObject)
   //后端发送添加通知请求
-  http.post("/notice/add",noticeObject).then((res) => {
+  http.post('/notice/add', noticeObject).then((res) => {
     if (res.data) {
       ElMessage.success('添加成功')
       addOrEditDrawerModal.value = false
@@ -284,46 +283,40 @@ const addNoticeSubmit = () => {
 //查看通知内容
 const seeContext = (noticeId) => {
   //查询当前通知内容
-  http.get("/notice/getById?id="+noticeId)
-  .then((res)=>{
-   if(res.data){
-      noticeObject.noticeContent=res.data.noticeContent
-      noticeObject.noticeTitle=res.data.noticeTitle
+  http.get('/notice/getById?id=' + noticeId).then((res) => {
+    if (res.data) {
+      noticeObject.noticeContent = res.data.noticeContent
+      noticeObject.noticeTitle = res.data.noticeTitle
     }
-    ElMessageBox.alert(`${noticeObject.noticeContent}` , `${noticeObject.noticeTitle}`, {
-    confirmButtonText: '已阅'
-  })
+    ElMessageBox.alert(`${noticeObject.noticeContent}`, `${noticeObject.noticeTitle}`, {
+      confirmButtonText: '已阅',
+    })
   })
 }
 
 //删除通知
 const delNotice = (noticeId) => {
-  ElMessageBox.confirm(
-    "确定删除编号为 "+noticeId+" 的通知？",
-    '警告',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
-  )
-  .then(() => {
-      //删除通知
-      http.post("notice/deleteById?id="+noticeId).then((res)=>{
-        if(res.data){
-          ElMessage.success('删除成功')
-          getNoticeFetch()
-        } else {
-      throw new Error('通知删除失败')
-    }
-      })
+  ElMessageBox.confirm('确定删除编号为 ' + noticeId + ' 的通知？', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    //删除通知
+    http.post('notice/deleteById?id=' + noticeId).then((res) => {
+      if (res.data) {
+        ElMessage.success('删除成功')
+        getNoticeFetch()
+      } else {
+        throw new Error('通知删除失败')
+      }
     })
-    // .catch(() => {
-    //   ElMessage({
-    //     type: 'info',
-    //     message: 'Delete canceled',
-    //   })
-    // })
+  })
+  // .catch(() => {
+  //   ElMessage({
+  //     type: 'info',
+  //     message: 'Delete canceled',
+  //   })
+  // })
 }
 
 //修改通知抽屉
@@ -332,14 +325,14 @@ const editNotice = (noticeId) => {
   addOrEditDrawerTitle.value = '编辑通知'
   addOrEditDrawerModal.value = true
   //回调单个通知数据
-  http.get("/notice/getById?id="+noticeId).then((res)=>{
-   if(res.data){
+  http.get('/notice/getById?id=' + noticeId).then((res) => {
+    if (res.data) {
       noticeObject.noticeId = noticeId
       noticeObject.noticeType = res.data.noticeType
-      noticeObject.noticeContent=res.data.noticeContent
-      noticeObject.noticeTitle=res.data.noticeTitle
-      noticeObject.status=res.data.status
-      noticeObject.remark=res.data.remark
+      noticeObject.noticeContent = res.data.noticeContent
+      noticeObject.noticeTitle = res.data.noticeTitle
+      noticeObject.status = res.data.status
+      noticeObject.remark = res.data.remark
     }
   })
   // .catch((error)=>{
@@ -351,7 +344,7 @@ const editNotice = (noticeId) => {
 const updateNoticeSubmit = () => {
   // console.log("修改的数据"+userObject)
   //后端发送修改通知请求
-  http.post("/notice/update",noticeObject).then((res) => {
+  http.post('/notice/update', noticeObject).then((res) => {
     if (res.data) {
       ElMessage.success('修改成功')
       addOrEditDrawerModal.value = false
@@ -365,12 +358,12 @@ const updateNoticeSubmit = () => {
 
 //判断当前抽屉的按钮操作是添加还是修改
 const handleSubmit = () => {
-  if (addOrEditDrawerTitle.value === "添加通知") {
-    addNoticeSubmit(); // 调用添加通知的方法
-  } else if (addOrEditDrawerTitle.value === "编辑通知") {
-    updateNoticeSubmit(); // 调用修改通知的方法
+  if (addOrEditDrawerTitle.value === '添加通知') {
+    addNoticeSubmit() // 调用添加通知的方法
+  } else if (addOrEditDrawerTitle.value === '编辑通知') {
+    updateNoticeSubmit() // 调用修改通知的方法
   }
-};
+}
 
 //关闭抽屉前提示用户是否关闭
 const beforeChangeAddOrEditDrawer = () => {
@@ -472,14 +465,13 @@ const getNoticeFetch = () => {
     .then((res) => {
       const list = Array.isArray(res.data.list) ? res.data.list : []
       // 将 status 转换为数字类型
-      list.forEach(item => {
+      list.forEach((item) => {
         item.status = Number(item.status)
       })
       noticeData.splice(0, noticeData.length, ...list)
       pageTotal.value = res.data?.total || 0
     })
 }
-
 </script>
 
 <style>

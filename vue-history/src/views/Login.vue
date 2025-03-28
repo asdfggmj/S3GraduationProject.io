@@ -64,8 +64,8 @@ const cookie = useCookies()
 let isLoading = ref(false)
 // 用户登录信息
 const loginData = reactive({
-  username: 'admin@163.com',
-  password: 'admin',
+  username: '',
+  password: '',
   validateCode: '1',
 })
 

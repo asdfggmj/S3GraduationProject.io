@@ -5,7 +5,7 @@
     <el-col :span="24">
       <el-card shadow="always" class="mb-10px">
         <el-row justify="space-between">
-      <el-col :span="12">
+          <el-col :span="12">
             <el-button type="danger" @click="batchDelete">
               <el-icon><Minus /></el-icon>
               <span>删除</span>
@@ -16,7 +16,7 @@
             </el-button>
           </el-col>
           <!-- 模糊查询 -->
-          <el-form-item label="系统模块" style="font-size: 15px;">
+          <el-form-item label="系统模块" style="font-size: 15px">
             <el-input
               v-model="title"
               @change="searchLoginLog"
@@ -24,9 +24,8 @@
               clearable
               size=""
             />
-    </el-form-item>
-    <el-row>
-      </el-row>
+          </el-form-item>
+          <el-row> </el-row>
         </el-row>
       </el-card>
     </el-col>
@@ -39,31 +38,36 @@
         <el-row class="mt-10px">
           <el-col>
             <el-table
-            :data="operLogData"
-            style="width: 100%"
-            max-height="500"
-            row-key="operId"
-            @selection-change="handleSelectionChange"
-            :border="false"
+              :data="operLogData"
+              style="width: 100%"
+              max-height="500"
+              row-key="operId"
+              @selection-change="handleSelectionChange"
+              border
             >
-            <el-table-column type="expand">
-            <template #default="props" >
-              <div m="6" style="margin-left: 40px;">
-                <p m="t-0 b-2"><b>操作模块:</b> {{ props.row.title }}</p>
-                <p m="t-0 b-2"><b>登陆信息:</b> {{ props.row.operName+"//"+props.row.operIp+"//"+props.row.operLocation}}</p>
-                <p m="t-0 b-2"><b>请求地址: </b>{{ props.row.operUrl }}</p>
-                <p m="t-0 b-2"><b>操作方法: </b>{{ props.row.method }}</p>
+              <el-table-column type="expand">
+                <template #default="props">
+                  <div m="6" style="margin-left: 40px">
+                    <p m="t-0 b-2"><b>操作模块:</b> {{ props.row.title }}</p>
+                    <p m="t-0 b-2">
+                      <b>登陆信息:</b>
+                      {{
+                        props.row.operName + '//' + props.row.operIp + '//' + props.row.operLocation
+                      }}
+                    </p>
+                    <p m="t-0 b-2"><b>请求地址: </b>{{ props.row.operUrl }}</p>
+                    <p m="t-0 b-2"><b>操作方法: </b>{{ props.row.method }}</p>
 
-                <p m="t-0 b-2"><b>请求参数:</b> {{ props.row.operParam }}</p>
-                <p m="t-0 b-2"><b>返回参数:</b> {{ props.row.jsonResult }}</p>
+                    <p m="t-0 b-2"><b>请求参数:</b> {{ props.row.operParam }}</p>
+                    <p m="t-0 b-2"><b>返回参数:</b> {{ props.row.jsonResult }}</p>
 
                 <p m="t-0 b-2"><b>操作状态:</b>{{ props.row.status==0?'正常':'异常' }}</p>
                 <p m="t-0 b-2"><b>操作时间:</b> {{ props.row.operTime.replace('T',' ') }}</p>
 
-                <p m="t-0 b-2"><b>异常信息:</b> {{ props.row.erroMsg }}</p>
-              </div>
-            </template>
-          </el-table-column>
+                    <p m="t-0 b-2"><b>异常信息:</b> {{ props.row.erroMsg }}</p>
+                  </div>
+                </template>
+              </el-table-column>
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="日志ID" prop="operId" width="100" />
               <el-table-column label="系统模块" prop="title" width="200" />
@@ -78,7 +82,7 @@
               <el-table-column label="操作地点" prop="operLocation" width="120" />
               <el-table-column label="操作状态" prop="status" width="120" >
                 <template #default="scope">
-                  <span>{{ scope.row.status==0?'成功':'失败' }}</span>
+                  <span>{{ scope.row.status == 0 ? '成功' : '失败' }}</span>
                 </template>
                 </el-table-column>
               <el-table-column label="操作时间" prop="operTime" width="200" >
@@ -90,7 +94,11 @@
               <el-table-column label="操作" fixed="right" width="150">
                 <template #default="scope">
                   <el-button-group>
-                    <el-button type="danger" size="small" @click="delOperateLog(scope.row.operId,scope.row.title)">
+                    <el-button
+                      type="danger"
+                      size="small"
+                      @click="delOperateLog(scope.row.operId, scope.row.title)"
+                    >
                       <el-icon><Delete /></el-icon>
                       <span>删除</span>
                     </el-button>
@@ -125,12 +133,13 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Search, Refresh } from '@element-plus/icons-vue'
 import http from '@/http'
-import { useCookies } from '@vueuse/integrations/useCookies';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { useCookies } from '@vueuse/integrations/useCookies'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { formatDate } from '@/utils/dateUtils'
 
 //从cookie获取authorization
-const cookie=useCookies();
-const auhtorization=cookie.get('authorization')
+const cookie = useCookies()
+const auhtorization = cookie.get('authorization')
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
@@ -139,37 +148,37 @@ const operName = ref('')
 const title = ref('')
 
 //计算操作类型
-const getBusinessTypeText=(businessType) => {
-      const typeMap = {
-        0: '退出',
-        1: '新增',
-        2: '修改',
-        3: '删除',
-        4: '授权',
-        5: '导出',
-        6: '导入',
-        8: '清空数据',
-      };
-      return typeMap[businessType] || '未知操作'; // 如果 businessType 不在 typeMap 中，返回 '未知操作'
-    }
+const getBusinessTypeText = (businessType) => {
+  const typeMap = {
+    0: '退出',
+    1: '新增',
+    2: '修改',
+    3: '删除',
+    4: '授权',
+    5: '导出',
+    6: '导入',
+    8: '清空数据',
+  }
+  return typeMap[businessType] || '未知操作' // 如果 businessType 不在 typeMap 中，返回 '未知操作'
+}
 //操作日志数据
 const operLogData = reactive([
   {
-    operId:'',
-    title:'',
-    businessType:'',
-    method:'',
-    requestMethod:'',
-    operatorType:'',
-    operName:'',
-    operUrl:'',
-    operLocation:'',
-    operParam:'',
-    jsonResult:'',
-    status:'',
-    errorMsg:'',
-    operTime:''
-  }
+    operId: '',
+    title: '',
+    businessType: '',
+    method: '',
+    requestMethod: '',
+    operatorType: '',
+    operName: '',
+    operUrl: '',
+    operLocation: '',
+    operParam: '',
+    jsonResult: '',
+    status: '',
+    errorMsg: '',
+    operTime: '',
+  },
 ])
 
 const operIds = ref([]) //选中的编号数组
@@ -207,11 +216,11 @@ const batchDelete = async () => {
 }
 //模糊查询
 const searchLoginLog = () => {
-   getOperLogData()
+  getOperLogData()
 }
 
 //删除操作日志
-const delOperateLog = (id,title) => {
+const delOperateLog = (id, title) => {
   ElMessageBox.confirm(`你确定要删除 ${title} 记录吗?`, '安全提示', {
     type: 'warning',
     cancelButtonText: '取消',
@@ -233,7 +242,7 @@ const emptyOperLog = (id) => {
     cancelButtonText: '取消',
     confirmButtonText: '确定',
   }).then(() => {
-    http.post("/operLog/emptyOperLog").then((res) => {
+    http.post('/operLog/emptyOperLog').then((res) => {
       if (res.data.data === true) {
         ElMessage.success('删除成功！')
         getOperLogData()
@@ -266,8 +275,9 @@ const getOperLogData = () => {
       params: {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
-        title: title.value
-      },headers: { 'Authorization': 'Bearer' + auhtorization }
+        title: title.value,
+      },
+      headers: { Authorization: 'Bearer' + auhtorization },
     })
     .then((res) => {
       const operLog = res.data.data
@@ -280,6 +290,4 @@ const getOperLogData = () => {
       }
     })
 }
-
-
 </script>

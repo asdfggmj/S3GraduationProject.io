@@ -42,13 +42,20 @@
               max-height="500"
               row-key="checkItemId"
               @selection-change="handleSelectionChange"
+              border
             >
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="项目费用ID" prop="checkItemId" width="120" />
               <el-table-column label="项目名称" prop="checkItemName" width="120" />
               <el-table-column label="关键字" prop="keyWords" width="120" />
-              <el-table-column label="项目单价" prop="unitPrice" width="120" />
-              <el-table-column label="项目成本" prop="cost" width="120" />
+              <el-table-column label="项目单价" prop="unitPrice" width="120">
+                <template #default="scope">{{
+                  parseFloat(scope.row.unitPrice).toFixed(2)
+                }}</template>
+              </el-table-column>
+              <el-table-column label="项目成本" prop="cost" width="120">
+                <template #default="scope">{{ parseFloat(scope.row.cost).toFixed(2) }}</template>
+              </el-table-column>
               <el-table-column label="单位" prop="unit" width="120" />
               <el-table-column label="类别" prop="dictLabel" width="120" />
               <el-table-column label="状态" prop="status">
@@ -69,7 +76,7 @@
                     inactive-text="禁用"
                     class="ml-2"
                     inline-prompt
-                    style="--el-switch-on-color:#13ce66 ; --el-switch-off-color: #ff4949"
+                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
                     :loading="rowLoadingMap[scope.row.checkItemId]"
                   />
                 </template>
@@ -139,7 +146,7 @@
     <el-row>
       <el-col :span="20">
         <el-form :model="checkItemObject" label-width="auto" style="max-width: 600px">
-          <el-input v-model="checkItemObject.checkItemId" style="display: none;"/>
+          <el-input v-model="checkItemObject.checkItemId" style="display: none" />
           <el-form-item label="项目类型">
             <el-select id="itemType" v-model="checkItemObject.typeId" placeholder="项目类型">
               <el-option label="拍片类" value="1"></el-option>
@@ -182,6 +189,7 @@
 
 <script setup lang="ts">
 import http from '@/http'
+import { formatDate } from '@/utils/dateUtils'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { c } from 'vite/dist/node/moduleRunnerTransport.d-CXw_Ws6P'
 import { onMounted, reactive, ref } from 'vue'
@@ -202,10 +210,10 @@ const checkItemObject = reactive({
   checkItemName: '',
   keyWords: '',
   unitPrice: '',
-  cost:'',
-  unit:'',
+  cost: '',
+  unit: '',
   typeId: '',
-  status: '0'
+  status: '0',
 })
 
 // 监听多选
@@ -247,14 +255,12 @@ const searchCheckItem = (keyWordInput) => {
   getAnnouncementFetch()
 }
 
-
 //添加检查费用抽屉
 const addCheckItem = () => {
   //清空检查费用对象
   checkItemObject.checkItemId = ''
   checkItemObject.checkItemName = ''
-  checkItemObject.keyWords='',
-  checkItemObject.unitPrice = ''
+  ;(checkItemObject.keyWords = ''), (checkItemObject.unitPrice = '')
   checkItemObject.cost = ''
   checkItemObject.unit = ''
   checkItemObject.typeId = ''
@@ -268,7 +274,7 @@ const addCheckItem = () => {
 const addCheckItemSubmit = () => {
   // console.log("添加的数据"+checkItemObject)
   //后端发送添加检查费用请求
-  http.post("/checkItem/add",checkItemObject).then((res) => {
+  http.post('/checkItem/add', checkItemObject).then((res) => {
     if (res.data) {
       ElMessage.success('添加成功')
       addOrEditDrawerModal.value = false
@@ -281,32 +287,27 @@ const addCheckItemSubmit = () => {
 
 //删除检查费用
 const delCheckItem = (checkItemId) => {
-  ElMessageBox.confirm(
-    "确定删除编号为"+checkItemId+"的检查费用？",
-    '警告',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
-  )
-  .then(() => {
-      //删除检查费用
-      http.post("checkItem/deleteById?id="+checkItemId).then((res)=>{
-        if(res.data){
-          ElMessage.success('删除成功')
-          getAnnouncementFetch()
-        } else {
-      throw new Error('检查费用删除失败')
-    }
-      })
+  ElMessageBox.confirm('确定删除编号为' + checkItemId + '的检查费用？', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    //删除检查费用
+    http.post('checkItem/deleteById?id=' + checkItemId).then((res) => {
+      if (res.data) {
+        ElMessage.success('删除成功')
+        getAnnouncementFetch()
+      } else {
+        throw new Error('检查费用删除失败')
+      }
     })
-    // .catch(() => {
-    //   ElMessage({
-    //     type: 'info',
-    //     message: 'Delete canceled',
-    //   })
-    // })
+  })
+  // .catch(() => {
+  //   ElMessage({
+  //     type: 'info',
+  //     message: 'Delete canceled',
+  //   })
+  // })
 }
 
 //修改检查费用抽屉
@@ -315,16 +316,16 @@ const editCheckItem = (checkItemId) => {
   addOrEditDrawerTitle.value = '编辑检查费用'
   addOrEditDrawerModal.value = true
   //回调单个检查费用数据
-  http.get("/checkItem/getById?id="+checkItemId).then((res)=>{
-   if(res.data){
-    checkItemObject.checkItemId = res.data.checkItemId
-    checkItemObject.checkItemName = res.data.checkItemName
-    checkItemObject.keyWords = res.data.keyWords
-    checkItemObject.unitPrice = res.data.unitPrice
-    checkItemObject.cost = res.data.cost
-    checkItemObject.unit = res.data.unit
-    checkItemObject.typeId = res.data.typeId
-    checkItemObject.status = res.data.status
+  http.get('/checkItem/getById?id=' + checkItemId).then((res) => {
+    if (res.data) {
+      checkItemObject.checkItemId = res.data.checkItemId
+      checkItemObject.checkItemName = res.data.checkItemName
+      checkItemObject.keyWords = res.data.keyWords
+      checkItemObject.unitPrice = res.data.unitPrice
+      checkItemObject.cost = res.data.cost
+      checkItemObject.unit = res.data.unit
+      checkItemObject.typeId = res.data.typeId
+      checkItemObject.status = res.data.status
     }
   })
   // .catch((error)=>{
@@ -336,7 +337,7 @@ const editCheckItem = (checkItemId) => {
 const updateCheckItemSubmit = () => {
   // console.log("修改的数据"+userObject)
   //后端发送修改检查费用请求
-  http.post("/checkItem/update",checkItemObject).then((res) => {
+  http.post('/checkItem/update', checkItemObject).then((res) => {
     if (res.data) {
       ElMessage.success('修改成功')
       addOrEditDrawerModal.value = false
@@ -350,12 +351,12 @@ const updateCheckItemSubmit = () => {
 
 //判断当前抽屉的按钮操作是添加还是修改
 const handleSubmit = () => {
-  if (addOrEditDrawerTitle.value === "添加检查费用") {
-    addCheckItemSubmit(); // 调用添加检查费用的方法
-  } else if (addOrEditDrawerTitle.value === "编辑检查费用") {
-    updateCheckItemSubmit(); // 调用修改检查费用的方法
+  if (addOrEditDrawerTitle.value === '添加检查费用') {
+    addCheckItemSubmit() // 调用添加检查费用的方法
+  } else if (addOrEditDrawerTitle.value === '编辑检查费用') {
+    updateCheckItemSubmit() // 调用修改检查费用的方法
   }
-};
+}
 
 //关闭抽屉前提示用户是否关闭
 const beforeChangeAddOrEditDrawer = () => {
@@ -375,10 +376,10 @@ const beforeChangeAddOrEditDrawer = () => {
 
 // 修改检查费用状态改变事件
 const updateUserStatus = async (id, roleStatus, roleName) => {
-  if(roleStatus==0){
-    roleStatus=1
-  }else{
-    roleStatus=0
+  if (roleStatus == 0) {
+    roleStatus = 1
+  } else {
+    roleStatus = 0
   }
   try {
     const response = await http.put(`/checkItem/update/${id}/${roleStatus}`)
@@ -461,7 +462,7 @@ const getAnnouncementFetch = () => {
     .then((res) => {
       const list = Array.isArray(res.data.list) ? res.data.list : []
       // 将 status 转换为数字类型
-      list.forEach(item => {
+      list.forEach((item) => {
         item.status = Number(item.status)
       })
       inspectionFeeData.splice(0, inspectionFeeData.length, ...list)
