@@ -211,7 +211,7 @@
           <el-form-item label="头像:" label-width="140px" style="margin-left:-40px">
             <el-upload
             class="avatar-uploader"
-            action="https://localhost:8080/user/uploadImg"
+            action="http://localhost:8080/user/uploadImg"
             :show-file-list="false"
             :on-success="handleAvatarSuccess"
             :before-upload="beforeAvatarUpload"
@@ -504,7 +504,7 @@ const addUser = () => {
       ''
   userObject.status = '0'
   userObject.schedulingFlag = '1'
-  userObject.sex = '3'
+  userObject.sex = '2'
 
   addOrEditDrawerTitle.value = '添加用户'
   addOrEditDrawerModal.value = true

@@ -91,8 +91,8 @@
                 show-summary>
                   <el-table-column label="药品ID" prop="itemRefId" />
                   <el-table-column label="药品名称" prop="itemName" />
-                  <el-table-column label="交易总金额" prop="num" />
-                  <el-table-column label="交易总数" prop="amount" />
+                  <el-table-column label="交易总金额" prop="amount" />
+                  <el-table-column label="交易总数" prop="num" />
                 </el-table>
               </el-col>
             </el-row>
@@ -139,11 +139,6 @@ const activeName = ref('first')//当前激活的标签页
 
 // 监听activeName变换，判断当前是哪个标签
 watch(activeName, (newVal) => {
-  //清空
-  valueDate.value = [];
-  pickdata.startDate = '';
-  pickdata.endDate = '';
-  keyWord.value='';
   // 根据标签页加载数据
   if (newVal === 'first') {
       getItem()

@@ -239,7 +239,7 @@ const addDeptSubmit = () => {
   // console.log("添加的数据"+deptObject)
   //后端发送添加科室请求
   http.post("/dept/addDept",deptObject).then((res) => {
-    if (res.data) {
+    if (res) {
       ElMessage.success('添加成功')
       addOrEditDrawerModal.value = false
     } else {

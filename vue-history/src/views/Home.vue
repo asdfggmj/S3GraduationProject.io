@@ -69,7 +69,7 @@
       </el-card>
     </el-col>
   </el-row>
-  <!-- 第三行 -->
+  <!-- 第二行 -->
   <el-row class="mt-10px" :gutter="20">
     <el-col :span="6">
       <el-card>
@@ -96,15 +96,35 @@
   <!-- 分隔符 -->
   <el-divider />
   <!-- 第三行 -->
+  <el-row class="mt-10px">
+  <el-col>
+    <el-card shadow="always">
+      <el-tabs v-model="activeTab">
+        <!-- 年报表 -->
+        <el-tab-pane label="年报表统计" name="year">
+          <div ref="yearChart" style="height: 400px; width: 100%"></div>
+        </el-tab-pane>
+        <!-- 月报表 -->
+        <el-tab-pane label="月报表统计" name="month">
+          <div ref="monthChart" style="height: 400px; width: 100%"></div>
+        </el-tab-pane>
+      </el-tabs>
+    </el-card>
+  </el-col>
+</el-row>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useTransition } from '@vueuse/core'
 import Weather from '@/components/_weather.vue'
 import { useUserStore } from '@/stores/user'
-import { time } from 'echarts'
+import http from '@/http'
+import * as echarts from 'echarts';
+import { ElMessage } from 'element-plus'
 
+// 标签页激活状态
+const activeTab = ref('year')
 const photoList = [
   'src/assets/image/p1.jpg',
   'src/assets/image/p2.jpg',
@@ -123,6 +143,157 @@ const timeObject = ref({
 })
 //计算早中晚
 const timeText = ref('')
+// 图表DOM引用
+const yearChart = ref<HTMLElement | null>(null)
+const monthChart = ref<HTMLElement | null>(null)
+
+const yearlyData = reactive({
+  years: [] as string[],
+  visits: [] as Array<{year: string; value: number}>,
+  newPatients: [] as Array<{year: string; value: number}>,
+  recoveryRates: [] as Array<{year: string; value: number}>
+})
+
+const monthlyData = reactive({
+  months: [] as string[],
+  visits: [] as Array<{month: string; value: number}>,
+  medicineUsage: {
+    '阿莫西林': [] as Array<{month: string; value: number}>,
+    '阿胶珠': [] as Array<{month: string; value: number}>
+  },
+  checkItems: {
+    '血常规': [] as Array<{month: string; value: number}>,
+    'X光': [] as Array<{month: string; value: number}>
+  }
+})
+
+const initYearChart = () => {
+  if (!yearChart.value) return
+  const chart = echarts.init(yearChart.value!)
+  const option = {
+    title: { text: '年度医疗数据统计' },
+    tooltip: { trigger: 'axis' },
+    legend: {
+      data: ['就诊人数', '新增患者', '痊愈率']
+    },
+    xAxis: {
+      type: 'category',
+      data: yearlyData.years
+    },
+    // 重点修复：正确配置双Y轴
+    yAxis: [
+      {
+        type: 'value',
+        name: '数量',
+        axisLabel: {
+          formatter: '{value} 人'
+        }
+      },
+      {
+        type: 'value',
+        name: '痊愈率',
+        min: 0,
+        max: 100,
+        axisLabel: {
+          formatter: '{value}%'
+        }
+      }
+    ],
+    series: [
+      {
+        name: '就诊人数',
+        type: 'line',
+        smooth: true,
+        data: yearlyData.visits.map(item => item.value),
+        yAxisIndex: 0,
+        xAxisIndex: 0 // 明确关联到第一个xAxis
+      },
+      {
+        name: '新增患者',
+        type: 'line',
+        smooth: true,
+        data: yearlyData.newPatients.map(item => item.value),
+        yAxisIndex: 0,
+        xAxisIndex: 0 // 明确关联到第一个xAxis
+      },
+      {
+        name: '痊愈率',
+        type: 'line',
+        smooth: true,
+        data: yearlyData.recoveryRates.map(item => item.value * 100),
+        yAxisIndex: 1,
+        xAxisIndex: 0 // 明确关联到第一个xAxis
+      }
+    ]
+  }
+  chart.setOption(option)
+}
+// 定义图表实例引用
+let yearChartInstance: echarts.ECharts | null = null;
+let monthChartInstance: echarts.ECharts | null = null;
+// 月度图表配置
+const initMonthChart = () => {
+  if (!monthChart.value || monthlyData.months.length === 0) {
+    console.log('月度图表初始化终止：数据为空', monthlyData.months);
+    return;
+  }
+
+  monthChartInstance?.dispose();
+  monthChartInstance = echarts.init(monthChart.value);
+
+  const option = {
+    title: { text: '月度医疗数据统计' },
+    tooltip: { trigger: 'axis' },
+    legend: {
+      data: ['就诊高峰', '阿莫西林', '阿胶珠', '血常规', 'X光']
+    },
+    xAxis: {
+      type: 'category',
+      data: monthlyData.months // 确保数据为月份数组，如['2023-01', '2023-02']
+    },
+    yAxis: {
+      type: 'value',
+      name: '数量'
+    },
+    series: [
+      {
+        name: '就诊高峰',
+        data: monthlyData.visits.map(item => item.value),
+        type: 'line',
+        smooth: true
+      },
+      {
+        name: '阿莫西林',
+        data: monthlyData.medicineUsage.阿莫西林.map(item => item.value),
+        type: 'line'
+      },
+      {
+        name: '阿胶珠',
+        data: monthlyData.medicineUsage.阿胶珠.map(item => item.value),
+        type: 'line'
+      },
+      {
+        name: '血常规',
+        data: monthlyData.checkItems.血常规.map(item => item.value),
+        type: 'line'
+      },
+      {
+        name: 'X光',
+        data: monthlyData.checkItems.X光.map(item => item.value),
+        type: 'line'
+      }
+    ]
+  }
+  monthChartInstance.setOption(option)
+}
+
+// 监听标签页切换
+watch(activeTab, (newVal) => {
+  nextTick(() => {
+    if (newVal === 'year') initYearChart()
+    else initMonthChart()
+  })
+})
 
 // 更新当前时间的函数
 const updateTime = () => {
@@ -145,20 +316,20 @@ const updateTime = () => {
 
   timeObject.value.currentTime = now.toLocaleTimeString() // 获取当前时间并转化为本地时间字符串
 }
-
+let intervalId
 // 组件挂载
 onMounted(() => {
+  get()
+  //初始化默认图表
+  initYearChart()
   updateTime() // 初始化当前时间
-  setInterval(updateTime, 1000) // 每秒更新时间
-  userObject.value = userStore.getUser.data.data
-  console.log(userObject.value)
+  intervalId= setInterval(updateTime, 1000) // 每秒更新时间
 })
 
 // 组件卸载
 onUnmounted(() => {
-  clearInterval()
+  clearInterval(intervalId)
 })
-
 //前端地址
 const gitHub = () => {
   window.open('https://github.com/asdfggmj/S3GraduationProject.io')
@@ -196,6 +367,49 @@ const doctorScaleValue = useTransition(doctorScale, {
   duration: 1000,
 })
 doctorScale.value = 49
+
+//获取统计数据
+const get = async () => {
+  try {
+    const response = await http.get('statistics/getStatisticsCount')
+    if (response?.data?.code === 200) {
+      const resData = response.data.data
+
+      // 基础数据
+      medicalVisits.value = resData.visitNum ?? 0
+      addHuanz.value = resData.newPatientNum ?? 0
+      cureHuanz.value = resData.recoveredPatientsNum ?? 0
+      doctorScale.value = resData.doctorNum ?? 0
+
+      // 处理年度数据
+      yearlyData.years = resData.years || []
+      yearlyData.visits = resData.visits || []
+      yearlyData.newPatients = resData.newPatients || []
+      yearlyData.recoveryRates = resData.recoveryRates || []
+
+      // 处理月度数据
+      monthlyData.months = resData.months || []
+      monthlyData.visits = resData.monthlyVisits || []
+      monthlyData.medicineUsage = {
+        '阿莫西林': resData.medicineUsage?.['阿莫西林'] || [],
+        '阿胶珠': resData.medicineUsage?.['阿胶珠'] || []
+      }
+      monthlyData.checkItems = {
+        '血常规': resData.checkItems?.['血常规'] || [],
+        'X光': resData.checkItems?.['X光'] || []
+      }
+
+       // 确保数据填充后渲染
+      nextTick(() => {
+        initYearChart();
+        initMonthChart();
+      });
+    }
+  } catch (error) {
+    console.error('数据加载失败:', error)
+    ElMessage.error('数据加载失败，请稍后重试')
+  }
+}
 </script>
 
 <style scoped>
