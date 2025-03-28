@@ -319,6 +319,7 @@ const updateTime = () => {
 let intervalId
 // 组件挂载
 onMounted(() => {
+  userObject.value = userStore.getUser.data.data
   get()
   //初始化默认图表
   initYearChart()
