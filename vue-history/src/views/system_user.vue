@@ -210,17 +210,18 @@
           </el-form-item>
           <el-form-item label="头像:" label-width="140px" style="margin-left: -40px">
             <el-upload
-              class="avatar-uploader"
-              :http-request="uploadUserHeader"
-              :show-file-list="false"
-              :on-success="handleAvatarSuccess"
-              :before-upload="beforeAvatarUpload"
-              :headers="{ Authorization: auhtorization }"
-            >
-              <img v-if="imageUrl" :src="imageUrl" class="avatar" />
-              <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-            </el-upload>
-          </el-form-item>
+            class="avatar-uploader"
+            action="http://localhost:8080/user/uploadImg"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload"
+            :headers="{Authorization: auhtorization }"
+          >
+            <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+          </el-upload>
+      </el-form-item>
+
           <el-form-item label="状态">
             <el-radio-group v-model="userObject.status">
               <el-radio value="0">正常</el-radio>
@@ -514,7 +515,7 @@ const addUser = () => {
       ''
   userObject.status = '0'
   userObject.schedulingFlag = '1'
-  userObject.sex = '3'
+  userObject.sex = '2'
 
   addOrEditDrawerTitle.value = '添加用户'
   addOrEditDrawerModal.value = true

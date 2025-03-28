@@ -59,7 +59,7 @@
                   <el-table-column label="项目ID" prop="checkItemId" />
                   <el-table-column label="项目名称" prop="checkItemName" />
                   <el-table-column label="项目价格" prop="unitPrice" />
-                  <el-table-column label="患者姓名" prop="paientName" />
+                  <el-table-column label="患者姓名" prop="patientName" />
                   <el-table-column label="检查状态">
                     <template #default="scope">
                       <span>{{ scope.row.resultStatus == '0' ? '检测中' : '检测完成' }}</span>
@@ -109,7 +109,8 @@
             </el-row>
             <el-row>
               <el-col>
-                <el-table :data="listData" border :summary-method="getTotal" show-summary>
+              <el-table :data="statisticsData" border :summary-method="getTotal"
+                show-summary>
                   <el-table-column label="项目ID" prop="checkItemId" />
                   <el-table-column label="项目名称" prop="checkItemName" />
                   <el-table-column label="总金额" prop="totalPrice" />
@@ -148,10 +149,10 @@ import { onMounted, reactive, ref } from 'vue'
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
-const listData = ref([]) //检查项目页面数据
-const valueDate = ref([]) //日期范围数组
-const pickdata = reactive({
-  //开始日期和结束日期
+const listData = ref([])//检查项目页面数据
+const statisticsData = ref([])//检查项目统计页面数据
+const valueDate = ref([])    //日期范围数组
+const pickdata = reactive({ //开始日期和结束日期
   startDate: '',
   endDate: '',
 })
@@ -160,20 +161,14 @@ const paientName = ref('') //患者名称
 const activeName = ref('first') //当前激活的标签页
 
 // 监听activeName变换，判断当前是哪个标签
-// watch(activeName, (newVal) => {
-//   //清空
-//   valueDate.value = [];
-//   pickdata.startDate = '';
-//   pickdata.endDate = '';
-//   itemName.value='';
-//   paientName.value='';
-//   // 根据标签页加载数据
-//   if (newVal === 'first') {
-//       getItem()
-//   } else if (newVal === 'second') {
-//       getStatisticsItem()
-//   }
-// });
+watch(activeName, (newVal) => {
+ // 根据标签页加载数据
+  if (newVal === 'first') {
+      getItem()
+  } else if (newVal === 'second') {
+      getStatisticsItem()
+  }
+});
 
 //上一页
 const sizeChange = (newPageSize) => {
@@ -247,23 +242,21 @@ const getItem = () => {
 //获取检查列表统计页面数据
 const getStatisticsItem = () => {
   //发送后端异步请求
-  http
-    .get('statistics/statisticsCheck', {
-      params: {
-        pageNum: pageNum.value,
-        pageSize: pageSize.value,
-        startDate: pickdata.startDate,
-        endDate: pickdata.endDate,
-        itemName: itemName.value,
-      },
+http.get("statistics/statisticsCheck",{
+    params:{
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+      startDate:pickdata.startDate,
+      endDate:pickdata.endDate,
+      itemName:itemName.value
+      }
+    }
+  )
+  .then((res)=>{
+    statisticsData.value=res.data.data.list
+    console.log(res.data.data)
+    // pageTotal.value = res.data.data?.total || 0
     })
-    .then((res) => {
-      console.log(res.data.data)
-
-      listData.value = res.data.data
-      // pageTotal.value = res.data.data?.total || 0
-    })
-  //lconsole.log(listData.value)
 }
 
 //计算合计数据

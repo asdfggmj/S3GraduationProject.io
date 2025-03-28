@@ -46,20 +46,22 @@
               border
             >
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="用户名" prop="userName" width="200" />
-              <el-table-column label="登录账号" prop="loginAccount" width="200" />
-              <el-table-column label="IP" prop="ipAddr" width="120" />
-              <el-table-column label="登录地址" prop="" width="200" />
-              <el-table-column label="浏览器" prop="browser" width="200" />
+              <el-table-column label="用户名" prop="userName" width="150" />
+              <el-table-column label="登录账号" prop="loginAccount" width="150"/>
+              <el-table-column label="IP" prop="ipAddr" width="150"/>
+              <el-table-column label="登录地址" prop="loginLocation" width="150" />
+              <el-table-column label="浏览器" prop="browser" width="150" />
               <el-table-column label="操作系统" prop="os" width="200" />
               <el-table-column label="登录状态" width="200" prop="msg"> </el-table-column>
               <el-table-column label="用户类型" width="200" prop="loginType">
                 <template #default="scope">
                   <span>{{ scope.row.loginType === '0' ? '系统用户' : '患者用户' }}</span>
                 </template>
-              </el-table-column>
-              <el-table-column label="登录时间" prop="loginTime" width="200">
-                <template #default="scope">{{ formatDate(scope.row.loginTime) }}</template>
+                </el-table-column>
+                <el-table-column prop="loginTime" label="登录时间" width="200" >
+                <template #default="scope">
+                  {{ scope.row.loginTime.replace('T',' ') }}
+                </template>
               </el-table-column>
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="100">

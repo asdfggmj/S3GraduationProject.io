@@ -96,11 +96,12 @@
             </el-row>
             <el-row>
               <el-col>
-                <el-table :data="saleListData" border :summary-method="getTotal" show-summary>
-                  <el-table-column label="药品ID" prop="medicinesId" />
-                  <el-table-column label="药品名称" prop="medicinesName" />
-                  <el-table-column label="交易总金额" prop="tradeTotalAmount" />
-                  <el-table-column label="交易总数" prop="tradeTotalAmount" />
+                <el-table :data="saleListData" border :summary-method="getTotal"
+                show-summary>
+                  <el-table-column label="药品ID" prop="itemRefId" />
+                  <el-table-column label="药品名称" prop="itemName" />
+                  <el-table-column label="交易总金额" prop="amount" />
+                  <el-table-column label="交易总数" prop="num" />
                 </el-table>
               </el-col>
             </el-row>
@@ -142,7 +143,18 @@ const pickdata = reactive({
   startDate: '',
   endDate: '',
 })
-const keyWord = ref('') //药品名称
+const keyWord=ref('')//药品名称
+const activeName = ref('first')//当前激活的标签页
+
+// 监听activeName变换，判断当前是哪个标签
+watch(activeName, (newVal) => {
+  // 根据标签页加载数据
+  if (newVal === 'first') {
+      getItem()
+  } else if (newVal === 'second') {
+      getStatisticsItem()
+  }
+});
 
 //上一页
 const sizeChange = (newPageSize) => {

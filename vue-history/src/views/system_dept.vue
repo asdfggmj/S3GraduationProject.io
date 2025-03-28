@@ -181,7 +181,7 @@ const deptObject = reactive({
   orderNum: '',
   deptLeader: '',
   leaderPhone: '',
-  status: 0,
+  status: '0'
 })
 
 // 监听多选
@@ -233,7 +233,7 @@ const addDept = () => {
   deptObject.orderNum = '0'
   deptObject.deptLeader = ''
   deptObject.leaderPhone = ''
-  deptObject.status = 0
+  deptObject.status = '0'
 
   addOrEditDrawerTitle.value = '添加科室'
   addOrEditDrawerModal.value = true
