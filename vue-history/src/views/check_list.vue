@@ -11,7 +11,7 @@
                 v-for="item in checkItemList"
                 :key="item.value"
                 :value="item.value"
-                @change="getCareOrderItemFetch(item.value)"
+                @change="getCheckResultFinishFetch(item.value)"
               >
                 {{ item.label }}
                 <!-- 确保显示文本 -->
@@ -58,7 +58,7 @@
               <el-table-column label="操作" fixed="right" width="160">
                 <template #default="scope">
                   <el-button-group>
-                    <el-button type="success" size="small" @click="seeResult">
+                    <el-button type="success" size="small" @click="seeResult(scope.row.itemId)">
                       <el-icon><Edit /></el-icon>
                       <span>查看结果</span>
                     </el-button>
@@ -89,37 +89,30 @@
   </el-row>
 
   <!-- 检查结果对话框 -->
-  <el-dialog
-    v-model="resultVisible"
-    title="查看[患者名]的检查结果"
-    width="500"
-    :before-close="handleClose"
-  >
+  <el-dialog v-model="resultVisible" :title="checkDialogTitle" center width="500">
     <el-row>
       <el-col>
-        <el-form-item label="检查结果">
-          <el-input v-model="textarea" style="width: 240px" :rows="2" type="textarea" />
+        <el-form-item label="检查单号：">
+          <el-text>{{ checkDialogItemId }}</el-text>
+        </el-form-item>
+        <el-form-item label="检查结果：">
+          <el-text>{{ checkDIalogText }}</el-text>
         </el-form-item>
       </el-col>
     </el-row>
     <el-row>
       <el-col>
-        <el-upload
-          class="upload-demo"
-          action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
-          list-type="picture"
-        >
-          <el-button type="primary">Click to upload</el-button>
-          <template #tip>
-            <div class="el-upload__tip">jpg/png files with a size less than 500kb</div>
-          </template>
-        </el-upload>
+        <el-carousel :interval="4000" v-if="checkDialogResultImg.length" type="card" height="200px">
+          <el-carousel-item v-for="(img, index) in checkDialogResultImg" :key="index">
+            <el-image :src="img.url" fit="cover" style="width: 100%; height: 100%"></el-image>
+          </el-carousel-item>
+        </el-carousel>
+        <el-empty v-else description="暂无检查图片" />
       </el-col>
     </el-row>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="resultVisible = false">取消</el-button>
-        <el-button type="primary" @click="resultVisible = false"> 确认录入 </el-button>
+        <el-button @click="resultVisible = false" type="primary">关闭</el-button>
       </div>
     </template>
   </el-dialog>
@@ -138,6 +131,10 @@ const resultVisible = ref(false) //查看结果对话框控制显示
 const checkItemList = ref([]) // 存储获取的检查项
 const checkedRegItem = ref(1) //选中的检查项目
 const checkResultFinishList = ref([]) //存储检查结果列表
+const checkDialogTitle = ref('') //查看检查结果的对话框标题
+const checkDIalogText = ref('') //查看检查结果的文本内容
+const checkDialogItemId = ref('') //查看检查结果的检查单号
+const checkDialogResultImg = ref([]) //查看检查结果的图片列表
 
 //获取所有检查费用的ID和名字
 const getCheckItemFetchData = async () => {
@@ -149,32 +146,47 @@ const getCheckItemFetchData = async () => {
 }
 
 //查看检查结果
-const seeResult = () => {
+const seeResult = (itemId) => {
+  http.get(`/checkResult/getResult/${itemId}`).then((res) => {
+    const data = res.data.data
+
+    checkDialogTitle.value = `查看${data.patientName}检查结果`
+    checkDIalogText.value = data.resultMsg
+    checkDialogItemId.value = data.itemId
+
+    //解析resultImg显示到走马灯上
+    try {
+      checkDialogResultImg.value = JSON.parse(data.resultImg) || [] // 确保是数组
+    } catch (e) {
+      checkDialogResultImg.value = [] // 解析失败时设为空数组
+    }
+  })
+
   resultVisible.value = true
 }
 
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
-  getCheckResultFinishFetch()
+  getCheckResultFinishFetch('1')
 }
 
 //下一页
 const currentChange = (newPage) => {
   pageNum.value = newPage
-  getCheckResultFinishFetch()
+  getCheckResultFinishFetch('1')
 }
 
 //页面加载时挂载
 onMounted(() => {
-  getCheckResultFinishFetch()
+  getCheckResultFinishFetch('1')
   getCheckItemFetchData()
 })
 
 //获取检查结果
-const getCheckResultFinishFetch = () => {
+const getCheckResultFinishFetch = (checkItemId) => {
   http
-    .get('/checkResult/get/1', {
+    .get(`/checkResult/get/1/${checkItemId}`, {
       params: {
         pageNum: pageNum.value,
         pageSize: pageSize.value,

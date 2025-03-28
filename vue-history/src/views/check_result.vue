@@ -12,7 +12,7 @@
                 v-for="item in checkItemList"
                 :key="item.value"
                 :value="item.value"
-                @change="getCareOrderItemFetch(item.value)"
+                @change="getCheckResultList(item.value)"
               >
                 {{ item.label }}
                 <!-- 确保显示文本 -->
@@ -217,10 +217,10 @@ const addCheckResult = () => {
       if (res.data.code === 200 || res.data.data === true) {
         checkResultText.value = '' //清空检查描述
         fileList.value = [] //清空图片列表
-        getCheckResultList() //重新获取数据
+        getCheckResultList('1') //重新获取数据
         resultVisible.value = false //关闭对话框
         //修改用药和检查项目状态为3已完成
-        http.put(`/orderItem/update/3/${itemId.value}`).then((res) => {
+        http.put(`/orderItem/update/${itemId.value}/3`).then((res) => {
           if (res.data.code === 200 && res.data.data === true) {
             itemId.value = '' //清空itemId
             ElMessage.success('录入成功!!!')
@@ -318,16 +318,17 @@ const beforeUpload = (file) => {
 }
 
 //获取检测中的检查数据
-const getCheckResultList = () => {
+const getCheckResultList = (itemRefId) => {
   http
-    .get('/checkResult/get/0', {
+    .get(`/checkResult/get/0/${itemRefId}`, {
       params: {
         regId: queryForm.regId,
         patientName: queryForm.patientName,
       },
     })
     .then((res) => {
-      checkResultList.value = res.data.data
+      checkResultList.value = res.data.data.list
+      console.log(res.data.data)
     })
 }
 
@@ -362,7 +363,7 @@ const currentChange = (newPage) => {
 //页面加载时挂载
 onMounted(() => {
   getCheckItemFetchData()
-  getCheckResultList()
+  getCheckResultList('1')
 })
 
 //防抖处理
