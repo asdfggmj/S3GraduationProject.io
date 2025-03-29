@@ -34,28 +34,31 @@
   <el-row>
     <el-col>
       <el-card shadow="always" class="mb-10px">
-        <el-form :model="hisPatient" label-width="auto">
+        <el-form :rules="rules" :model="hisPatient" ref="ruleFormRef" label-width="auto">
           <el-row>
             <el-col :span="5">
-              <el-form-item label="身份证号">
-                <el-input v-model="hisPatient.idCard" placeholder="输入或导入身份证" />
+              <el-form-item label="身份证号" prop="idCard">
+                <el-input
+                  v-model="hisPatient.idCard"
+                  placeholder="输入或导入身份证"
+                  @change="getBirthdayAndAgeFromIdCard"
+                />
               </el-form-item>
-              <el-form-item label="患者姓名">
+              <el-form-item label="患者姓名" prop="name">
                 <el-input v-model="hisPatient.name" placeholder="输入或导入名字" />
               </el-form-item>
             </el-col>
             <el-col :span="5" class="ml-20px">
-              <el-form-item label="患者电话">
+              <el-form-item label="患者电话" prop="phone">
                 <el-input v-model="hisPatient.phone" placeholder="输入或导入电话" />
               </el-form-item>
-              <el-form-item label="出生日期">
+              <el-form-item label="出生日期" prop="birthDay">
                 <el-date-picker
-                  v-model="hisPatient.birthday"
+                  v-model="hisPatient.birthDay"
                   type="date"
                   placeholder="选择或导入出生日期"
                   format="YYYY-MM-DD"
-                  date-format="MMM DD, YYYY"
-                  time-format="HH:mm"
+                  value-format="YYYY-MM-DD"
                 />
               </el-form-item>
             </el-col>
@@ -119,99 +122,102 @@
   <el-row>
     <el-col>
       <el-card shadow="always" class="mb-10px">
-        <el-row>
-          <!-- 所属科室 -->
-          <el-col :span="4" class="mr-20px">
-            <el-form-item label="所属科室">
-              <el-select
-                clearable
-                v-model="selectedDeptId"
-                @focus="getAllDeptDataFetch"
-                @change="getTodaySchedulingFetch"
-                placeholder="请选择所属科室"
-                style="width: 240px"
-              >
-                <el-option
-                  v-for="item in deptData"
-                  :key="item.deptId"
-                  :label="item.deptName"
-                  :value="item.deptId"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <!-- 挂号类型 -->
-          <el-col :span="4" class="mr-20px">
-            <el-form-item label="挂号类型">
-              <el-select
-                clearable
-                v-model="querySelectedItemId"
-                placeholder="请选择挂号类型"
-                style="width: 240px"
-                @change="getTodaySchedulingFetch"
-              >
-                <el-option
-                  v-for="item in regTypeMap"
-                  :key="item.dictValue"
-                  :label="item.dictLabel"
-                  :value="item.dictValue"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <!-- 挂号时段 -->
-          <el-col :span="4" class="mr-20px">
-            <el-form-item label="挂号时段">
-              <el-select
-                clearable
-                v-model="selectedTimeDataId"
-                @focus="getAllTimesDataFetch"
-                @change="getTodaySchedulingFetch"
-                placeholder="请选择挂号时段"
-                style="width: 240px"
-              >
-                <el-option
-                  v-for="item in timeData"
-                  :key="item.dictValue"
-                  :label="item.dictLabel"
-                  :value="item.dictValue"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <!-- 挂号时间 -->
-          <el-col :span="4" class="mr-20px">
-            <el-form-item label="挂号时间">
-              <el-date-picker
-                clearable
-                v-model="queryRegTime"
-                :disabled-date="disabledDate"
-                @change="getTodaySchedulingFetch"
-                type="date"
-                placeholder="挂号时间"
-              >
-                <!-- <template #default="{ cell }">
+        <el-form ref="queryFormRef" :model="queryForm" :rules="rules" label-width="auto">
+          <el-row>
+            <!-- 所属科室 -->
+            <el-col :span="4" class="mr-20px">
+              <el-form-item label="所属科室">
+                <el-select
+                  clearable
+                  v-model="queryForm.selectedDeptId"
+                  @focus="getAllDeptDataFetch"
+                  @change="getTodaySchedulingFetch"
+                  placeholder="请选择所属科室"
+                  style="width: 240px"
+                >
+                  <el-option
+                    v-for="item in deptData"
+                    :key="item.deptId"
+                    :label="item.deptName"
+                    :value="item.deptId"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <!-- 挂号类型 -->
+            <el-col :span="4" class="mr-20px">
+              <el-form-item label="挂号类型" prop="querySelectedItemId">
+                <el-select
+                  clearable
+                  v-model="queryForm.querySelectedItemId"
+                  placeholder="请选择挂号类型"
+                  style="width: 240px"
+                  @change="getTodaySchedulingFetch"
+                >
+                  <el-option
+                    v-for="item in regTypeMap"
+                    :key="item.dictValue"
+                    :label="item.dictLabel"
+                    :value="item.dictValue"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <!-- 挂号时段 -->
+            <el-col :span="4" class="mr-20px">
+              <el-form-item label="挂号时段" prop="selectedTimeDataId">
+                <el-select
+                  clearable
+                  v-model="queryForm.selectedTimeDataId"
+                  @focus="getAllTimesDataFetch"
+                  @change="getTodaySchedulingFetch"
+                  placeholder="请选择挂号时段"
+                  style="width: 240px"
+                >
+                  <el-option
+                    v-for="item in timeData"
+                    :key="item.dictValue"
+                    :label="item.dictLabel"
+                    :value="item.dictValue"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <!-- 挂号时间 -->
+            <el-col :span="4" class="mr-20px">
+              <el-form-item label="挂号时间" prop="queryRegTime">
+                <el-date-picker
+                  clearable
+                  v-model="queryForm.queryRegTime"
+                  :disabled-date="disabledDate"
+                  @change="getTodaySchedulingFetch"
+                  type="date"
+                  placeholder="挂号时间"
+                >
+                  <!-- <template #default="{ cell }">
                   <div class="cell" :class="{ current: cell.isCurrent, today: isToday(cell.text) }">
                     <span class="text">{{ cell.text }}</span>
                   </div>
                 </template> -->
-              </el-date-picker>
-            </el-form-item>
-          </el-col>
-          <!-- 按钮组 -->
-          <el-col :span="4">
-            <el-form-item>
-              <el-button type="primary" @click="getTodaySchedulingFetch()">
-                <el-icon><Search /></el-icon>
-                <span>搜索</span>
-              </el-button>
-              <el-button type="primary" @click="resetQuery">
-                <el-icon><Refresh /></el-icon>
-                <span>重置</span>
-              </el-button>
-            </el-form-item>
-          </el-col>
-        </el-row>
+                </el-date-picker>
+              </el-form-item>
+            </el-col>
+
+            <!-- 按钮组 -->
+            <el-col :span="4">
+              <el-form-item>
+                <el-button type="primary" @click="getTodaySchedulingFetch()">
+                  <el-icon><Search /></el-icon>
+                  <span>搜索</span>
+                </el-button>
+                <el-button type="primary" @click="resetQuery">
+                  <el-icon><Refresh /></el-icon>
+                  <span>重置</span>
+                </el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
         <!-- 表格行 -->
         <el-row>
           <el-col>
@@ -226,7 +232,7 @@
             >
               <el-table-column prop="deptId" label="部门编号" />
               <el-table-column prop="deptName" label="部门名称" />
-              <el-table-column prop="currentNumber" label="当前已挂号数" />
+              <el-table-column prop="visitCount" label="当前已挂号数" />
               <template #empty>
                 <el-empty description="当日没有数据" :image-size="100" />
               </template>
@@ -309,18 +315,20 @@
 
 <script setup lang="ts">
 import http from '@/http'
-import { dayjs, ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import {
+  dayjs,
+  ElMessage,
+  ElMessageBox,
+  ElNotification,
+  FormInstance,
+  FormRules,
+} from 'element-plus'
 import { computed, onMounted, reactive, ref } from 'vue'
 
-const queryRegTime = ref('') //挂号时间
 const queryTypeKeyword = ref('') //搜索关键词
-const selectedTimeDataId = ref('') //选中的时段ID
 const timeData = ref([]) //时段ID
-const selectedDeptId = ref('') //选中的科室ID
 const deptData = ref([]) //科室数据
-const querySelectedItemId = ref('') //搜索选中的挂号类型
 const queryRegisteredItems = ref([]) //搜索挂号数据类型
-// const selectedItemId = ref(1) //选中的挂号费用ID
 const registeredItems = ref([])
 const pageNum = ref(1) //当前页
 const pageSize = ref(5) //每页显示的数据
@@ -349,6 +357,80 @@ const hisRegistration = reactive({
   schedulingType: '',
   subsectionType: '',
 })
+const ruleFormRef = ref<FormInstance | null>(null)
+const queryFormRef = ref(null) // 绑定表单的 ref
+const queryForm = reactive({
+  selectedDeptId: '', //所属科室
+  querySelectedItemId: '', //挂号类型
+  selectedTimeDataId: '', //挂号时段
+  queryRegTime: '', //挂号时间
+})
+
+//患者规则验证
+const rules = reactive<FormRules>({
+  // hisPatient 的表单验证规则
+  idCard: [
+    { required: true, message: '身份证号不能为空', trigger: 'blur' },
+    {
+      pattern: /^(^[1-9]\d{5}(18|19|20)?\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}(\d|X|x)?$)$/,
+      message: '身份证号码格式不正确',
+      trigger: 'blur',
+    },
+  ],
+  name: [{ required: true, message: '患者姓名不能为空', trigger: 'blur' }],
+  phone: [
+    { required: true, message: '电话不能为空', trigger: 'blur' },
+    {
+      pattern: /^1[3-9]\d{9}$/,
+      message: '请输入正确的11位手机号码',
+      trigger: 'blur',
+    },
+  ],
+
+  // hisRegistration 的表单验证规则
+  selectedDeptId: [{ required: true, message: '请选择所属科室', trigger: 'change' }],
+  querySelectedItemId: [{ required: true, message: '请选择挂号类型', trigger: 'change' }],
+  selectedTimeDataId: [{ required: true, message: '请选择挂号时段', trigger: 'change' }],
+  queryRegTime: [{ required: true, message: '请选择挂号时间', trigger: 'change' }],
+})
+//挂号选项规则验证
+
+//挂号收费点击事件
+const joinFeeFetch = async () => {
+  if (!ruleFormRef.value || !queryFormRef.value) return
+
+  // 同时校验两个表单
+  try {
+    await ruleFormRef.value.validate()
+    await queryFormRef.value.validate()
+
+    hisRegistration.regItemAmount = getSelectedItemFee.value || 0
+    hisRegistration.schedulingType = queryForm.querySelectedItemId
+    hisRegistration.subsectionType = queryForm.selectedTimeDataId
+
+    const requestData = {
+      hisRegistration: { ...hisRegistration },
+      hisPatient: { ...hisPatient },
+    }
+
+    const res = await http.post('/regList/add', requestData)
+    if (res.data.data) {
+      ElNotification({
+        title: '挂号成功！',
+        message: `请通知患者前往缴费`,
+        type: 'success',
+        offset: 50,
+        duration: 3000,
+      })
+      resetQueryForm()
+      resetRegistration()
+      resetPatient()
+      getTodaySchedulingFetch()
+    }
+  } catch (error) {
+    ElMessage.error('表单校验失败，请检查输入')
+  }
+}
 
 //重置患者对象
 const resetPatient = () => {
@@ -358,7 +440,7 @@ const resetPatient = () => {
     phone: '',
     age: 0,
     sex: '0',
-    birthday: '',
+    birthDay: '',
     address: '',
   })
 }
@@ -374,10 +456,16 @@ const resetRegistration = () => {
   })
 }
 
-// 判断是否是今天
-// const isToday = (dateText) => {
-//   return dateText == dayjs().date() // 只匹配日期，不匹配年月
-// }
+//重置挂号对象
+const resetQueryForm = () => {
+  Object.assign(queryForm, {
+    selectedDeptId: '',
+    querySelectedItemId: '',
+    selectedTimeDataId: '',
+    queryRegTime: '',
+  })
+}
+
 // 禁用今天之前的日期
 const disabledDate = (time) => {
   return dayjs(time).isBefore(dayjs().startOf('day'))
@@ -387,69 +475,15 @@ const formatDate = (date) => {
   return date ? dayjs(date).format('YYYY-MM-DD') : ''
 }
 
-//挂号收费点击事件
-const joinFeeFetch = () => {
-  if (querySelectedItemId.value === '') {
-    ElMessage.warning('请选择挂号类型！')
-    return
-  }
-  if (selectedTimeDataId.value === '') {
-    ElMessage.warning('请选择挂号时段！')
-    return
-  }
-  if (hisRegistration.deptId === '') {
-    ElMessage.warning('请选择挂号部门！')
-    return
-  }
-  //为表单赋挂号费
-  hisRegistration.regItemAmount = getSelectedItemFee.value
-  //赋值挂号类型
-  hisRegistration.schedulingType = querySelectedItemId.value
-  //赋值挂号时段
-  hisRegistration.subsectionType = selectedTimeDataId.value
-  //封装数据并且赋值身份证号
-  const requestData = {
-    hisRegistration: hisRegistration,
-    hisPatient: hisPatient,
-  }
-  //发送异步请求
-  http
-    .post('/regList/add', requestData)
-    .then((res) => {
-      if (res.data.data === true) {
-        ElNotification({
-          title: '挂号成功！',
-          message: `挂号流水号：${res.data.data.registrationId}，请通知患者前往缴费`,
-          type: 'success',
-          offset: 50,
-          duration: 3000,
-        })
-        //重置对象
-        resetRegistration()
-        resetPatient()
-      }
-    })
-    .catch((error) => {
-      ElNotification({
-        title: '挂号失败！',
-        message: `错误信息：${error}`,
-        type: 'error',
-        offset: 50,
-        duration: 3000,
-      })
-    })
-}
-
 //获取当天的所有排班信息
 const getTodaySchedulingFetch = () => {
-
   http
     .get('/doctors/getScheduleData', {
       params: {
-        deptId: selectedDeptId.value,
-        regTypeId: querySelectedItemId.value,
-        timePeriod: selectedTimeDataId.value,
-        date: formatDate(queryRegTime.value),
+        deptId: queryForm.selectedDeptId,
+        regTypeId: queryForm.querySelectedItemId,
+        timePeriod: queryForm.selectedTimeDataId,
+        date: formatDate(queryForm.queryRegTime),
         pageNum: pageNum.value,
         pageSize: pageSize.value,
       },
@@ -459,7 +493,6 @@ const getTodaySchedulingFetch = () => {
       pageNum.value = res.data.data?.pageNum || 1
       pageSize.value = res.data.data?.pageSize || 3
       pageTotal.value = res.data.data?.total || 0
-      console.log(res.data.data)
     })
 }
 
@@ -476,51 +509,58 @@ const handleRowClickByDeptId = (row) => {
   hisRegistration.deptId = row.deptId
 }
 
+//根据身份证号计算出生日期和年龄的方法
+const getBirthdayAndAgeFromIdCard = (idCard) => {
+  if (!idCard || idCard.length !== 18) {
+    return { birthday: '', age: 0 }
+  }
+
+  // 提取出生日期 (身份证 6-14 位)
+  const year = idCard.substring(6, 10)
+  const month = idCard.substring(10, 12)
+  const day = idCard.substring(12, 14)
+  const birthday = `${year}-${month}-${day}`
+
+  // 计算年龄
+  const birthDate = new Date(year, month - 1, day)
+  const today = new Date()
+  let age = today.getFullYear() - birthDate.getFullYear()
+
+  // 判断是否过了生日
+  const thisYearBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
+  if (today < thisYearBirthday) {
+    age--
+  }
+
+  return { birthday, age }
+}
+
 //根据身份证查询赋值患者信息
 const selectedPatientFetch = () => {
   selectedPatient.value = null // 重置为 null，而不是空数组
 
   if (!selectedPatientIdCode.value) {
-    ElMessage.warning('你还没有选择患者啊！')
-    return
+    return ElMessage.warning('你还没有选择患者啊！')
   }
 
   // 在 patientData 中查找身份证匹配的患者
-  const foundPatient = patientData.value.find(
-    (patient) => patient.idCard === selectedPatientIdCode.value,
-  )
+  const foundPatient = patientData.value.find((p) => p.idCard === selectedPatientIdCode.value)
 
   if (!foundPatient) {
-    ElMessage.warning('未找到该患者信息!')
-    return
+    return ElMessage.warning('未找到该患者信息!')
   }
 
-  // 计算准确年龄
-  const birthDate = new Date(foundPatient.birthDay) // 生日字符串转 Date 对象
-  const now = new Date()
-  let age = now.getFullYear() - birthDate.getFullYear()
-  if (
-    now.getMonth() < birthDate.getMonth() ||
-    (now.getMonth() === birthDate.getMonth() && now.getDate() < birthDate.getDate())
-  ) {
-    age-- // 还没过生日，减去 1 岁
-  }
-
-  // 赋值给 selectedPatient
-  selectedPatient.value = foundPatient
+  const { birthday, age } = getBirthdayAndAgeFromIdCard(foundPatient.idCard)
 
   // 将患者信息填充到表单
   Object.assign(hisPatient, {
-    idCard: foundPatient.idCard,
-    name: foundPatient.name,
-    phone: foundPatient.phone,
-    birthday: foundPatient.birthDay,
-    sex: foundPatient.sex,
-    address: foundPatient.address,
+    ...foundPatient,
+    birthDay: birthday,
     age: age,
   })
 
-  loadPatientDrawerVisible.value = false // 关闭弹窗
+  selectedPatient.value = foundPatient
+  loadPatientDrawerVisible.value = false
   patientData.value = []
 }
 
@@ -557,9 +597,9 @@ const getAllTimesDataFetch = () => {
 
 //重置查询条件
 const resetQuery = () => {
-  selectedDeptId.value = null
+  queryForm.selectedDeptId = null
   //挂号时段和挂号类型
-  selectedTimeDataId.value = querySelectedItemId.value = ''
+  queryForm.selectedTimeDataId = queryForm.querySelectedItemId = ''
   getTodaySchedulingFetch()
 }
 
@@ -583,7 +623,7 @@ const getSelectedItemFee = computed(() => {
 onMounted(() => {
   getRegItemFetch()
   getTodaySchedulingFetch()
-  queryRegTime.value = formatDate(Date.now())
+  queryForm.queryRegTime = formatDate(Date.now())
   getScheduleRegItemFetch()
 })
 
@@ -603,50 +643,29 @@ const getRegItemFetch = () => {
 }
 
 //根据身份者号获取患者信息
-const getPatientFetch = () => {
-  if (!idCard.value) {
-    ElMessage.warning('身份证不可为空')
-    return
+const getPatientFetch = async () => {
+  if (!idCard.value) return ElMessage.warning('身份证不可为空')
+
+  try {
+    const res = await http.get(`/patient/get/${idCard.value}`)
+    const patientData = res.data.data
+
+    if (!patientData) {
+      return ElMessage.warning('未查询到该患者，请手动添加信息')
+    }
+
+    const { birthday, age } = getBirthdayAndAgeFromIdCard(patientData.idCard)
+
+    Object.assign(hisPatient, {
+      ...patientData,
+      birthDay: birthday,
+      age: age,
+    })
+
+    ElMessage.success(`查询到 1 个患者`)
+  } catch (error) {
+    ElMessage.error('查询失败，请稍后重试')
   }
-
-  http
-    .get(`/patient/get/${idCard.value}`)
-    .then((res) => {
-      const patientData = res.data.data
-
-      if (!patientData) {
-        ElMessage.warning('未查询到该患者，请手动添加信息')
-        return
-      }
-
-      ElMessage.success(`查询到 1 个患者`)
-
-      // 计算准确年龄
-      const birthDate = new Date(patientData.birthDay) // 生日字符串转 Date 对象
-      const now = new Date()
-      let age = now.getFullYear() - birthDate.getFullYear()
-      if (
-        now.getMonth() < birthDate.getMonth() ||
-        (now.getMonth() === birthDate.getMonth() && now.getDate() < birthDate.getDate())
-      ) {
-        age-- // 还没过生日，减去 1 岁
-      }
-
-      // 批量更新 hisPatient，确保 Vue 能正确响应变化
-      Object.assign(hisPatient, {
-        idCard: patientData.idCard,
-        phone: patientData.phone,
-        sex: patientData.sex,
-        name: patientData.name,
-        age: age,
-        birthday: patientData.birthDay,
-        address: patientData.address,
-      })
-    })
-    .catch((error) => {
-      ElMessage.error('查询失败，请稍后重试')
-      console.error(error)
-    })
 }
 
 //上一页

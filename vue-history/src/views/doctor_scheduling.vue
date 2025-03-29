@@ -130,7 +130,12 @@
               <!-- 操作列 -->
               <el-table-column label="操作" align="center" width="120" fixed="right">
                 <template #default="scope">
-                  <el-button size="small" type="primary" @click="editScheduling(scope.row)">
+                  <el-button
+                    size="small"
+                    type="primary"
+                    @click="editScheduling(scope.row)"
+                    :disabled="weekToAdd < 0"
+                  >
                     <el-icon><Edit /></el-icon>
                     <span>排班</span>
                   </el-button>
@@ -262,7 +267,7 @@ const selectByDoctorId = () => {
 
 //获取排班时间段数据
 const getTimesData = () => {
-  http.get('/dict/get/his_subsection_type').then((res) => {
+  http.get('/dictData/get/his_subsection_type').then((res) => {
     const dictData = res.data.data || []
     timesDataMap.value = dictData.reduce((map, item) => {
       map[Number(item.dictValue)] = item.dictLabel
@@ -273,7 +278,7 @@ const getTimesData = () => {
 
 //获取排班类型数据
 const getSchedulingType = () => {
-  http.get('/dict/get/his_scheduling_type').then((res) => {
+  http.get('/dictData/get/his_scheduling_type').then((res) => {
     const dictData = res.data.data || []
 
     schedulingTypeMap.value = dictData.reduce((map, item) => {
@@ -309,7 +314,7 @@ const submitShiftTypeData = () => {
 //获取所有排班信息数据
 const getAllShiftTypeDataFetch = () => {
   if (shiftTypeData.value.length === 0) {
-    http.get('/dict/get/his_scheduling_type').then((res) => {
+    http.get('/dictData/get/his_scheduling_type').then((res) => {
       shiftTypeData.value = res.data.data
     })
   }
@@ -388,6 +393,8 @@ const editScheduling = (row) => {
     //清空一个医生的排班数据数组
     aScheduleData.value = []
   }
+  //判断周数是否正常，如果不正常给予提示并且不给发送后端
+  if (weekToAdd.value < 0) return ElMessage.warning('当前不允许修改排班信息')
   //打开对话框
   dialogVisible.value = true
   // 获取用户名
@@ -397,6 +404,8 @@ const editScheduling = (row) => {
   //给选中的医生变量ID赋值
   selectedDoctorId.value = row.userId
   //根据用户编号获取排班数据
+  console.log('医生ID', selectedDoctorId.value)
+
   http
     .get('/doctors/ScheduleList', {
       params: {

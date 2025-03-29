@@ -1,212 +1,466 @@
 <template>
   <!-- 第一行 -->
-  <el-row>
-    <el-col :span="24">
-      <!-- 卡片 -->
-      <el-card shadow="always">
-        <!-- 切换卡 -->
-        <el-tabs v-model="activeName" class="demo-tabs">
-          <el-tab-pane label="药品总库存" name="first">
-            <!-- 按钮行 -->
-            <el-row>
-              <el-col :span="5">
-                <el-form-item label="药品名称">
-                  <el-input placeholder="请输入药品名称" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="5" style="margin-left: 6px">
-                <el-form-item label="药品类型">
-                  <el-select v-model="value" placeholder="药品类型" style="width: 240px">
-                    <el-option
-                      v-for="item in options"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="5" style="margin-left: 6px">
-                <el-form-item label="生产厂家">
-                  <el-select v-model="value" placeholder="生产厂家" style="width: 240px">
-                    <el-option
-                      v-for="item in options"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="5" style="margin-left: 6px">
-                <el-form-item label="处方类型">
-                  <el-select v-model="value" placeholder="处方类型" style="width: 240px">
-                    <el-option
-                      v-for="item in options"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="3" style="margin-left: 20px">
-                <el-button type="primary">搜索</el-button>
-                <el-button type="primary">重置</el-button>
-              </el-col>
-            </el-row>
-            <!-- 表格行 -->
-            <el-row>
-              <el-col>
-                <el-table>
-                  <el-table-column label="药品编号"></el-table-column>
-                  <el-table-column label="药品名称"></el-table-column>
-                  <el-table-column label="库存数量"></el-table-column>
-                  <el-table-column label="预警值"></el-table-column>
-                  <el-table-column label="生产厂家"></el-table-column>
-                  <el-table-column label="药品类型"></el-table-column>
-                  <el-table-column label="处方类型"></el-table-column>
-                  <el-table-column label="单位"></el-table-column>
-                  <el-table-column label="换算量"></el-table-column>
-                </el-table>
-              </el-col>
-            </el-row>
-            <!-- 分页行 -->
-            <el-row style="margin-top: 10px">
-              <el-col :span="24">
-                <el-pagination
-                  background
-                  layout="total,sizes,prev, pager, next,jumper"
-                  :total="pageTotal"
-                  :pager-count="11"
-                  :page-size="pageSize"
-                  :page-sizes="[10, 20, 50]"
-                  :current-page="pageNum"
-                  @size-change="sizeChange"
-                  @current-change="currentChange"
+  <el-card shadow="always">
+    <!-- 切换卡 -->
+    <el-tabs v-model="activeName" class="demo-tabs" stretch>
+      <el-tab-pane label="药品总库存" name="first">
+        <el-form :model="medicinesQueryForm">
+          <!-- 按钮行 -->
+          <el-row justify="space-between">
+            <el-col :span="5">
+              <el-form-item label="药品名称">
+                <el-input
+                  placeholder="请输入药品名称"
+                  @input="debouncedGetProviderFetch"
+                  v-model="medicinesQueryForm.medicinesName"
                 />
-              </el-col>
-            </el-row>
-          </el-tab-pane>
-          <el-tab-pane label="批次库存及价格" name="second">
-            <!-- 按钮行 -->
-            <el-row justify="space-between">
-              <el-col :span="5">
-                <el-form-item label="采购单编号">
-                  <el-input placeholder="请输入药品名称" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="5">
-                <el-form-item label="药品名称">
-                  <el-input placeholder="请输入药品名称" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="5">
-                <el-form-item label="药品类型">
-                  <el-select v-model="value" placeholder="生产厂家">
-                    <el-option
-                      v-for="item in options"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="5">
-                <el-form-item label="生产厂家">
-                  <el-select v-model="value" placeholder="处方类型">
-                    <el-option
-                      v-for="item in options"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <!-- 第二行 -->
-            <el-row justify="space-between">
-              <el-col :span="10">
-                <el-form-item label="处方类型">
-                  <el-select v-model="value" placeholder="处方类型" style="width: 240px">
-                    <el-option
-                      v-for="item in options"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="10">
-                <el-form-item label="创建时间">
-                  <el-date-picker v-model="value1" type="date" placeholder="Select date and time" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="4">
-                <el-button type="primary">搜索</el-button>
-                <el-button type="primary">重置</el-button>
-              </el-col>
-            </el-row>
-            <!-- 表格行 -->
-            <el-row>
-              <el-col>
-                <el-table>
-                  <el-table-column label="药品编号"></el-table-column>
-                  <el-table-column label="药品名称"></el-table-column>
-                  <el-table-column label="采购数量"></el-table-column>
-                  <el-table-column label="批发价"></el-table-column>
-                  <el-table-column label="批发额"></el-table-column>
-                  <el-table-column label="批次号"></el-table-column>
-                  <el-table-column label="生产厂家"></el-table-column>
-                  <el-table-column label="药品类型"></el-table-column>
-                  <el-table-column label="处方类型"></el-table-column>
-                  <el-table-column label="创建时间"></el-table-column>
-                </el-table>
-              </el-col>
-            </el-row>
-            <!-- 分页行 -->
-            <el-row style="margin-top: 10px">
-              <el-col :span="24">
-                <el-pagination
-                  background
-                  layout="total,sizes,prev, pager, next,jumper"
-                  :total="pageTotal"
-                  :pager-count="11"
-                  :page-size="pageSize"
-                  :page-sizes="[10, 20, 50]"
-                  :current-page="pageNum"
-                  @size-change="sizeChange"
-                  @current-change="currentChange"
+              </el-form-item>
+            </el-col>
+            <el-col :span="5">
+              <el-form-item label="关键字">
+                <el-input
+                  placeholder="请输入关键字"
+                  @input="debouncedGetProviderFetch"
+                  v-model="medicinesQueryForm.keywords"
                 />
-              </el-col>
-            </el-row>
-          </el-tab-pane>
-        </el-tabs>
-      </el-card>
-    </el-col>
-  </el-row>
+              </el-form-item>
+            </el-col>
+            <el-col :span="5">
+              <el-form-item label="药品类型">
+                <el-select
+                  clearable
+                  v-model="medicinesQueryForm.medicinesType"
+                  placeholder="请选择药品类型"
+                  style="width: 240px"
+                  @change="debouncedGetProviderFetch"
+                >
+                  <el-option
+                    v-for="item in medicinesDataMap"
+                    :key="item.dictValue"
+                    :label="item.dictLabel"
+                    :value="item.dictValue"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="5">
+              <el-form-item label="生产厂家">
+                <el-select
+                  v-model="medicinesQueryForm.producterId"
+                  clearable
+                  @change="debouncedGetProviderFetch"
+                  placeholder="请选择生产厂家"
+                >
+                  <el-option
+                    v-for="item in producterList"
+                    :key="item.producterId"
+                    :label="item.producterName"
+                    :value="item.producterId"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <!-- 按钮行 -->
+          <el-row justify="space-between">
+            <el-col :span="5">
+              <el-form-item label="处方类型">
+                <el-select
+                  clearable
+                  v-model="medicinesQueryForm.prescriptionType"
+                  placeholder="请选择处方类型"
+                  style="width: 240px"
+                  @change="debouncedGetProviderFetch"
+                >
+                  <el-option
+                    v-for="item in prescriptionTypeDataMap"
+                    :key="item.dictValue"
+                    :label="item.dictLabel"
+                    :value="item.dictValue"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="5">
+              <el-form-item style="margin-right: 6px" label="状态">
+                <el-select
+                  @change="debouncedGetProviderFetch"
+                  v-model="medicinesQueryForm.status"
+                  placeholder="请选择状态"
+                  style="width: 240px"
+                  clearable
+                >
+                  <el-option label="正常" value="0" />
+                  <el-option label="禁用" value="1" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="10">
+              <el-button-group>
+                <el-button type="primary" @click="getMedicinesFetch">
+                  <el-icon><Search /></el-icon>
+                  <span>搜索</span>
+                </el-button>
+                <el-button type="danger" @click="resetQueryFetch">
+                  <el-icon><Refresh /></el-icon>
+                  <span>重置</span>
+                </el-button>
+              </el-button-group>
+            </el-col>
+          </el-row>
+        </el-form>
+        <!-- 表格行 -->
+        <el-row>
+          <el-col>
+            <el-table
+              :data="medicinesData"
+              style="width: 100%"
+              max-height="500"
+              row-key="medicinesId"
+              border
+            >
+              <el-table-column label="药品编号" prop="medicinesId" width="120" />
+              <el-table-column label="药品名称" prop="medicinesName" width="120" />
+              <el-table-column label="药品编码" prop="medicinesNumber" width="120" />
+              <el-table-column label="生产厂家" prop="producterName" width="240" />
+              <el-table-column label="药品类型" prop="medicinesType" width="160">
+                <template #default="scope">
+                  <span>{{ medicinesMap[scope.row.medicinesType] }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="处方类型" prop="prescriptionType" width="100">
+                <template #default="scope">
+                  <span>{{ prescriptionTypeMap[scope.row.prescriptionType] }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="关键词" prop="keywords" width="100" />
+              <el-table-column label="处方价格" prop="prescriptionPrice" width="100">
+                <template #default="scope">
+                  <span>{{ Number(scope.row.prescriptionPrice).toFixed(2) }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="换算量" prop="conversion" width="100" />
+              <el-table-column label="单位" prop="unit" width="100" />
+              <el-table-column label="库存量" prop="medicinesStockNum" width="100">
+                <template #default="scope">
+                  <el-tag
+                    :type="
+                      stockColor(scope.row.medicinesStockNum, scope.row.medicinesStockDangerNum)
+                    "
+                    >{{ scope.row.medicinesStockNum }}</el-tag
+                  >
+                </template>
+              </el-table-column>
+              <el-table-column label="预警值" prop="medicinesStockDangerNum" width="100" />
+              <el-table-column label="状态" prop="status" width="100">
+                <template #default="scope">
+                  {{ scope.row.status === '0' ? '正常' : '禁用' }}
+                </template>
+              </el-table-column>
+              <el-table-column label="创建时间" prop="createTime" width="200">
+                <template #default="scope">
+                  <span>{{ formatDate(scope.row.createTime) }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="创建人" prop="createBy" width="120" />
+              <el-table-column label="最后一次修改时间" prop="updateTime" width="200">
+                <template #default="scope">
+                  <span>{{ formatDate(scope.row.updateTime) }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="修改人" prop="updateBy" width="120">
+                <template #default="scope">
+                  {{ scope.row.updateBy || '--' }}
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-col>
+        </el-row>
+        <!-- 分页行 -->
+        <el-row class="mt-10px">
+          <el-col :span="24">
+            <el-pagination
+              background
+              layout="total,sizes,prev, pager, next,jumper"
+              :total="medicinesPageTotal"
+              :pager-count="11"
+              :page-size="medicinesPageSize"
+              :page-sizes="[10, 20, 50]"
+              :current-page="medicinesPageNum"
+              @size-change="sizeChange"
+              @current-change="currentChange"
+            />
+          </el-col>
+        </el-row>
+      </el-tab-pane>
+
+      <!-- 批次库存及价格 -->
+      <el-tab-pane label="批次库存及价格" name="second">
+        <!-- 按钮行 -->
+        <el-form :model="stockQueryForm">
+          <el-row justify="space-between">
+            <el-col :span="5">
+              <el-form-item label="采购单编号">
+                <el-input placeholder="请输入药品名称" v-model="stockQueryForm.purchaseId" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="5">
+              <el-form-item label="药品名称">
+                <el-input placeholder="请输入药品名称" v-model="stockQueryForm.medicinesName" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="5">
+              <el-form-item label="药品类型">
+                <el-select
+                  clearable
+                  v-model="stockQueryForm.medicinesType"
+                  placeholder="请选择药品类型"
+                  style="width: 240px"
+                  @change="debouncedGetProviderFetch"
+                >
+                  <el-option
+                    v-for="item in medicinesDataMap"
+                    :key="item.dictValue"
+                    :label="item.dictLabel"
+                    :value="item.dictValue"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="5">
+              <el-form-item label="生产厂家">
+                <el-select
+                  v-model="stockQueryForm.producterId"
+                  clearable
+                  @change="debouncedGetProviderFetch"
+                  placeholder="请选择生产厂家"
+                >
+                  <el-option
+                    v-for="item in producterList"
+                    :key="item.producterId"
+                    :label="item.producterName"
+                    :value="item.producterId"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <!-- 第二行 -->
+          <el-row justify="space-between">
+            <el-col :span="5">
+              <el-form-item label="处方类型">
+                <el-select
+                  clearable
+                  v-model="stockQueryForm.prescriptionType"
+                  placeholder="请选择处方类型"
+                  @change="debouncedGetProviderFetch"
+                >
+                  <el-option
+                    v-for="item in prescriptionTypeDataMap"
+                    :key="item.dictValue"
+                    :label="item.dictLabel"
+                    :value="item.dictValue"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="18">
+              <el-button-group>
+                <el-button type="primary" @click="getPurchaseFetch">
+                  <el-icon><Search /></el-icon>
+                  <span>搜索</span>
+                </el-button>
+                <el-button type="danger" @click="resetMedicinesQueryFetch">
+                  <el-icon><Refresh /></el-icon>
+                  <span>重置</span>
+                </el-button>
+              </el-button-group>
+            </el-col>
+          </el-row>
+        </el-form>
+
+        <!-- 表格行 -->
+        <el-row>
+          <el-col>
+            <el-table>
+              <el-table-column label="药品编号"></el-table-column>
+              <el-table-column label="药品名称"></el-table-column>
+              <el-table-column label="采购数量"></el-table-column>
+              <el-table-column label="批发价"></el-table-column>
+              <el-table-column label="批发额"></el-table-column>
+              <el-table-column label="批次号"></el-table-column>
+              <el-table-column label="生产厂家"></el-table-column>
+              <el-table-column label="药品类型"></el-table-column>
+              <el-table-column label="处方类型"></el-table-column>
+              <el-table-column label="创建时间"></el-table-column>
+            </el-table>
+          </el-col>
+        </el-row>
+        <!-- 分页行 -->
+        <el-row class="mt-10px">
+          <el-col :span="24">
+            <el-pagination
+              background
+              layout="total,sizes,prev, pager, next,jumper"
+              :total="pageTotal"
+              :pager-count="11"
+              :page-size="pageSize"
+              :page-sizes="[10, 20, 50]"
+              :current-page="pageNum"
+              @size-change="sizeChange"
+              @current-change="currentChange"
+            />
+          </el-col>
+        </el-row>
+      </el-tab-pane>
+    </el-tabs>
+  </el-card>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import http from '@/http'
+import { onMounted, reactive, ref } from 'vue'
+import { debounce } from '@/utils/debounceUtils'
+import { formatDate } from '@/utils/dateUtils'
 
 const activeName = ref('first')
-const pageNum = ref(1) //当前页
-const pageSize = ref(10) //每页显示的数据
-const pageTotal = ref(0) //总个数
+const medicinesPageNum = ref(1) //当前页
+const medicinesPageSize = ref(10) //每页显示的数据
+const medicinesPageTotal = ref(0) //总个数
+const medicinesQueryForm = reactive({
+  medicinesName: '', //药品名称
+  keywords: '', //关键字
+  medicinesType: '', //药品类型
+  prescriptionType: '', //处方类型
+  producterId: '', //生产厂家
+  status: '', //状态
+}) //药品总库存的搜索条件对象
+const stockQueryForm = reactive({
+  purchaseId: '', //采购单号
+  medicinesName: '', //药品名称
+  medicinesType: '', //药品类型
+  prescriptionType: '', //处方类型
+  producterId: '', //生产厂家
+})
+const medicinesDataMap = ref({}) //存储药品类型字典
+const medicinesMap = ref([])
+const prescriptionTypeDataMap = ref({}) //存储处方类型字典
+const prescriptionTypeMap = ref([])
+const medicinesData = reactive([]) //药品数据
+const producterList = ref([]) //生产厂家数组
+
+//重置查询条件
+const resetMedicinesQueryFetch = () => {
+  Object.assign(medicinesQueryForm, {
+    medicinesName: '', //药品名称
+    keywords: '', //关键字
+    medicinesType: '', //药品类型
+    prescriptionType: '', //处方类型
+    producterId: '', //生产厂家
+    status: '', //状态
+  })
+  getMedicinesFetch()
+}
+
+//获取厂家ID和名字
+const getProducterIdNameFetch = () => {
+  http.get('/producter/getIdName').then((res) => {
+    producterList.value = res.data.data
+    console.log(producterList)
+  })
+}
+
+const stockColor = (kucun, yujing) => {
+  if (!Number.isFinite(kucun) || !Number.isFinite(yujing)) return '' // 保护措施
+  if (kucun > yujing) return 'success'
+  if (kucun === yujing) return 'warning'
+  return 'danger' // 省略 `if`，默认小于时返回 danger
+}
+
+//处方类型
+const getPrescriptionTypeFetch = () => {
+  http.get('/dictData/get/his_prescription_type').then((res) => {
+    const prescriptionTypeData = res.data.data || []
+    prescriptionTypeDataMap.value = prescriptionTypeData
+
+    prescriptionTypeMap.value = prescriptionTypeData.reduce((map, item) => {
+      map[Number(item.dictValue)] = item.dictLabel
+      return map
+    }, {})
+  })
+}
+
+onMounted(() => {
+  getMedicinesFetch()
+  getMedicinesTypeFetch()
+  getPrescriptionTypeFetch()
+  getProducterIdNameFetch()
+})
+
+//药品类型
+const getMedicinesTypeFetch = () => {
+  http.get('/dictData/get/his_medicines_type').then((res) => {
+    const medicinesData = res.data.data || []
+    medicinesDataMap.value = medicinesData
+
+    medicinesMap.value = medicinesData.reduce((map, item) => {
+      map[Number(item.dictValue)] = item.dictLabel
+      return map
+    }, {})
+  })
+}
 
 //上一页
 const sizeChange = (newPageSize) => {
-  pageSize.value = newPageSize
-  // getDictFetch()
+  medicinesPageSize.value = newPageSize
+  getMedicinesFetch()
 }
 
 //下一页
 const currentChange = (newPage) => {
-  pageNum.value = newPage
-  // getDictFetch()
+  medicinesPageNum.value = newPage
+  getMedicinesFetch()
 }
+
+const getMedicinesFetch = () => {
+  http
+    .get('/medicines/list', {
+      params: {
+        pageNum: medicinesPageNum.value,
+        pageSize: medicinesPageSize.value,
+        medicinesName: medicinesQueryForm.medicinesName,
+        keywords: medicinesQueryForm.keywords,
+        medicinesType: medicinesQueryForm.medicinesType,
+        prescriptionType: medicinesQueryForm.prescriptionType,
+        producterId: medicinesQueryForm.producterId,
+        status: medicinesQueryForm.status,
+      },
+    })
+    .then((res) => {
+      const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
+      medicinesData.splice(0, medicinesData.length, ...list)
+      medicinesPageTotal.value = res.data.data?.total || 0
+    })
+}
+
+// 防抖处理
+const debouncedGetProviderFetch = debounce(getMedicinesFetch, 500)
 </script>
+
+<style>
+.mr-20px {
+  margin-right: 20px;
+}
+.mt-10px {
+  margin-top: 10px;
+}
+.mb-10px {
+  margin-bottom: 10px;
+}
+.ml-10px {
+  margin-left: 10px;
+}
+.text-center {
+  text-align: center;
+}
+</style>
