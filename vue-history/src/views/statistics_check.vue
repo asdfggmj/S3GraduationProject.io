@@ -160,13 +160,15 @@ watch(activeName, (newVal) => {
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
-  activeName.value=='first'?getItem():getStatisticsItem()
+  getItem()
+  getStatisticsItem()
 }
 
 //下一页
 const currentChange = (newPage) => {
   pageNum.value = newPage
-  activeName.value=='first'?getItem():getStatisticsItem()
+  getItem()
+  getStatisticsItem()
 }
 
 // 搜索按钮，获取日期选择器
@@ -184,7 +186,8 @@ const searchByDate = () => {
     pickdata.endDate = format(new Date(valueDate.value[1]), 'yyyy-MM-dd')
     }
     //刷新
-    activeName.value=='first'?getItem():getStatisticsItem()
+    getItem()
+    getStatisticsItem()
   //}
 }
 
@@ -197,7 +200,8 @@ const reset = () => {
   paientName.value='';
 
   // 重置后重新请求默认数据（即使当天数据为空，也会覆盖旧数据
-  activeName.value=='first'?getItem():getStatisticsItem()
+  getItem()
+  getStatisticsItem()
 }
 
 //页面挂载

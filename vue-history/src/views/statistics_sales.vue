@@ -87,7 +87,7 @@
             </el-row>
             <el-row>
               <el-col>
-                <el-table :data="saleListData" border :summary-method="getTotal"
+                <el-table :data="saleStatisticsData" border :summary-method="getTotal"
                 show-summary>
                   <el-table-column label="药品ID" prop="itemRefId" />
                   <el-table-column label="药品名称" prop="itemName" />
@@ -128,7 +128,8 @@ import { onMounted, reactive, ref, watch } from 'vue'
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
-const saleListData = ref([])//页面数据
+const saleListData = ref([])//列表数据
+const saleStatisticsData = ref([])//统计数据
 const valueDate = ref([])    //日期范围数组
 const pickdata = reactive({ //开始日期和结束日期
   startDate: '',
@@ -138,25 +139,28 @@ const keyWord=ref('')//药品名称
 const activeName = ref('first')//当前激活的标签页
 
 // 监听activeName变换，判断当前是哪个标签
-watch(activeName, (newVal) => {
-  // 根据标签页加载数据
-  if (newVal === 'first') {
-      getItem()
-  } else if (newVal === 'second') {
-      getStatisticsItem()
-  }
-});
+// watch(activeName, (newVal) => {
+//   // 根据标签页加载数据
+//   if (newVal === 'first') {
+//       getItem()
+//   } else if (newVal === 'second') {
+//       getStatisticsItem()
+//   }
+// });
 
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
-  activeName.value=='first'?getItem():getStatisticsItem
+  getItem()
+  getStatisticsItem
 }
 
 //下一页
 const currentChange = (newPage) => {
   pageNum.value = newPage
-  activeName.value=='first'?getItem():getStatisticsItem}
+  getItem()
+  getStatisticsItem()
+}
 
 // 搜索按钮，获取日期选择器
 const searchByDate = () => {
@@ -173,7 +177,8 @@ const searchByDate = () => {
     pickdata.endDate = format(new Date(valueDate.value[1]), 'yyyy-MM-dd')
     }
     //刷新
-    activeName.value=='first'?getItem():getStatisticsItem()  //}
+    getItem()
+    getStatisticsItem()  //}
 }
 
 // 重置
@@ -184,13 +189,15 @@ const reset = () => {
   keyWord.value='';
 
   // 重置后重新请求默认数据（即使当天数据为空，也会覆盖旧数据）
-  activeName.value=='first'?getItem():getStatisticsItem()
+  getItem()
+  getStatisticsItem()
 }
 
 //页面挂载
 onMounted(() => {
-  //获取药品列表数据
+  //获取数据
   getItem()
+  getStatisticsItem()
 })
 
 //查询标签一的数据
@@ -226,7 +233,7 @@ http.get("statistics/statisticsSales",{
     }
   )
   .then((res)=>{
-      saleListData.value=res.data.data.list
+    saleStatisticsData.value=res.data.data.list
       pageTotal.value = res.data.data?.total || 0
     })
 }
