@@ -35,6 +35,7 @@
                   <div class="demo-date-picker">
                     <div class="block">
                       <el-date-picker
+                        :shortcuts="shortcuts"
                         v-model="valueDate"
                         type="daterange"
                         style="width: 100%"
@@ -160,6 +161,36 @@ const pickdata = reactive({ //开始日期和结束日期
 const itemName = ref('') //项目名称
 const paientName = ref('') //患者名称
 const activeName = ref('first') //当前激活的标签页
+//快速选择日期范围
+const shortcuts = [
+  {
+    text: '最近一周',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setDate(start.getDate() - 7)
+      return [start, end]
+    },
+  },
+  {
+    text: '最近一个月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setMonth(start.getMonth() - 1)
+      return [start, end]
+    },
+  },
+  {
+    text: '最近三个月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setMonth(start.getMonth() - 3)
+      return [start, end]
+    },
+  },
+]
 
 // 监听activeName变换，判断当前是哪个标签
 // watch(activeName, (newVal) => {

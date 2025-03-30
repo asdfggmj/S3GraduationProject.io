@@ -40,7 +40,7 @@
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="角色名称" prop="roleName" width="120" />
               <el-table-column label="权限编码" prop="roleCode" />
-              <el-table-column label="显示顺序" prop="roleSort" width="120" />
+              <el-table-column label="显示顺序" min="0" prop="roleSort" width="120" />
               <el-table-column label="状态" prop="status">
                 <template #default="scope">
                   <el-switch
@@ -251,7 +251,7 @@ const addRoleMenu = () => {
   http
     .post('/role/addRoleMenu', {
       rid: rid.value,
-      mids: checkMids,
+      mids: checkMids
     })
     .then((res) => {
       ElMessage({
@@ -317,12 +317,6 @@ const delRole = (roleId) => {
       }
     })
   })
-  // .catch(() => {
-  //   ElMessage({
-  //     type: 'info',
-  //     message: 'Delete canceled',
-  //   })
-  // })
 }
 
 //修改角色抽屉
@@ -334,15 +328,13 @@ const editRole = (roleId) => {
   http
     .get('/role/getRole?rid=' + roleId)
     .then((res) => {
-      if (res.data.data) {
         roleObject.roleId = roleId
-        roleObject.roleName = res.data.roleName
-        roleObject.roleCode = res.data.roleCode
-        roleObject.roleSort = res.data.roleSort
-        roleObject.status = res.data.status
-        roleObject.remark = res.data.remark
-        roleObject.createTime = res.data.createTime
-      }
+        roleObject.roleName = res.data.data.roleName
+        roleObject.roleCode = res.data.data.roleCode
+        roleObject.roleSort = res.data.data.roleSort
+        roleObject.status = res.data.data.status
+        roleObject.remark = res.data.data.remark
+        roleObject.createTime = res.data.data.createTime
     })
     .catch((error) => {
       // ElMessage.error('获取角色数据失败'+error)

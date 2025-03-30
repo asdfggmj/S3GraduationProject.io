@@ -21,6 +21,7 @@
                 <div class="block">
                   <el-date-picker
                     v-model="valueDate"
+                    :shortcuts="shortcuts"
                     type="daterange"
                     style="width: 100%"
                     start-placeholder="开始日期"
@@ -111,6 +112,38 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { formatDate } from '@/utils/dateUtils'
 import http from '@/http'
 import * as echarts from 'echarts'
+import { format } from 'date-fns'
+
+//快速选择日期范围
+const shortcuts = [
+  {
+    text: '最近一周',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setDate(start.getDate() - 7)
+      return [start, end]
+    },
+  },
+  {
+    text: '最近一个月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setMonth(start.getMonth() - 1)
+      return [start, end]
+    },
+  },
+  {
+    text: '最近三个月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setMonth(start.getMonth() - 3)
+      return [start, end]
+    },
+  },
+]
 
 //统计数据
 const statisticsData = ref({
@@ -244,8 +277,8 @@ const searchByDate = () => {
   // } else {
   if (valueDate.value.length !== 0) {
     // 格式化日期为 yyyy-MM-dd
-    pickdata.startDate = formatDate(new Date(valueDate.value[0]), 'yyyy-MM-dd')
-    pickdata.endDate = formatDate(new Date(valueDate.value[1]), 'yyyy-MM-dd')
+    pickdata.startDate = format(new Date(valueDate.value[0]), 'yyyy-MM-dd')
+    pickdata.endDate = format(new Date(valueDate.value[1]), 'yyyy-MM-dd')
   }
   //刷新
   getData()

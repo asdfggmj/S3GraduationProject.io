@@ -10,11 +10,11 @@
               <el-icon><Plus /></el-icon>
               <span>新增用户</span>
             </el-button>
-            <el-button type="success" disabled>
+            <!-- <el-button type="success">
               <el-icon><Refresh /></el-icon>
               <span>重置选中用户账号</span>
-            </el-button>
-            <el-button type="danger" disabled>
+            </el-button> -->
+            <el-button type="danger" >
               <el-icon><Minus /></el-icon>
               <span>删除选中用户</span>
             </el-button>
@@ -321,6 +321,7 @@ const userObject = reactive({
   age: '',
   sex: '2',
   status: '0',
+  userType:'',
   userRank: '',
   background: '',
   schedulingFlag: '1',
@@ -359,7 +360,11 @@ const uploadUserHeader = (file) => {
     .then((res) => {
       if (res.data.code === 200) {
         handleAvatarSuccess(res.data, file)
-        ElMessage.success('头像更改成功!')
+        if(addOrEditDrawerTitle.value=='添加用户'){
+        ElMessage.success('头像上传成功!')
+        }else{
+          ElMessage.success('头像更改成功!')
+        }
       }
     })
     .catch((error) => {
@@ -397,22 +402,18 @@ const schedulingFlagComputedFetch = (value) => {
   }
 }
 
-const deptMap = computed(() => {
+// 计算属性，根据 deptId 获取科室名称
+const getDeptName = (deptId) => {
   const map = new Map()
   deptData.value.forEach((item) => {
     map.set(item.deptId, item.deptName)
   })
-  return map
-})
-
-// 计算属性，根据 deptId 获取科室名称
-const getDeptName = (deptId) => {
-  return deptMap.value.get(deptId) || '未知科室'
-  http.post('http://localhost:8080/file/user/uploadImg', formData).then((res) => {
-    if (res.data.data.code === 200) {
-      ElMessage.success('头像更改成功!')
-    }
-  })
+  return map.get(deptId) || '未知科室'
+  // http.post('http://localhost:8080/file/user/uploadImg', formData).then((res) => {
+  //   if (res.data.data.code === 200) {
+  //     ElMessage.success('头像更改成功!')
+  //   }
+  // })
 }
 
 //使用dayjs序列化时间
@@ -500,7 +501,7 @@ const getAllDept = async () => {
   if (deptData.value.length === 0) {
     try {
       const res = await http.get('/dept/list')
-      deptData.value = Array.isArray(res.data.data.list) ? res.data.data.list : []
+      deptData.value = res.data.data.list? res.data.data.list : []
     } catch (error) {
       console.error('获取科室列表失败', error)
     }
@@ -551,14 +552,11 @@ const currentChange = (newPage) => {
 }
 
 //实现添加用户头像文件上传
-//上传成功调用
-// 上传成功回调函数
 const handleAvatarSuccess = (response, uploadFile) => {
   // 这里使用从服务器返回的图片 URL，而不是本地临时URL
   userObject.picture = response.data // 更新用户头像地址
 }
 //上传之前调用,验证文件的格式文件的大小
-// 上传之前的验证
 const beforeAvatarUpload = (rawFile) => {
   // 验证文件类型
   if (
@@ -578,23 +576,20 @@ const beforeAvatarUpload = (rawFile) => {
 }
 //添加用户抽屉
 const addUser = () => {
+  getAllDept(); // 确保部门数据已加载
   //清空用户对象
-  Object.assign(userObject, {
-    userId: '',
-    userName: '',
-    email: '',
-    deptId: '',
-    phone: '',
-    age: '18',
-    sex: '0',
-    status: '0',
-    userRank: '',
-    background: '',
-    schedulingFlag: '1',
-    picture: '',
-    userRankValue: '',
-    backgroundValue: '',
-  })
+    userObject.userId=
+    userObject.userName=
+    userObject.email=
+    userObject.deptId=
+    userObject.phone=
+    userObject.age=
+    userObject.userRank=
+    userObject.background=
+    userObject.schedulingFlag=
+    userObject.picture=
+    userObject.userRankValue=
+    userObject.backgroundValue=''
 
   addOrEditDrawerTitle.value = '添加用户'
   addOrEditDrawerModal.value = true
@@ -602,7 +597,6 @@ const addUser = () => {
 
 //添加用户
 const addUserSubmit = () => {
-  console.log('添加的数据' + userObject)
   //后端发送添加用户请求
   http.post('/user/addUser', userObject).then((res) => {
     if (res.data.data === true) {
@@ -636,6 +630,7 @@ const delUser = (userId) => {
 
 //修改用户抽屉
 const editUser = (userId) => {
+  getAllDept(); // 确保部门数据已加载
   addOrEditDrawerTitle.value = '编辑用户'
   addOrEditDrawerModal.value = true
   //回调单个用户数据
@@ -701,7 +696,6 @@ const beforeChangeAddOrEditDrawer = () => {
     .then(() => {
       addOrEditDrawerModal.value = false
       dialog.value = false
-      deptData.value.splice(0, deptData.value.length)
     })
     .catch(() => {
       return
@@ -767,27 +761,6 @@ onMounted(() => {
   getUserData()
   getAllDept()
 })
-
-// 关闭抽屉时的处理逻辑
-const handleDrawerClose = () => {
-  // 重置表单，避免直接操作响应式数据
-  Object.assign(userObject, {
-    userId: '',
-    userName: '',
-    email: '',
-    deptId: '',
-    phone: '',
-    age: '',
-    sex: '2',
-    status: '0',
-    userRank: '',
-    background: '',
-    schedulingFlag: '1',
-    picture: '',
-    userRankValue: '',
-    backgroundValue: '',
-  })
-}
 
 // 获取用户数据
 const getUserData = () => {

@@ -16,15 +16,15 @@
             </el-button>
           </el-col>
           <!-- 模糊查询 -->
-          <el-form-item label="用户名" style="font-size: 15px">
+           <el-col :span="5">
             <el-input
               v-model="userName"
               @change="searchLoginLog"
-              placeholder="请输入用户名"
+              placeholder="请输入用户名称回车以查询"
               clearable
               size=""
             />
-          </el-form-item>
+           </el-col>
           <el-row> </el-row>
         </el-row>
       </el-card>

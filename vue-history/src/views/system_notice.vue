@@ -20,7 +20,7 @@
             <el-input
               v-model="keyWord"
               @change="searchNotice"
-              placeholder="请输入公告标题"
+              placeholder="请输入公告标题回车以查询"
               clearable
               size=""
             />
@@ -283,8 +283,8 @@ const seeContext = (noticeId) => {
   //查询当前通知内容
   http.get('/notice/getById?id=' + noticeId).then((res) => {
     if (res.data.data) {
-      noticeObject.noticeContent = res.data.noticeContent
-      noticeObject.noticeTitle = res.data.noticeTitle
+      noticeObject.noticeContent = res.data.data.noticeContent
+      noticeObject.noticeTitle = res.data.data.noticeTitle
     }
     ElMessageBox.alert(`${noticeObject.noticeContent}`, `${noticeObject.noticeTitle}`, {
       confirmButtonText: '已阅',
@@ -320,15 +320,14 @@ const editNotice = (noticeId) => {
   http
     .get('/notice/getById?id=' + noticeId)
     .then((res) => {
-      if (res.data.data) {
-        res.data.status = res.data.data.data
+        res.data.status = res.data.data.status
         noticeObject.noticeId = noticeId
-        noticeObject.noticeType = res.data.noticeType
-        noticeObject.noticeContent = res.data.noticeContent
-        noticeObject.noticeTitle = res.data.noticeTitle
-        noticeObject.status = res.data.status
-        noticeObject.remark = res.data.remark
-      }
+        noticeObject.noticeType = res.data.data.noticeType
+        noticeObject.noticeContent = res.data.data.noticeContent
+        noticeObject.noticeTitle = res.data.data.noticeTitle
+        noticeObject.status = res.data.data.status
+        noticeObject.remark = res.data.data.remark
+
     })
     .catch((error) => {
       ElMessage.error('获取通知数据失败' + error)
@@ -394,7 +393,7 @@ const updateUserStatus = async (id, roleStatus, roleName) => {
     if (response.data.data) {
       ElNotification({
         title: '修改成功!',
-        message: `编号为 ${id} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
+        message: `公告编号为 ${id} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
         type: 'success',
         offset: 50,
         duration: 3000,

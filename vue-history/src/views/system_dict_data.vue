@@ -24,7 +24,7 @@
             <el-input
               v-model="keyWord"
               @change="searchDictData"
-              placeholder="请输入关键字回车以查询"
+              placeholder="请输入字典标签回车以查询"
               clearable
               size=""
             />

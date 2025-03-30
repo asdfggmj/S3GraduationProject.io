@@ -20,7 +20,7 @@
             <el-input
               v-model="keyWord"
               @change="searchDept"
-              placeholder="请输入科室名称"
+              placeholder="请输入科室名称回车以查询"
               clearable
               size=""
             />
@@ -136,7 +136,7 @@
             <el-input v-model="deptObject.leaderPhone" placeholder="请输入电话" />
           </el-form-item>
           <el-form-item label="显示顺序">
-            <el-input-number v-model="deptObject.orderNum" :min="18" :max="200" />
+            <el-input-number v-model="deptObject.orderNum" :min="0" :max="200" />
           </el-form-item>
         </el-form>
       </el-col>

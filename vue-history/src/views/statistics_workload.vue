@@ -30,6 +30,7 @@
                         v-model="valueDate"
                         type="daterange"
                         style="width: 100%"
+                        :shortcuts="shortcuts"
                         start-placeholder="开始日期"
                         end-placeholder="结束日期"
                         unlink-panels="false"
@@ -131,6 +132,7 @@
 <script setup lang="ts">
 import http from '@/http'
 import { formatDate } from '@/utils/dateUtils'
+import { format } from 'date-fns'
 import { onMounted, reactive, ref } from 'vue'
 
 const doctorData = ref([]) //医生工作量统计
@@ -146,7 +148,36 @@ const pickdata = reactive({
 })
 const doctorName = ref('') //医生名称
 const activeName = ref('first')
-
+//快速选择日期范围
+const shortcuts = [
+  {
+    text: '最近一周',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setDate(start.getDate() - 7)
+      return [start, end]
+    },
+  },
+  {
+    text: '最近一个月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setMonth(start.getMonth() - 1)
+      return [start, end]
+    },
+  },
+  {
+    text: '最近三个月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setMonth(start.getMonth() - 3)
+      return [start, end]
+    },
+  },
+]
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
@@ -170,8 +201,8 @@ const searchByDate = () => {
   // } else {
   if (valueDate.value.length !== 0) {
     // 格式化日期为 yyyy-MM-dd
-    pickdata.startDate = formatDate(new Date(valueDate.value[0]), 'yyyy-MM-dd')
-    pickdata.endDate = formatDate(new Date(valueDate.value[1]), 'yyyy-MM-dd')
+    pickdata.startDate = format(new Date(valueDate.value[0]), 'yyyy-MM-dd')
+    pickdata.endDate = format(new Date(valueDate.value[1]), 'yyyy-MM-dd')
   }
   //刷新
   getData()

@@ -45,7 +45,7 @@
             >
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="挂号费编号" prop="regItemId" width="120" />
-              <el-table-column label="挂号费名称" prop="regItemName" width="180" />
+              <el-table-column label="挂号项目名称" prop="regItemName" width="180" />
               <el-table-column label="挂号费" prop="regItemFee">
                 <template #default="scope">
                   <el-text>{{ parseFloat(scope.row.regItemFee).toFixed(2) }}</el-text>
@@ -237,7 +237,7 @@ const addRegisteredItem = () => {
   regItemObject.regItemFee = ''
   regItemObject.delFlag = ''
   regItemObject.status = '0'
-
+  regItemObject.regItemFee = '0.00'
   addOrEditDrawerTitle.value = '添加检查费用'
   addOrEditDrawerModal.value = true
 }
@@ -265,7 +265,7 @@ const delRegistrationFee = (registeredItemId) => {
     type: 'warning',
   }).then(() => {
     //删除检查费用
-    http.post('registeredItem/delete?id=' + registeredItemId).then((res) => {
+    http.post('registeredItem/deleteById?id=' + registeredItemId).then((res) => {
       if (res.data.data) {
         ElMessage.success('删除成功')
         getAnnouncementFetch()
@@ -358,7 +358,6 @@ const currentChange = (newPage) => {
 
 // 修改检查费用状态改变事件
 const updateUserStatus = async (rid, roleStatus, roleName) => {
-  alert(roleStatus)
   if (roleStatus == 0) {
     roleStatus = 1
   } else {

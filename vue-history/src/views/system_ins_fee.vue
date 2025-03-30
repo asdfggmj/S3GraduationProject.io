@@ -20,7 +20,7 @@
             <el-input
               v-model="keyWord"
               @change="searchCheckItem"
-              placeholder="请输入项目名称回车键搜索"
+              placeholder="请输入项目名称回车键以查询"
               clearable
               size=""
             />

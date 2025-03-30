@@ -16,15 +16,15 @@
             </el-button>
           </el-col>
           <!-- 模糊查询 -->
-          <el-form-item label="系统模块" style="font-size: 15px">
+          <el-col :span="5">
             <el-input
               v-model="title"
               @change="searchLoginLog"
-              placeholder="请输入菜单名称"
+              placeholder="请输入系统模块名称回车以查询"
               clearable
-              size=""
+              size="10"
             />
-          </el-form-item>
+          </el-col>
           <el-row> </el-row>
         </el-row>
       </el-card>

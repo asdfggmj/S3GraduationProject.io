@@ -489,7 +489,7 @@ const getMenus = async () => {
     //     item.status = item.status
     //   })
     menuData.value = buildMenuTree(list) //处理为树形结构
-    pageTotal.value = response.data.data?.total || 0
+    pageTotal.value = menuData.value.length
     setTimeout(() => {
       loading.value = false
     }, 500)
