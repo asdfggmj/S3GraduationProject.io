@@ -160,7 +160,7 @@
   </el-row>
   <el-dialog
     v-model="payforVisible"
-    :title="`使用[${payType}]扫码支付`"
+    :title="`使用[${payType}]支付`"
     width="600"
     :before-close="handleClose"
   >
@@ -169,13 +169,13 @@
         <el-col :span="12">订单号：{{ odc }}</el-col>
         <el-row :span="12">总金额：￥{{ amount.toFixed(2) }}</el-row>
       </el-row>
+      <el-row :span="12" style="margin-top: 20px;"><el-button type="primary" @click="confirmPayment ">支付完成</el-button></el-row>
     </el-card>
-    <el-card class="mt-10px">
+    <el-card class="mt-10px" v-if="payType=='支付宝'">
       <el-row>
         <!-- <el-col :span="24">二维码</el-col> -->
         <img :src="`/src/assets/image/${payType}.jpg`" alt="二维码" style="width: 200px; height: 200px;margin-left: 160px;" />
       </el-row>
-      <el-button style="float: right;" type="primary" @click="confirmPayment ">支付完成</el-button>
     </el-card>
   </el-dialog>
 </template>
@@ -183,7 +183,7 @@
 <script setup lang="ts">
 import http from '@/http'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
 const payforVisible = ref(false)//二维码显示
 const msg = ref(false)//显示数据
@@ -311,12 +311,6 @@ const handleCheckSelectionChange = (items) => {
 const handleMedicinesSelectionChange = (items) => {
   medicinesSelected.value = items;
 };
-
-
-// onMounted(()=>{
-//   regId.value='GH17418992518938890'
-//   get()
-// })
 
 // 计算总金额
 const amount = computed(() => {

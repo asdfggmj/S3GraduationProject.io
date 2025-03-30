@@ -186,7 +186,7 @@ const deptObject = reactive({
 
 // 监听多选
 const handleSelectionChange = (val) => {
-  //console.log('当前选中的数据:', val) // ✅ 确保这里不是空的
+  console.log('当前选中的数据:', val) // ✅ 确保这里不是空的
   depIds.value = val
 }
 
@@ -195,25 +195,24 @@ const batchDelete = async () => {
   if (depIds.value.length === 0) {
     return ElMessage.warning('请选择要删除的项！')
   }
-  try {
-    await ElMessageBox.confirm(`确定删除选中的 ${depIds.value.length} 条记录吗？`, '提示', {
+     ElMessageBox.confirm(`确定删除选中的 ${depIds.value.length} 条记录吗？`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
-    })
-
+}).then(() => {
     //提取id
-    const ids = depIds.value.map((item) => item.operId)
+    const ids = depIds.value.map((item) => item.deptId)
     // 调用 API 批量删除
-    await http.post('/dept/batchDelete', { ids })
-
-    // 重新查询一遍数据
-    getDeptFetch()
-
-    ElMessage.success('批量删除成功！')
-  } catch (error) {
-    ElMessage.error('批量删除失败！', error)
-  }
+    http.post('/dept/batchDelete', { ids })
+    .then((res) => {
+      if (res.data.data&&res.data.data!==null) {
+        ElMessage.success('删除成功')
+        getDeptFetch()
+      } else {
+        ElMessage.error('删除失败')
+      }
+    })
+})
 }
 
 //模糊查询

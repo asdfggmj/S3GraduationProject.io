@@ -55,12 +55,11 @@
                   () =>
                     handleBeforeChange(
                       scope.row.menuId,
-                      scope.row.status === 0 ? 1 : 0,
+                      scope.row.status === '0' ? '1' : '0',
                       scope.row.menuName
-                    )
-                "
-                     :active-value="0"
-                    :inactive-value="1"
+                    )"
+                     :active-value="'0'"
+                     :inactive-value="'1'"
                     active-text="正常"
                     inactive-text="禁用"
                     class="ml-2"
@@ -189,7 +188,7 @@ const menuObject = reactive({
   perCode:'',
   path:'',
   remark:'',
-  status:0,
+  status:'0',
   createTime:'',
   updateTime:'',
   createBy:'',
@@ -218,7 +217,7 @@ const addMenu = () => {
   menuObject.parentId = ''
   menuObject.menuName = ''
   menuObject.menuType = ''
-  menuObject.status=0
+  menuObject.status='0'
   menuObject.path = ''
 
   addOrEditDrawerTitle.value = '添加菜单'
@@ -435,7 +434,7 @@ const getMenus = async () => {
     const list = Array.isArray(response.data.data.list) ? response.data.data.list : []
     // 将 status 转换为数字类型
     list.forEach(item => {
-        item.status = Number(item.status)
+        item.status = item.status
       })
     menuData.value = buildMenuTree(list) //处理为树形结构
     pageTotal.value = response.data.total?.total || 0
@@ -451,7 +450,7 @@ const buildMenuTree = (menuList) => {
 
   // 将数据存入 Map，方便查找
   menuList.forEach((item) => menuMap.set(item.menuId, { ...item, children: [] }))
-  console.log(menuMap)
+  //console.log(menuMap)
 
   // 构建树
   menuList.forEach((item) => {
@@ -464,7 +463,7 @@ const buildMenuTree = (menuList) => {
       tree.push(menuMap.get(item.menuId))
     }
   })
-
+  console.log(tree)
   return tree
 }
 </script>

@@ -151,6 +151,7 @@
     size="30%"
     :before-close="beforeChangeAddOrEditDrawer"
   >
+  >
     <el-row>
       <el-col :span="20">
         <el-form :model="userObject" label-width="auto" style="max-width: 600px">
@@ -317,7 +318,6 @@ const formatDate = (date) => {
   return date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : '--'
 }
 
-//用户分配角色抽屉
 //用户授权的按钮
 const userGrant = async (index: number, userId) => {
   uid.value = userId
@@ -625,7 +625,6 @@ const beforeChangeAddOrEditDrawer = () => {
   })
     .then(() => {
       addOrEditDrawerModal.value = false
-      dialog.value = false
       deptData.splice(0, deptData.length)
     })
     .catch(() => {
@@ -690,8 +689,29 @@ const handleBeforeChange = async (uid, value, username) => {
 // 页面加载时获取用户数据
 onMounted(() => {
   getUserData()
-  console.log(userObject)
+  //console.log(userObject)
 })
+
+// 关闭抽屉时的处理逻辑
+const handleDrawerClose = () => {
+  // 重置表单，避免直接操作响应式数据
+  Object.assign(userObject, {
+    userId: '',
+    userName: '',
+    email: '',
+    deptId: '',
+    phone: '',
+    age: '',
+    sex: '2',
+    status: '0',
+    userRank: '',
+    background: '',
+    schedulingFlag: '1',
+    picture: '',
+    userRankValue: '',
+    backgroundValue: ''
+  });
+};
 
 // 获取用户数据
 const getUserData = () => {
