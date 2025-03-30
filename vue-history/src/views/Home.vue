@@ -45,6 +45,14 @@
                   </el-button>
                 </el-tooltip>
               </el-col>
+              <!-- Gitee -->
+              <el-col>
+                <el-tooltip effect="dark" content="前往接口文档" placement="bottom">
+                  <el-button type="danger" link @click="openApi">
+                    <el-icon><i class="iconfont icon-gitee"></i></el-icon> openAPI
+                  </el-button>
+                </el-tooltip>
+              </el-col>
             </el-row>
           </el-col>
         </el-row>
@@ -338,6 +346,9 @@ const gitHub = () => {
 //后端地址
 const gitee = () => {
   window.open('https://gitee.com/asdfggmj12/history-back')
+}
+const openApi = () => {
+  window.open('http://localhost:8080/doc.html')
 }
 
 //今日就诊数
