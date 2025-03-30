@@ -161,14 +161,14 @@ const paientName = ref('') //患者名称
 const activeName = ref('first') //当前激活的标签页
 
 // 监听activeName变换，判断当前是哪个标签
-watch(activeName, (newVal) => {
- // 根据标签页加载数据
-  if (newVal === 'first') {
-      getItem()
-  } else if (newVal === 'second') {
-      getStatisticsItem()
-  }
-});
+// watch(activeName, (newVal) => {
+//  // 根据标签页加载数据
+//   if (newVal === 'first') {
+//       getItem()
+//   } else if (newVal === 'second') {
+//       getStatisticsItem()
+//   }
+// });
 
 //上一页
 const sizeChange = (newPageSize) => {

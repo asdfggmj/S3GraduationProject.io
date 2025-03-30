@@ -154,6 +154,7 @@
     size="30%"
     :before-close="beforeChangeAddOrEditDrawer"
   >
+    >
     <el-row>
       <el-col :span="20">
         <el-form :model="userObject" label-width="auto" style="max-width: 600px">
@@ -403,7 +404,6 @@ const formatDate = (date) => {
   return date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : '--'
 }
 
-//用户分配角色抽屉
 //用户授权的按钮
 const userGrant = async (index: number, userId) => {
   uid.value = userId
@@ -751,6 +751,27 @@ onMounted(() => {
   getUserData()
   getAllDept()
 })
+
+// 关闭抽屉时的处理逻辑
+const handleDrawerClose = () => {
+  // 重置表单，避免直接操作响应式数据
+  Object.assign(userObject, {
+    userId: '',
+    userName: '',
+    email: '',
+    deptId: '',
+    phone: '',
+    age: '',
+    sex: '2',
+    status: '0',
+    userRank: '',
+    background: '',
+    schedulingFlag: '1',
+    picture: '',
+    userRankValue: '',
+    backgroundValue: '',
+  })
+}
 
 // 获取用户数据
 const getUserData = () => {

@@ -194,31 +194,28 @@ const batchDelete = async () => {
   if (depIds.value.length === 0) {
     return ElMessage.warning('请选择要删除的项！')
   }
-  try {
-    await ElMessageBox.confirm(`确定删除选中的 ${depIds.value.length} 条记录吗？`, '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-
+  ElMessageBox.confirm(`确定删除选中的 ${depIds.value.length} 条记录吗？`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
     //提取id
-    const ids = depIds.value.map((item) => item.operId)
+    const ids = depIds.value.map((item) => item.deptId)
     // 调用 API 批量删除
-    await http.post('/dept/batchDelete', { ids })
-
-    // 重新查询一遍数据
-    getDeptFetch()
-
-    ElMessage.success('批量删除成功！')
-  } catch (error) {
-    ElMessage.error('批量删除失败！', error)
-  }
+    http.post('/dept/batchDelete', { ids }).then((res) => {
+      if (res.data.data && res.data.data !== null) {
+        ElMessage.success('删除成功')
+        getDeptFetch()
+      } else {
+        ElMessage.error('删除失败')
+      }
+    })
+  })
 }
 
 //模糊查询
 const searchDept = (keyWordInput) => {
   keyWord.value = keyWordInput
-  // ElMessage.info(keyWord.value)
   getDeptFetch()
 }
 
@@ -270,34 +267,29 @@ const delDept = (deptId) => {
       }
     })
   })
-  // .catch(() => {
-  //   ElMessage({
-  //     type: 'info',
-  //     message: 'Delete canceled',
-  //   })
-  // })
 }
 
 //修改科室抽屉
 const editDept = (deptId) => {
-  //userId=userId
   addOrEditDrawerTitle.value = '编辑科室'
   addOrEditDrawerModal.value = true
   //回调单个科室数据
-  http.get('/dept/getDeptById?deptId=' + deptId).then((res) => {
-    if (res.data) {
-      deptObject.deptId = deptId
-      deptObject.deptName = res.data.deptName
-      deptObject.deptLeader = res.data.deptLeader
-      deptObject.deptNumber = res.data.deptNumber
-      deptObject.orderNum = res.data.orderNum
-      deptObject.leaderPhone = res.data.leaderPhone
-      deptObject.status = res.data.status
-    }
-  })
-  // .catch((error)=>{
-  //   ElMessage.error('获取科室数据失败'+error)
-  // })
+  http
+    .get('/dept/getDeptById?deptId=' + deptId)
+    .then((res) => {
+      if (res.data) {
+        deptObject.deptId = deptId
+        deptObject.deptName = res.data.deptName
+        deptObject.deptLeader = res.data.deptLeader
+        deptObject.deptNumber = res.data.deptNumber
+        deptObject.orderNum = res.data.orderNum
+        deptObject.leaderPhone = res.data.leaderPhone
+        deptObject.status = res.data.status
+      }
+    })
+    .catch((error) => {
+      ElMessage.error('获取科室数据失败' + error)
+    })
 }
 
 //修改科室
@@ -334,7 +326,6 @@ const beforeChangeAddOrEditDrawer = () => {
   })
     .then(() => {
       addOrEditDrawerModal.value = false
-      //deptData.splice(0, deptData.length)
     })
     .catch(() => {
       return
