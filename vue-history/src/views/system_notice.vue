@@ -81,15 +81,15 @@
                 </template>
               </el-table-column>
               <el-table-column label="备注" prop="remark" width="200" />
-              <el-table-column label="创建时间" prop="createTime" width="200" >
+              <el-table-column label="创建时间" prop="createTime" width="200" sortable>
                 <template #default="scope">
-                  {{ scope.row.createTime.replace('T',' ') }}
+                  {{ scope.row.createTime.replace('T', ' ') }}
                 </template>
               </el-table-column>
               <el-table-column label="创建人" prop="createBy" width="200" />
-              <el-table-column label="最后一次修改日期" prop="updateTime" width="200" >
+              <el-table-column label="最后一次修改日期" prop="updateTime" width="200">
                 <template #default="scope">
-                  {{ scope.row.updateTime.replace('T',' ') }}
+                  {{ scope.row.updateTime.replace('T', ' ') }}
                 </template>
               </el-table-column>
               <el-table-column label="修改人" prop="updateBy" width="200" />
@@ -162,7 +162,7 @@
             </el-radio-group>
           </el-form-item>
           <el-form-item label="内容">
-            <el-input v-model="noticeObject.remark" type="textarea" />
+            <el-input v-model="noticeObject.remark" placeholder="请输入公告内容" type="textarea" />
           </el-form-item>
         </el-form>
       </el-col>
@@ -171,7 +171,7 @@
     <el-row class="text-center">
       <el-col>
         <el-button @click="handleSubmit" type="primary">提交</el-button>
-        <el-button type="primary">取消</el-button>
+        <el-button type="primary" @click="addOrEditDrawerModal = false">取消</el-button>
       </el-col>
     </el-row>
   </el-drawer>
@@ -179,10 +179,8 @@
 
 <script setup lang="ts">
 import http from '@/http'
-import { Action, ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ClickOutside as vClickOutside } from 'element-plus'
-import { formatDate } from '@/utils/dateUtils'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
@@ -214,7 +212,6 @@ const noticeIds = ref([]) //选中的编号数组
 
 // 监听多选
 const handleSelectionChange = (val) => {
-  //console.log('当前选中的数据:', val) // ✅ 确保这里不是空的
   noticeIds.value = val
 }
 

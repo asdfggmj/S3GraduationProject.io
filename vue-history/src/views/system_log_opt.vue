@@ -33,7 +33,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -61,8 +61,8 @@
                     <p m="t-0 b-2"><b>请求参数:</b> {{ props.row.operParam }}</p>
                     <p m="t-0 b-2"><b>返回参数:</b> {{ props.row.jsonResult }}</p>
 
-                <p m="t-0 b-2"><b>操作状态:</b>{{ props.row.status==0?'正常':'异常' }}</p>
-                <p m="t-0 b-2"><b>操作时间:</b> {{ props.row.operTime.replace('T',' ') }}</p>
+                    <p m="t-0 b-2"><b>操作状态:</b>{{ props.row.status == 0 ? '正常' : '异常' }}</p>
+                    <p m="t-0 b-2"><b>操作时间:</b> {{ props.row.operTime.replace('T', ' ') }}</p>
 
                     <p m="t-0 b-2"><b>异常信息:</b> {{ props.row.erroMsg }}</p>
                   </div>
@@ -70,28 +70,28 @@
               </el-table-column>
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="日志ID" prop="operId" width="100" />
-              <el-table-column label="系统模块" prop="title" width="200" />
-              <el-table-column label="操作类型" props="bussinessType" width="150">
+              <el-table-column label="系统模块" prop="title" width="200" show-overflow-tooltip />
+              <el-table-column label="操作类型" props="businessType" width="150">
                 <template #default="scope">
-                  <span>{{ getBusinessTypeText(scope.row.bussinessType) }}</span>
+                  <span>{{ getBusinessTypeText(scope.row.businessType) }}</span>
                 </template>
-                </el-table-column>
+              </el-table-column>
               <el-table-column label="请求方式" prop="requestMethod" width="150" />
               <el-table-column label="操作人员" prop="operName" width="150" />
               <el-table-column label="主机" prop="operIp" width="150" />
               <el-table-column label="操作地点" prop="operLocation" width="120" />
-              <el-table-column label="操作状态" prop="status" width="120" >
+              <el-table-column label="操作状态" prop="status" width="120">
                 <template #default="scope">
                   <span>{{ scope.row.status == 0 ? '成功' : '失败' }}</span>
                 </template>
-                </el-table-column>
-              <el-table-column label="操作时间" prop="operTime" width="200" >
+              </el-table-column>
+              <el-table-column label="操作时间" prop="operTime" width="200">
                 <template #default="scope">
-                  {{ scope.row.operTime.replace('T',' ') }}
+                  {{ scope.row.operTime.replace('T', ' ') }}
                 </template>
               </el-table-column>
               <!-- 按钮组 -->
-              <el-table-column label="操作" fixed="right" width="150">
+              <el-table-column label="操作" fixed="right" width="100">
                 <template #default="scope">
                   <el-button-group>
                     <el-button
@@ -130,12 +130,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
-import { Search, Refresh } from '@element-plus/icons-vue'
+import { onMounted, reactive, ref } from 'vue'
 import http from '@/http'
 import { useCookies } from '@vueuse/integrations/useCookies'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { formatDate } from '@/utils/dateUtils'
 
 //从cookie获取authorization
 const cookie = useCookies()
@@ -144,22 +142,33 @@ const auhtorization = cookie.get('authorization')
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
-const operName = ref('')
 const title = ref('')
+const loading = ref(true) //表格加载动画
 
 //计算操作类型
 const getBusinessTypeText = (businessType) => {
-  const typeMap = {
-    0: '退出',
-    1: '新增',
-    2: '修改',
-    3: '删除',
-    4: '授权',
-    5: '导出',
-    6: '导入',
-    8: '清空数据',
+  switch (businessType) {
+    case '0':
+      return '其他'
+    case '1':
+      return '新增'
+    case '2':
+      return '修改'
+    case '3':
+      return '删除'
+    case '4':
+      return '授权'
+    case '5':
+      return '导出'
+    case '6':
+      return '导入'
+    case '7':
+      return '退出'
+    case '8':
+      return '清空数据'
+    default:
+      return '未知操作'
   }
-  return typeMap[businessType] || '未知操作' // 如果 businessType 不在 typeMap 中，返回 '未知操作'
 }
 //操作日志数据
 const operLogData = reactive([
@@ -270,6 +279,7 @@ onMounted(() => {
 
 // 获取操作日志记录数据
 const getOperLogData = () => {
+  loading.value = true
   http
     .get('/operLog/list', {
       params: {
@@ -286,8 +296,19 @@ const getOperLogData = () => {
         pageNum.value = operLog.pageNum
         pageSize.value = operLog.pageSize
         operLogData.splice(0, operLogData.length, ...operLog.list)
-        //operLogData.splice(0, operLogData.length, ...buildMenuTree(res.data.data.list)); // 处理为树形结构
       }
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 </script>
+
+<style scoped>
+.mt-10px {
+  margin-top: 10px;
+}
+.mb-10px {
+  margin-bottom: 10px;
+}
+</style>

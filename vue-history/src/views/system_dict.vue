@@ -32,7 +32,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -78,16 +78,16 @@
               </el-table-column>
               <el-table-column label="备注" prop="remark" width="200" />
               <el-table-column label="创建时间" prop="createTime" width="200">
-                  <template #default="scope">
-                    {{ scope.row.createTime.replace('T',' ') }}
-                  </template>
-                </el-table-column>
+                <template #default="scope">
+                  {{ scope.row.createTime.replace('T', ' ') }}
+                </template>
+              </el-table-column>
               <el-table-column label="创建人" prop="createBy" width="120" />
-              <el-table-column label="最后一次修改时间" prop="updateTime" width="200" >
-                  <template #default="scope">
-                    {{ scope.row.updateTime.replace('T',' ') }}
-                  </template>
-                </el-table-column>
+              <el-table-column label="最后一次修改时间" prop="updateTime" width="200">
+                <template #default="scope">
+                  {{ scope.row.updateTime.replace('T', ' ') }}
+                </template>
+              </el-table-column>
               <el-table-column label="修改人" prop="updateBy" width="120" />
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="160">
@@ -144,14 +144,8 @@
           <el-form-item label="字典类型">
             <el-input v-model="dictTypeObject.dictType" placeholder="请输入数据标签" />
           </el-form-item>
-          <el-form-item label="状态">
-            <el-radio-group v-model="dictTypeObject.status">
-              <el-radio value="0">正常</el-radio>
-              <el-radio value="1">禁用</el-radio>
-            </el-radio-group>
-          </el-form-item>
           <el-form-item label="备注">
-            <el-input v-model="dictTypeObject.remark" type="textarea" />
+            <el-input v-model="dictTypeObject.remark" placeholder="请输入备注" type="textarea" />
           </el-form-item>
         </el-form>
       </el-col>
@@ -160,7 +154,7 @@
     <el-row class="text-center">
       <el-col>
         <el-button @click="addOrEditDicTypeSubmit" type="primary">提交</el-button>
-        <el-button type="primary">取消</el-button>
+        <el-button type="primary" @click="addOrEditDrawerModal = false">取消</el-button>
       </el-col>
     </el-row>
   </el-drawer>
@@ -170,7 +164,7 @@
 import http from '@/http'
 import router from '@/router'
 import { useDictTypeStore } from '@/stores/dictType'
-import { dayjs, ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 
 const addOrEditDrawerModal = ref(false) //添加或编辑角色抽屉
@@ -184,6 +178,7 @@ const rowLoadingMap = reactive({}) //是否处于加载状态
 const dictTypeStore = useDictTypeStore() //使用字典类别的xx
 //角色编号
 let dCodes = ref([])
+const loading = ref(true) //表格加载动画
 
 //字典数据对象，用于存储添加或修改的字典数据信息
 const dictTypeObject = reactive({
@@ -193,11 +188,6 @@ const dictTypeObject = reactive({
   status: '0',
   remark: '',
 })
-
-//使用dayjs序列化时间
-const formatDate = (date) => {
-  return date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : '--'
-}
 
 //根据ID查看数据类别的数据
 const checkDictData = (dictType) => {
@@ -257,18 +247,20 @@ const editDictType = (dictCode) => {
   addOrEditDrawerTitle.value = '编辑字典数据'
   addOrEditDrawerModal.value = true
   //回调单个字典数据数据
-  http.get('/dictType/getById?id=' + dictCode).then((res) => {
-    if (res.data.data) {
-      dictTypeObject.dictId = dictCode
-      dictTypeObject.dictName = res.data.data.dictName
-      dictTypeObject.dictType = res.data.data.dictType
-      dictTypeObject.status = res.data.data.status
-      dictTypeObject.remark = res.data.data.remark
-    }
-  })
-  // .catch((error)=>{
-  //   //ElMessage.error('获取字典数据数据失败'+error)
-  // })
+  http
+    .get('/dictType/getById?id=' + dictCode)
+    .then((res) => {
+      if (res.data.data) {
+        dictTypeObject.dictId = dictCode
+        dictTypeObject.dictName = res.data.data.dictName
+        dictTypeObject.dictType = res.data.data.dictType
+        dictTypeObject.status = res.data.data.status
+        dictTypeObject.remark = res.data.data.remark
+      }
+    })
+    .catch((error) => {
+      ElMessage.error('获取字典数据数据失败' + error)
+    })
 }
 
 //添加或修改字典数据
@@ -307,12 +299,6 @@ const delDictType = (roleId) => {
       }
     })
   })
-  // .catch(() => {
-  //   ElMessage({
-  //     type: 'info',
-  //     message: 'Delete canceled',
-  //   })
-  // })
 }
 
 //关闭抽屉前提示用户是否关闭
@@ -425,7 +411,11 @@ const getDictFetch = () => {
         item.status = Number(item.status)
       })
       dictData.splice(0, dictData.length, ...list)
-      pageTotal.value = res.data.data?.total || 0
+        pageTotal.value = res.data.data?.total || 0
+        setTimeout(() => {
+        loading.value = false
+      }, 500)
+
     })
 }
 </script>

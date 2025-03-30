@@ -32,7 +32,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -47,7 +47,7 @@
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="科室名称" prop="deptName" width="120" />
               <el-table-column label="科室编码" prop="deptNumber" />
-              <el-table-column label="当前挂号量" prop="regNumber" width="120" />
+              <el-table-column label="当前挂号量" prop="regNumber" width="120" sortable />
               <el-table-column label="负责人" prop="deptLeader" />
               <el-table-column label="电话" prop="leaderPhone" />
               <el-table-column label="状态" prop="status">
@@ -73,7 +73,7 @@
                   />
                 </template>
               </el-table-column>
-              <el-table-column label="创建时间" prop="createTime" width="200" />
+              <el-table-column label="创建时间" prop="createTime" width="200" sortable />
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="240">
                 <template #default="scope">
@@ -160,7 +160,6 @@
 <script setup lang="ts">
 import http from '@/http'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
-import { de } from 'element-plus/es/locale'
 import { onMounted, reactive, ref } from 'vue'
 const addOrEditDrawerModal = ref(false) //添加或编辑科室抽屉
 const addOrEditDrawerTitle = ref('') //添加或编辑科室抽屉标题
@@ -171,6 +170,7 @@ const keyWord = ref('') //关键字
 const deptData = reactive([]) //科室数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
 const depIds = ref([]) //选中的编号数组
+const loading = ref(true) //表格加载动画
 
 //科室对象，用于存储添加或修改的科室信息
 const deptObject = reactive({
@@ -181,12 +181,11 @@ const deptObject = reactive({
   orderNum: '',
   deptLeader: '',
   leaderPhone: '',
-  status: '0'
+  status: '0',
 })
 
 // 监听多选
 const handleSelectionChange = (val) => {
-  console.log('当前选中的数据:', val) // ✅ 确保这里不是空的
   depIds.value = val
 }
 
@@ -195,30 +194,28 @@ const batchDelete = async () => {
   if (depIds.value.length === 0) {
     return ElMessage.warning('请选择要删除的项！')
   }
-     ElMessageBox.confirm(`确定删除选中的 ${depIds.value.length} 条记录吗？`, '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-}).then(() => {
+  ElMessageBox.confirm(`确定删除选中的 ${depIds.value.length} 条记录吗？`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
     //提取id
     const ids = depIds.value.map((item) => item.deptId)
     // 调用 API 批量删除
-    http.post('/dept/batchDelete', { ids })
-    .then((res) => {
-      if (res.data.data&&res.data.data!==null) {
+    http.post('/dept/batchDelete', { ids }).then((res) => {
+      if (res.data.data && res.data.data !== null) {
         ElMessage.success('删除成功')
         getDeptFetch()
       } else {
         ElMessage.error('删除失败')
       }
     })
-})
+  })
 }
 
 //模糊查询
 const searchDept = (keyWordInput) => {
   keyWord.value = keyWordInput
-  // ElMessage.info(keyWord.value)
   getDeptFetch()
 }
 
@@ -270,34 +267,29 @@ const delDept = (deptId) => {
       }
     })
   })
-  // .catch(() => {
-  //   ElMessage({
-  //     type: 'info',
-  //     message: 'Delete canceled',
-  //   })
-  // })
 }
 
 //修改科室抽屉
 const editDept = (deptId) => {
-  //userId=userId
   addOrEditDrawerTitle.value = '编辑科室'
   addOrEditDrawerModal.value = true
   //回调单个科室数据
-  http.get('/dept/getDeptById?deptId=' + deptId).then((res) => {
-    if (res.data.data) {
-      deptObject.deptId = deptId
-      deptObject.deptName = res.data.data.deptName
-      deptObject.deptLeader = res.data.data.deptLeader
-      deptObject.deptNumber = res.data.data.deptNumber
-      deptObject.orderNum = res.data.data.orderNum
-      deptObject.leaderPhone = res.data.data.leaderPhone
-      deptObject.status = res.data.data.status
-    }
-  })
-  // .catch((error)=>{
-  //   ElMessage.error('获取科室数据失败'+error)
-  // })
+  http
+    .get('/dept/getDeptById?deptId=' + deptId)
+    .then((res) => {
+      if (res.data.data) {
+        deptObject.deptId = deptId
+        deptObject.deptName = res.data.data.deptName
+        deptObject.deptLeader = res.data.data.deptLeader
+        deptObject.deptNumber = res.data.data.deptNumber
+        deptObject.orderNum = res.data.data.orderNum
+        deptObject.leaderPhone = res.data.data.leaderPhone
+        deptObject.status = res.data.data.status
+      }
+    })
+    .catch((error) => {
+      ElMessage.error('获取科室数据失败' + error)
+    })
 }
 
 //修改科室
@@ -334,7 +326,6 @@ const beforeChangeAddOrEditDrawer = () => {
   })
     .then(() => {
       addOrEditDrawerModal.value = false
-      //deptData.splice(0, deptData.length)
     })
     .catch(() => {
       return

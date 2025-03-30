@@ -77,9 +77,9 @@
                 </template>
               </el-table-column>
               <el-table-column label="备注" prop="remark" width="200" />
-              <el-table-column label="创建时间" prop="createTime" width="200" >
+              <el-table-column label="创建时间" prop="createTime" width="200">
                 <template #default="scope">
-                  {{ scope.row.createTime.replace('T',' ') }}
+                  {{ scope.row.createTime.replace('T', ' ') }}
                 </template>
               </el-table-column>
               <el-table-column label="创建人" prop="createBy" width="120" />
@@ -154,14 +154,8 @@
           <el-form-item label="显示顺序">
             <el-input-number v-model="dictDataObject.dictSort" :min="0" />
           </el-form-item>
-          <el-form-item label="状态">
-            <el-radio-group v-model="dictDataObject.status">
-              <el-radio value="0">正常</el-radio>
-              <el-radio value="1">禁用</el-radio>
-            </el-radio-group>
-          </el-form-item>
           <el-form-item label="备注">
-            <el-input v-model="dictDataObject.remark" type="textarea" />
+            <el-input v-model="dictDataObject.remark" placeholder="请输入备注" type="textarea" />
           </el-form-item>
         </el-form>
       </el-col>
@@ -170,7 +164,7 @@
     <el-row class="text-center">
       <el-col>
         <el-button @click="addOrEditDictDataSubmit" type="primary">提交</el-button>
-        <el-button type="primary">取消</el-button>
+        <el-button type="primary" @click="addOrEditDrawerModal = false">取消</el-button>
       </el-col>
     </el-row>
   </el-drawer>
@@ -198,7 +192,7 @@ let dids = ref([]) //存储选中的字典数据编号的数组
 //字典数据对象，用于存储添加或修改的字典数据信息
 const dictDataObject = reactive({
   dictCode: '',
-  dictSort: '',
+  dictSort: '0',
   dictLabel: '',
   dictValue: '',
   dictType: '',

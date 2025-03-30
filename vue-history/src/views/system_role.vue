@@ -32,7 +32,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -47,7 +47,11 @@
                     v-model="scope.row.status"
                     :before-change="
                       () =>
-                        handleBeforeChange(scope.row.roleId, scope.row.status, scope.row.roleName)
+                        handleBeforeChange(
+                          scope.row.roleId,
+                          scope.row.status == '0' ? '1' : '0',
+                          scope.row.roleName,
+                        )
                     "
                     :active-value="0"
                     :inactive-value="1"
@@ -61,9 +65,9 @@
                 </template>
               </el-table-column>
               <el-table-column label="备注" prop="remark" width="120" />
-              <el-table-column label="创建时间" prop="createTime" width="200" >
+              <el-table-column label="创建时间" prop="createTime" width="200" sortable>
                 <template #default="scope">
-                  {{ scope.row.createTime.replace('T',' ') }}
+                  {{ scope.row.createTime.replace('T', ' ') }}
                 </template>
               </el-table-column>
               <!-- 按钮组 -->
@@ -127,16 +131,10 @@
             <el-input v-model="roleObject.roleName" placeholder="请输入角色名" />
           </el-form-item>
           <el-form-item label="权限编码">
-            <el-input v-model="roleObject.roleCode" placeholder="请输入手机号" />
+            <el-input v-model="roleObject.roleCode" placeholder="请输入权限编码" />
           </el-form-item>
           <el-form-item label="显示顺序">
-            <el-input-number v-model="roleObject.roleSort" :min="18" :max="200" />
-          </el-form-item>
-          <el-form-item label="状态">
-            <el-radio-group v-model="roleObject.status">
-              <el-radio value="0">正常</el-radio>
-              <el-radio value="1">禁用</el-radio>
-            </el-radio-group>
+            <el-input-number v-model="roleObject.roleSort" :min="0" :max="200" />
           </el-form-item>
           <el-form-item label="备注">
             <el-input v-model="roleObject.remark" type="textarea" />
@@ -148,7 +146,7 @@
     <el-row class="text-center">
       <el-col>
         <el-button @click="handleSubmit" type="primary">提交</el-button>
-        <el-button type="primary">取消</el-button>
+        <el-button type="primary" @click="addOrEditDrawerModal = false">取消</el-button>
       </el-col>
     </el-row>
   </el-drawer>
@@ -201,6 +199,7 @@ let mids = ref([])
 let menuData = ref([])
 //角色编号
 let rid = ref('')
+const loading = ref(true) //表格加载动画
 
 const defaultProps = {
   children: 'childMenus',
@@ -212,7 +211,7 @@ const roleObject = reactive({
   roleId: '',
   roleName: '',
   roleCode: '',
-  roleSort: '',
+  roleSort: 0,
   status: 0,
   remark: '',
   createTime: '',
@@ -237,36 +236,28 @@ const menuGrant = async (index: number, role) => {
   })
 }
 const treeRef = ref<InstanceType<typeof ElTree>>()
+
 //授权的确定按钮，添加角色的菜单权限
 const addRoleMenu = () => {
-  //存储选中的菜单编号
   let checkMids = []
   treeRef.value!.getCheckedNodes(false, false).forEach((menuNode) => {
-    //获取选中的菜单编号
     checkMids.push(menuNode.id)
-    //如果当前节点是一个子菜单，添加父菜单编号
     if (menuNode.parentId != null) {
       checkMids.push(menuNode.parentId)
     }
   })
-  //去重复父菜单编号
-  checkMids = [...new Set(checkMids)]
-  //console.log(checkMids)
-  //发送异步请求，添加当前角色选中的菜单
+  checkMids = [...new Set(checkMids)].filter((id) => id) // 去重并过滤空值
+
   http
-    .get('/role/addRoleMenu', {
-      params: {
-        rid: rid.value,
-        mids: checkMids.toString(),
-      },
+    .post('/role/addRoleMenu', {
+      rid: rid.value,
+      mids: checkMids,
     })
     .then((res) => {
-      //成功提示
       ElMessage({
         message: '授权成功',
         type: 'success',
       })
-      //抽屉隐藏
       dialog.value = false
     })
 }
@@ -284,7 +275,7 @@ const addRole = () => {
   roleObject.roleId = ''
   roleObject.roleName = ''
   roleObject.roleCode = ''
-  roleObject.roleSort = ''
+  roleObject.roleSort = 0
   // roleObject.status = 0
   roleObject.remark = ''
   roleObject.createTime = ''
@@ -417,7 +408,7 @@ onMounted(() => {
   getRoleFetch()
 })
 
-//判断修改角色状态前逻辑，判断角色id是否相同，如果相同拦截并不让更改，否则放行
+//判断修改角色状态前逻辑
 const beforeChange = () => {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -433,7 +424,7 @@ const updateUserStatus = async (rid, roleStatus, roleName) => {
     if (response.data.data) {
       ElNotification({
         title: '修改成功!',
-        message: `角色 ${roleName} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
+        message: `角色 ${roleName} 的状态已更新为 ${roleStatus === '0' ? '正常' : '禁用'}`,
         type: 'success',
         offset: 50,
         duration: 3000,
@@ -456,6 +447,8 @@ const updateUserStatus = async (rid, roleStatus, roleName) => {
 
 //按钮切换主逻辑方法
 const handleBeforeChange = async (rid, roleStatus, roleName) => {
+  console.log('rid', rid, 'roleStatus', roleStatus, 'roleName', roleName)
+
   //将当前开关的动画状态开启
   rowLoadingMap[rid] = true
   try {
@@ -489,6 +482,18 @@ const getRoleFetch = () => {
       })
       roleData.splice(0, roleData.length, ...list)
       pageTotal.value = res.data.data?.total || 0
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 </script>
+
+<style scoped>
+.mt-10px {
+  margin-top: 10px;
+}
+.mb-10px {
+  margin-bottom: 10px;
+}
+</style>

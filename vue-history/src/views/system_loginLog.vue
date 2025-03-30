@@ -33,7 +33,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -46,21 +46,26 @@
               border
             >
               <el-table-column fixed type="selection" width="55" />
-              <el-table-column label="用户名" prop="userName" width="150" />
-              <el-table-column label="登录账号" prop="loginAccount" width="150"/>
-              <el-table-column label="IP" prop="ipAddr" width="150"/>
+              <el-table-column label="用户名" prop="userName" width="160" show-overflow-tooltip />
+              <el-table-column
+                label="登录账号"
+                prop="loginAccount"
+                width="160"
+                show-overflow-tooltip
+              />
+              <el-table-column label="IP" prop="ipAddr" width="150" />
               <el-table-column label="登录地址" prop="loginLocation" width="150" />
               <el-table-column label="浏览器" prop="browser" width="150" />
-              <el-table-column label="操作系统" prop="os" width="200" />
-              <el-table-column label="登录状态" width="200" prop="msg"> </el-table-column>
-              <el-table-column label="用户类型" width="200" prop="loginType">
+              <el-table-column label="操作系统" prop="os" width="160" />
+              <el-table-column label="登录状态" width="140" prop="msg" show-overflow-tooltip />
+              <el-table-column label="用户类型" width="140" prop="loginType">
                 <template #default="scope">
                   <span>{{ scope.row.loginType === '0' ? '系统用户' : '患者用户' }}</span>
                 </template>
-                </el-table-column>
-                <el-table-column prop="loginTime" label="登录时间" width="200" >
+              </el-table-column>
+              <el-table-column prop="loginTime" label="登录时间" width="200">
                 <template #default="scope">
-                  {{ scope.row.loginTime.replace('T',' ') }}
+                  {{ scope.row.loginTime.replace('T', ' ') }}
                 </template>
               </el-table-column>
               <!-- 按钮组 -->
@@ -104,11 +109,9 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import { Search, Refresh } from '@element-plus/icons-vue'
 import http from '@/http'
 import { useCookies } from '@vueuse/integrations/useCookies'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { formatDate } from '@/utils/dateUtils'
 
 //从cookie获取authorization
 const cookie = useCookies()
@@ -118,6 +121,7 @@ const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
 const userName = ref('') //用户名称
+const loading = ref(true) //表格加载动画
 
 const infoIds = ref([]) //选中的编号数组
 
@@ -207,6 +211,7 @@ onMounted(() => {
 
 // 获取登录日志记录数据
 const getLoginInfoData = () => {
+  loading.value = true
   http
     .get('/loginInfo/list', {
       params: {
@@ -224,7 +229,18 @@ const getLoginInfoData = () => {
         pageSize.value = loginLog.pageSize
         loginLogData.splice(0, loginLogData.length, ...loginLog.list)
       }
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
-  //console.log(loginLogData)
 }
 </script>
+
+<style scoped>
+.mt-10px {
+  margin-top: 10px;
+}
+.mb-10px {
+  margin-bottom: 10px;
+}
+</style>
