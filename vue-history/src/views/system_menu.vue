@@ -10,6 +10,10 @@
               <el-icon><Plus /></el-icon>
               <span>新增目录</span>
             </el-button>
+            <!-- <el-button type="danger" @click="batchDelete">
+              <el-icon><Minus /></el-icon>
+              <span>删除选中菜单</span>
+            </el-button> -->
           </el-col>
           <!-- 模糊查询 -->
           <el-col :span="5">
@@ -39,6 +43,7 @@
               :tree-props="{ children: 'childMenus', hasChildren: 'hasChildren' }"
               default-expand-none
               stripe
+              @selection-change="handleSelectionChange"
             >
               <el-table-column prop="menuName" label="菜单名称" width="160" />
               <el-table-column prop="menuType" label="类型">
@@ -62,12 +67,12 @@
                       () =>
                         handleBeforeChange(
                           scope.row.menuId,
-                          scope.row.status == '0' ? '1' : '0',
+                          scope.row.status === '0' ? '1' : '0',
                           scope.row.menuName,
                         )
                     "
-                    :active-value="0"
-                    :inactive-value="1"
+                    :active-value="'0'"
+                    :inactive-value="'1'"
                     active-text="正常"
                     inactive-text="禁用"
                     class="ml-2"
@@ -156,6 +161,15 @@
           <el-form-item label="路由地址">
             <el-input v-model="menuObject.path" placeholder="请输入路由地址" />
           </el-form-item>
+          <el-form-item label="状态">
+            <el-radio-group v-model="menuObject.status">
+              <el-radio value="0">正常</el-radio>
+              <el-radio value="1">禁用</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="备注">
+            <el-input v-model="menuObject.remark" type="textarea" />
+          </el-form-item>
         </el-form>
       </el-col>
     </el-row>
@@ -184,6 +198,7 @@ const keyWord = ref('') //关键字
 const rowLoadingMap = reactive({}) //是否处于加载状态
 let menuData = ref([]) //菜单响应式数据
 let parentMenuData = ref([]) //父菜单响应式数据
+let dids = ref([]) //存储选中的字典数据编号的数组
 const loading = ref(true) //表格加载动画
 
 //角色对象，用于存储添加或修改的角色信息
@@ -196,7 +211,7 @@ const menuObject = reactive({
   perCode: '',
   path: '',
   remark: '',
-  status: 0,
+  status: '0',
   createTime: '',
   updateTime: '',
   createBy: '',
@@ -223,7 +238,7 @@ const addMenu = () => {
   menuObject.parentId = ''
   menuObject.menuName = ''
   menuObject.menuType = ''
-  menuObject.status = 0
+  menuObject.status = '0'
   menuObject.path = ''
 
   addOrEditDrawerTitle.value = '添加菜单'
@@ -235,7 +250,7 @@ const addMenuSubmit = () => {
   // console.log("添加的数据"+roleObject)
   //后端发送添加菜单请求
   http.post('/menu/addMenu', menuObject).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
       ElMessage.success('添加成功')
       addOrEditDrawerModal.value = false
     } else {
@@ -243,6 +258,40 @@ const addMenuSubmit = () => {
     }
     getMenus()
   })
+}
+
+// 监听多选
+const handleSelectionChange = (val) => {
+  //console.log('当前选中的数据:', val) // ✅ 确保这里不是空的
+  dids.value = val
+}
+
+//批量删除
+const batchDelete = async () => {
+  if (dids.value.length === 0) {
+    return ElMessage.warning('请选择要删除的项！')
+  }
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${dids.value.length} 条记录吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+
+    //提取id
+    const ids = dids.value.map((item) => item.dictCode)
+    // 调用 API 批量删除
+    await http.post('/dictData/batchDelete', { ids }).then((res) => {
+      // 重新查询一遍数据
+      if (res.data.data) {
+        getMenus()
+        ElMessage.success('批量删除成功！')
+      }
+    })
+  } catch (error) {
+    ElMessage.error('批量删除有误,请重试!', error)
+  }
+  keyWord.value = ''
 }
 
 //删除菜单
@@ -254,7 +303,7 @@ const delMenu = (menuId) => {
   }).then(() => {
     //删除菜单
     http.post('menu/delMenu?menuId=' + menuId).then((res) => {
-      if (res.data) {
+      if (res.data.data) {
         ElMessage.success('删除成功')
         getMenus()
       } else {
@@ -288,7 +337,7 @@ const editMenu = (menuId: string) => {
       }
     })
     .catch((error) => {
-      // ElMessage.error('获取菜单数据失败'+error)
+      ElMessage.error('获取菜单数据失败' + error)
     })
 }
 
@@ -297,7 +346,7 @@ const updateMenuSubmit = () => {
   // console.log("修改的数据"+userObject)
   //后端发送修改菜单请求
   http.post('/menu/updMenu', menuObject).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
       ElMessage.success('修改成功')
       addOrEditDrawerModal.value = false
       getMenus()
@@ -355,7 +404,7 @@ const updateMenuStatus = async (menuId, menuStatus, menuName) => {
   //menuId = menuId.parseInt(menuId);
   try {
     const response = await http.put(`/menu/update/${menuId}/${menuStatus}`)
-    if (response.data) {
+    if (response.data.data) {
       ElNotification({
         title: '修改成功!',
         message: `菜单 ${menuName} 的状态已更新为 ${menuStatus === 0 ? '启用' : '禁用'}`,
@@ -363,6 +412,8 @@ const updateMenuStatus = async (menuId, menuStatus, menuName) => {
         offset: 50,
         duration: 3000,
       })
+      //刷新
+      getMenus()
     } else {
       throw new Error('状态更新失败')
     }
@@ -406,7 +457,7 @@ const beforeChange = () => {
 const getParentsMenu = async () => {
   try {
     const response = await http.get('/menu/getParentMenus')
-    parentMenuData.value = response.data
+    parentMenuData.value = response.data.data
   } catch (error) {
     console.error('获取父菜单失败', error)
   }
@@ -429,12 +480,12 @@ const getMenus = async () => {
     })
     // menuData.value = response.data
     const list = Array.isArray(response.data.data.list) ? response.data.data.list : []
-    // 将 status 转换为数字类型
-    list.forEach((item) => {
-      item.status = Number(item.status)
-    })
+    // // 将 status 转换为数字类型
+    // list.forEach(item => {
+    //     item.status = item.status
+    //   })
     menuData.value = buildMenuTree(list) //处理为树形结构
-    pageTotal.value = response.data.total?.total || 0
+    pageTotal.value = response.data.data?.total || 0
     setTimeout(() => {
       loading.value = false
     }, 500)
@@ -463,7 +514,6 @@ const buildMenuTree = (menuList) => {
       tree.push(menuMap.get(item.menuId))
     }
   })
-  console.log(tree)
   return tree
 }
 </script>

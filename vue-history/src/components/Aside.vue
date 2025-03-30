@@ -2,15 +2,11 @@
 <template>
   <el-row>
     <el-col :span="24">
+      <!-- <button @click="router.push('/demo')">测试</button> -->
       <el-scrollbar style="height: 90vh">
-        <el-menu
-          class="el-menu-vertical-demo"
-          :default-active="activeMenu"
-          @select="handleSelect"
-          router
-        >
+        <el-menu class="el-menu-vertical-demo" default-active="0">
           <!-- 首页 -->
-          <el-menu-item index="/home">
+          <el-menu-item index="0" @click="navigateTo('/home')">
             <el-icon><House /></el-icon>
             <span>首页</span>
           </el-menu-item>
@@ -18,7 +14,7 @@
           <el-sub-menu
             v-for="parentMenu in menuData"
             :key="parentMenu.menuId"
-            :index="`${parentMenu.menuId}`"
+            :index="String(parentMenu.menuId)"
           >
             <template #title>
               <el-icon><Setting /></el-icon>
@@ -28,9 +24,9 @@
             <el-menu-item
               v-for="childrenMenu in parentMenu.childMenus"
               :key="childrenMenu.menuId"
-              :index="`${childrenMenu.path}`"
-              >{{ childrenMenu.menuName }}</el-menu-item
-            >
+              :index="`${parentMenu.menuId}-${childrenMenu.menuId}`"
+              @click="navigateTo(childrenMenu.path)"
+              >{{ childrenMenu.menuName }}</el-menu-item>
           </el-sub-menu>
         </el-menu>
       </el-scrollbar>
@@ -43,31 +39,12 @@ import http from '@/http'
 import { useUserStore } from '@/stores/user'
 import { House, Setting } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { el } from 'element-plus/es/locale'
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const menuData = ref([]) //菜单数据
 const router = useRouter() // 获取路由实例
-const route = useRoute()
-
-// 读取 localStorage 里的菜单选中状态（如果没有就用当前路由）
-const activeMenu = ref(localStorage.getItem('activeMenu') || route.path)
-
-// 监听菜单点击事件
-const handleSelect = (index) => {
-  activeMenu.value = index
-  localStorage.setItem('activeMenu', index) // 存储选中的菜单
-  router.push(index) // 跳转到对应的路由
-}
-
-// 监听路由变化（防止手动输入 URL 时，菜单不同步）
-watch(
-  () => route.path,
-  (newPath) => {
-    activeMenu.value = newPath
-    localStorage.setItem('activeMenu', newPath)
-  },
-)
 
 const navigateTo = (path) => {
   router.push(path)
@@ -94,8 +71,18 @@ const getMenus = async () => {
   //获取用户菜单
   if (menuData.value.length === 0) {
     http.get(`/menu/getUserMenus`).then((response) => {
-      menuData.value = response.data
+      //情况数据
+      menuData.value = []
+      menuData.value = response.data.data
+    }).catch((error)=>{
+      ElMessage({
+        message: '获取菜单失败'+error,
+        type: 'error',
+        grouping: true,
+      })
     })
   }
 }
 </script>
+
+<style scoped></style>

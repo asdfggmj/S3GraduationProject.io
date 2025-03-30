@@ -19,7 +19,7 @@ const router = createRouter({
       meta: { title: '医疗一体站管理系统--登录' }
     },
     {
-      path: '/home',
+      path: '',
       name: 'index',
       meta: { title: '医疗一体站管理系统--主页', breadcrumb: '首页' },
       component: () => import('@/views/Index.vue'),
@@ -32,7 +32,7 @@ const router = createRouter({
         },
         {
           path: '/system',
-          meta: { breadcrumb: '系统管理' },
+          meta: { title: '医疗一体站管理系统--系统', breadcrumb: '系统管理' },
           children: [
             {
               path: 'user',
