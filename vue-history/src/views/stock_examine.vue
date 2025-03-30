@@ -66,7 +66,7 @@
   </el-card>
 
   <!-- 第三行 -->
-  <el-card shadow="always" class="mt-10px">
+  <el-card shadow="always" class="mt-10px" v-loading="loading">
     <!-- 表格 -->
     <el-row class="mt-10px">
       <el-col>
@@ -252,6 +252,7 @@ const prescriptionTypeDataMap = ref({}) //存储处方类型字典
 const prescriptionTypeMap = ref([])
 const medicinesDataMap = ref({}) //存储药品类型字典
 const medicinesMap = ref([])
+const loading = ref(true)
 
 //药品类型
 const getMedicinesTypeFetch = () => {
@@ -416,6 +417,7 @@ onMounted(() => {
 
 //获取所有待审核的入库订单数据
 const getPurchaseFetch = () => {
+  loading.value = true
   http
     .get('/purchase/list', {
       params: {
@@ -428,6 +430,9 @@ const getPurchaseFetch = () => {
       const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       purchaseData.value.splice(0, purchaseData.value.length, ...list)
       pageTotal.value = res.data.data?.total || 0
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 

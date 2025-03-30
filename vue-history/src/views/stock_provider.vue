@@ -83,7 +83,7 @@
     </el-row>
   </el-card>
   <!-- 第二行 -->
-  <el-card shadow="always" class="mt-10px">
+  <el-card shadow="always" class="mt-10px" v-loading="loading">
     <!-- 表格 -->
     <el-row>
       <el-col>
@@ -259,6 +259,7 @@ const queryForm = reactive({
   contactTel: '', //联系人电话
   status: '', //状态
 }) //搜索行条件对象
+const loading = ref(true)
 
 // 重置方法
 const resetQueryFetch = () => {
@@ -465,7 +466,7 @@ onMounted(() => {
 
 //获取供应商数据
 const getProviderFetch = () => {
-  console.log(queryForm)
+  loading.value = true
   http
     .get('/provider/list', {
       params: {
@@ -481,6 +482,9 @@ const getProviderFetch = () => {
       const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       dictData.splice(0, dictData.length, ...list)
       pageTotal.value = res.data.data?.total || 0
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 

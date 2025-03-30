@@ -95,7 +95,7 @@
   <!-- 第三行(数据展示行) -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -631,6 +631,7 @@ const purchaseItemList = ref([]) //详细信息的列表
 const purchaseStatusDataMap = ref({}) //入库状态map
 const purchaseStatusData = ref([])
 const tableRef = ref(null) // 绑定 el-table 的 ref
+const loading = ref(true)
 
 watch(
   () => checkedAddMedicinesDataList.value, // 监听 checkedAddMedicinesDataList 的变化
@@ -1104,6 +1105,7 @@ onMounted(() => {
 
 //获取入库订单数据
 const getPurchaseFetch = () => {
+  loading.value = true
   http
     .get('/purchase/list', {
       params: {
@@ -1118,6 +1120,9 @@ const getPurchaseFetch = () => {
       const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       purchaseData.splice(0, purchaseData.length, ...list)
       pageTotal.value = res.data.data?.total || 0
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 // 防抖处理
