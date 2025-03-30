@@ -160,7 +160,7 @@
   </el-row>
   <el-dialog
     v-model="payforVisible"
-    :title="`使用[${payType}]支付`"
+    title="请确认订单信息"
     width="600"
     :before-close="handleClose"
   >
@@ -168,13 +168,13 @@
       <el-row>
         <el-col :span="12">订单号：{{ odc }}</el-col>
         <el-row :span="12">总金额：￥{{ amount.toFixed(2) }}</el-row>
-        <el-row :span="12" style="margin-top: -5px;margin-left: 30px;"><el-button type="primary" @click="confirmPayment ">支付完成</el-button></el-row>
+        <el-row :span="12" style="margin-top: -5px;margin-left: 30px;"><el-button type="primary" @click="confirmPayment ">确认</el-button></el-row>
       </el-row>
     </el-card>
     <el-card class="mt-10px" v-if="payType=='支付宝'">
       <el-row>
         <!-- <el-col :span="24">二维码</el-col> -->
-        <img :src="`/src/assets/image/${payType}.jpg`" alt="二维码" style="width: 200px; height: 200px;margin-left: 160px;" />
+        <!-- <img :src="`/src/assets/image/${payType}.jpg`" alt="二维码" style="width: 200px; height: 200px;margin-left: 160px;" /> -->
       </el-row>
     </el-card>
   </el-dialog>
