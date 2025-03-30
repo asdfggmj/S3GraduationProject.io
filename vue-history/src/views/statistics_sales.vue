@@ -96,7 +96,7 @@
             </el-row>
             <el-row>
               <el-col>
-                <el-table :data="saleListData" border :summary-method="getTotal"
+                <el-table :data="saleStatisticsData" border :summary-method="getTotal"
                 show-summary>
                   <el-table-column label="药品ID" prop="itemRefId" />
                   <el-table-column label="药品名称" prop="itemName" />
@@ -131,12 +131,14 @@
 <script setup lang="ts">
 import http from '@/http'
 import { formatDate } from '@/utils/dateUtils'
+import { format } from 'date-fns'
 import { onMounted, reactive, ref } from 'vue'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
 const pageTotal = ref(0) //总个数
-const saleListData = ref([]) //页面数据
+const saleListData = ref([]) //列表数据
+const saleStatisticsData = ref([])//统计数据
 const valueDate = ref([]) //日期范围数组
 const pickdata = reactive({
   //开始日期和结束日期
@@ -160,12 +162,14 @@ const activeName = ref('first')//当前激活的标签页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
   getData()
+  getStatisticsItem
 }
 
 //下一页
 const currentChange = (newPage) => {
   pageNum.value = newPage
   getData()
+  getStatisticsItem()
 }
 
 // 搜索按钮，获取日期选择器
@@ -179,12 +183,13 @@ const searchByDate = () => {
   // } else {
   if (valueDate.value.length !== 0) {
     // 格式化日期为 yyyy-MM-dd
-    pickdata.startDate = formatDate(new Date(valueDate.value[0]), 'yyyy-MM-dd')
-    pickdata.endDate = formatDate(new Date(valueDate.value[1]), 'yyyy-MM-dd')
-  }
-  //刷新
-  getData()
   //}
+    pickdata.startDate = format(new Date(valueDate.value[0]), 'yyyy-MM-dd')
+    pickdata.endDate = format(new Date(valueDate.value[1]), 'yyyy-MM-dd')
+    }
+    //刷新
+    getData()
+    getStatisticsItem()  //}
 }
 
 // 重置按钮，清空数据
@@ -196,10 +201,13 @@ const reset = () => {
 
   // 重置后重新请求默认数据（即使当天数据为空，也会覆盖旧数据）
   getData()
+  getStatisticsItem()
 }
 
 //页面挂载
 onMounted(() => {
+  //获取数据
+  getStatisticsItem()
   //获取统计数据
   getData()
 })
@@ -207,18 +215,37 @@ onMounted(() => {
 //获取页面数据
 const getData = () => {
   //发送后端异步请求
-  http
-    .get('statistics/listSales', {
-      params: {
-        pageNum: pageNum.value,
-        pageSize: pageSize.value,
-        startDate: pickdata.startDate,
-        endDate: pickdata.endDate,
-        keyWord: keyWord.value,
-      },
+http.get("statistics/itemSales",{
+    params:{
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+      startDate:pickdata.startDate,
+      endDate:pickdata.endDate,
+      keyWord:keyWord.value
+      }
+    }
+  )
+  .then((res)=>{
+      saleListData.value=res.data.data.list
+      pageTotal.value = res.data.data?.total || 0
     })
-    .then((res) => {
-      saleListData.value = res.data.data.list
+}
+
+//查询标签二的数据
+const getStatisticsItem=()=>{
+  //发送后端异步请求
+http.get("statistics/statisticsSales",{
+    params:{
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+      startDate:pickdata.startDate,
+      endDate:pickdata.endDate,
+      keyWord:keyWord.value
+      }
+    }
+  )
+  .then((res)=>{
+      saleListData.value=res.data.data.list
       pageTotal.value = res.data.data?.total || 0
     })
 }

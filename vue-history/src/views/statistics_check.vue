@@ -173,13 +173,15 @@ const activeName = ref('first') //当前激活的标签页
 //上一页
 const sizeChange = (newPageSize) => {
   pageSize.value = newPageSize
-  activeName.value == 'first' ? getItem() : getStatisticsItem()
+  getItem()
+  getStatisticsItem()
 }
 
 //下一页
 const currentChange = (newPage) => {
   pageNum.value = newPage
-  activeName.value == 'first' ? getItem() : getStatisticsItem()
+  getItem()
+  getStatisticsItem()
 }
 
 // 搜索按钮，获取日期选择器
@@ -193,11 +195,12 @@ const searchByDate = () => {
   // } else {
   if (valueDate.value.length !== 0) {
     // 格式化日期为 yyyy-MM-dd
-    pickdata.startDate = formatDate(new Date(valueDate.value[0]), 'yyyy-MM-dd')
-    pickdata.endDate = formatDate(new Date(valueDate.value[1]), 'yyyy-MM-dd')
-  }
-  //刷新
-  activeName.value == 'first' ? getItem() : getStatisticsItem()
+    pickdata.startDate = format(new Date(valueDate.value[0]), 'yyyy-MM-dd')
+    pickdata.endDate = format(new Date(valueDate.value[1]), 'yyyy-MM-dd')
+    }
+    //刷新
+    getItem()
+    getStatisticsItem()
   //}
 }
 
@@ -210,7 +213,8 @@ const reset = () => {
   paientName.value = ''
 
   // 重置后重新请求默认数据（即使当天数据为空，也会覆盖旧数据
-  activeName.value == 'first' ? getItem() : getStatisticsItem()
+  getItem()
+  getStatisticsItem()
 }
 
 //页面挂载
