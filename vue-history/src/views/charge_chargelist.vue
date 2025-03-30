@@ -30,52 +30,52 @@
           <el-table-column type="expand">
             <template #default="props">
               <div m="4">
-                <el-card shadow="never" style="border: 1px solid white;">
-                <el-table :data="props.row.orderChargeItemList" border style="width: 100%;">
-                  <el-table-column label="详情ID" prop="itemId" />
-                  <el-table-column label="处方ID" prop="coId" />
-                  <el-table-column label="名称" prop="itemName" />
-                  <el-table-column label="价格" prop="itemPrice" />
-                  <el-table-column label="数量" prop="itemNum" />
-                  <el-table-column label="小计" prop="itemAmount" />
-                  <el-table-column label="类型" prop="itemType">
-                    <template #default="scope">
-                      {{ scope.row.itemType==1?'检查':'药品' }}
-                    </template>
-                  </el-table-column>
-                  <el-table-column prop="status" label="状态" >
-                    <template #default="scope">
-                      <span v-if="scope.row.status==0">未支付</span>
-                      <span v-if="scope.row.status==1">已支付</span>
-                      <span v-if="scope.row.status==2">已退费</span>
-                      <span v-if="scope.row.status==3">已完成</span>
-                    </template>
-                  </el-table-column>
-                </el-table>
-              </el-card>
+                <el-card shadow="never" style="border: 1px solid white">
+                  <el-table :data="props.row.orderChargeItemList" border style="width: 100%">
+                    <el-table-column label="详情ID" prop="itemId" />
+                    <el-table-column label="处方ID" prop="coId" />
+                    <el-table-column label="名称" prop="itemName" />
+                    <el-table-column label="价格" prop="itemPrice" />
+                    <el-table-column label="数量" prop="itemNum" />
+                    <el-table-column label="小计" prop="itemAmount" />
+                    <el-table-column label="类型" prop="itemType">
+                      <template #default="scope">
+                        {{ scope.row.itemType == 1 ? '检查' : '药品' }}
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="status" label="状态">
+                      <template #default="scope">
+                        <span v-if="scope.row.status == 0">未支付</span>
+                        <span v-if="scope.row.status == 1">已支付</span>
+                        <span v-if="scope.row.status == 2">已退费</span>
+                        <span v-if="scope.row.status == 3">已完成</span>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </el-card>
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="orderId" label="订单号" />
-          <el-table-column prop="regId" label="挂号单号" />
+          <el-table-column prop="orderId" label="订单号" width="220" />
+          <el-table-column prop="regId" label="挂号单号" width="220" />
           <el-table-column prop="patientName" label="患者姓名" />
           <el-table-column prop="orderAmount" label="总金额" />
-          <el-table-column prop="payType" label="支付类型" >
+          <el-table-column prop="payType" label="支付类型">
             <template #default="scope">
-              {{ scope.row.payType==1?'支付宝':'现金' }}
+              {{ scope.row.payType == 1 ? '支付宝' : '现金' }}
             </template>
           </el-table-column>
-          <el-table-column prop="orderStatus" label="订单状态" >
+          <el-table-column prop="orderStatus" label="订单状态">
             <template #default="scope">
-              <span v-if="scope.row.orderStatus==0">未支付</span>
-              <span v-if="scope.row.orderStatus==1">支付成功</span>
-              <span v-if="scope.row.orderStatus==2">支付超时</span>
-              <span v-if="scope.row.status==3">支付失败</span>
+              <span v-if="scope.row.orderStatus == 0">未支付</span>
+              <span v-if="scope.row.orderStatus == 1">支付成功</span>
+              <span v-if="scope.row.orderStatus == 2">支付超时</span>
+              <span v-if="scope.row.status == 3">支付失败</span>
             </template>
           </el-table-column>
-          <el-table-column prop="createTime" label="创建时间" >
+          <el-table-column prop="createTime" label="创建时间" width="220">
             <template #default="scope">
-              {{ scope.row.createTime.replace('T',' ') }}
+              {{ scope.row.createTime.replace('T', ' ') }}
             </template>
           </el-table-column>
           <el-table-column label="操作" fixed="right" width="400">
@@ -132,7 +132,11 @@
     <el-card class="mt-10px" v-if="payType=='支付宝'">
       <el-row>
         <!-- <el-col :span="24">二维码</el-col> -->
-        <img :src="`/src/assets/image/${payType}.jpg`" alt="二维码" style="width: 200px; height: 200px;margin-left: 160px;" />
+        <img
+          :src="`/src/assets/image/${payType}.jpg`"
+          alt="二维码"
+          style="width: 200px; height: 200px; margin-left: 160px"
+        />
       </el-row>
     </el-card>
   </el-dialog>
@@ -157,8 +161,8 @@ const selectItem=ref('')//选中项
 
 // 重置按钮，清空数据
 const reset = () => {
-  paientName.value=''
-  regId.value=''
+  paientName.value = ''
+  regId.value = ''
   getOrder()
 }
 
@@ -171,21 +175,21 @@ const confirmPayment = () => {
       ElMessage.success('支付成功！');
       payforVisible.value=false
 
-      //刷新
-      getOrder()
-    }else{
-      ElMessage.error('支付失败,请重试！')
-    }
-  })
-  .catch((erro)=>{
-    ElMessage.error('支付超时,请重试！'+erro)
-  })
-};
+        //刷新
+        getOrder()
+      } else {
+        ElMessage.error('支付失败,请重试！')
+      }
+    })
+    .catch((erro) => {
+      ElMessage.error('支付超时,请重试！' + erro)
+    })
+}
 
 //支付方式点击事件
 const pay = (type,row) => {
   //赋值支付类型
-  payType.value=type
+  payType.value = type
   //赋值订单编号
   odc.value=row.orderId
   //赋值总金额
@@ -197,9 +201,9 @@ const pay = (type,row) => {
 }
 
 //根据当前收费列状态判断支付方式是否可用
-const isPyTypeDisabled=((status)=>{
-    return status==='1';
-})
+const isPyTypeDisabled = (status) => {
+  return status === '1'
+}
 
 //支付关闭前提示用户
 const handleClose = (done: () => void) => {
@@ -231,20 +235,20 @@ onMounted(() => {
 })
 
 //获取收费列表页面数据
-const getOrder=()=>{
+const getOrder = () => {
   //发送后端异步请求
-http.get("orderCharge/list",{
-    params:{
-      pageNum: pageNum.value,
-      pageSize: pageSize.value,
-      regId:regId.value,
-      patientName:paientName.value
-      }
-    }
-  )
-  .then((res)=>{
-    chargeListData.splice(0, chargeListData.length, ...res.data.data.list)
-    pageTotal.value = res.data.data?.total || 0
+  http
+    .get('orderCharge/list', {
+      params: {
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        regId: regId.value,
+        patientName: paientName.value,
+      },
+    })
+    .then((res) => {
+      chargeListData.splice(0, chargeListData.length, ...res.data.data.list)
+      pageTotal.value = res.data.data?.total || 0
     })
 }
 </script>

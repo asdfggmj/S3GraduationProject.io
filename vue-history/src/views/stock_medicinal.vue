@@ -130,7 +130,7 @@
   <!-- 第三行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -401,6 +401,7 @@ const queryForm = reactive({
   prescriptionType: '', //处方类型
   producterId: '', //生产厂家
 }) //查询条件表单
+const loading = ref(true)
 
 //重置查询条件
 const resetQueryFetch = () => {
@@ -657,6 +658,7 @@ onMounted(() => {
 
 //获取药品信息
 const getMedicinesFetch = () => {
+  loading.value = true
   http
     .get('/medicines/list', {
       params: {
@@ -674,6 +676,9 @@ const getMedicinesFetch = () => {
       const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       medicinesData.splice(0, medicinesData.length, ...list)
       pageTotal.value = res.data.data?.total || 0
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 

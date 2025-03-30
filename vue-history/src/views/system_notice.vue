@@ -32,7 +32,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -190,6 +190,7 @@ const noticeData = reactive([]) //通知数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
 const addOrEditDrawerModal = ref(false) //添加或编辑通知抽屉
 const addOrEditDrawerTitle = ref('') //添加或编辑通知抽屉标题
+const loading = ref(true)
 
 //计算菜单类别名字
 const noticeTag = computed(() => (tagName) => {
@@ -308,12 +309,6 @@ const delNotice = (noticeId) => {
       }
     })
   })
-  // .catch(() => {
-  //   ElMessage({
-  //     type: 'info',
-  //     message: 'Delete canceled',
-  //   })
-  // })
 }
 
 //修改通知抽屉
@@ -322,20 +317,22 @@ const editNotice = (noticeId) => {
   addOrEditDrawerTitle.value = '编辑通知'
   addOrEditDrawerModal.value = true
   //回调单个通知数据
-  http.get('/notice/getById?id=' + noticeId).then((res) => {
-    if (res.data.data) {
-      res.data.status = res.data.data.data
-      noticeObject.noticeId = noticeId
-      noticeObject.noticeType = res.data.noticeType
-      noticeObject.noticeContent = res.data.noticeContent
-      noticeObject.noticeTitle = res.data.noticeTitle
-      noticeObject.status = res.data.status
-      noticeObject.remark = res.data.remark
-    }
-  })
-  // .catch((error)=>{
-  //   ElMessage.error('获取通知数据失败'+error)
-  // })
+  http
+    .get('/notice/getById?id=' + noticeId)
+    .then((res) => {
+      if (res.data.data) {
+        res.data.status = res.data.data.data
+        noticeObject.noticeId = noticeId
+        noticeObject.noticeType = res.data.noticeType
+        noticeObject.noticeContent = res.data.noticeContent
+        noticeObject.noticeTitle = res.data.noticeTitle
+        noticeObject.status = res.data.status
+        noticeObject.remark = res.data.remark
+      }
+    })
+    .catch((error) => {
+      ElMessage.error('获取通知数据失败' + error)
+    })
 }
 
 //修改通知
@@ -372,7 +369,6 @@ const beforeChangeAddOrEditDrawer = () => {
   })
     .then(() => {
       addOrEditDrawerModal.value = false
-      //noticeData.splice(0, noticeData.length)
     })
     .catch(() => {
       return
@@ -451,6 +447,7 @@ onMounted(() => {
 })
 
 const getNoticeFetch = () => {
+  loading.value = true
   //获取通知数据
   http
     .get('/notice/list', {
@@ -468,6 +465,9 @@ const getNoticeFetch = () => {
       })
       noticeData.splice(0, noticeData.length, ...list)
       pageTotal.value = res.data.data?.total || 0
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 </script>

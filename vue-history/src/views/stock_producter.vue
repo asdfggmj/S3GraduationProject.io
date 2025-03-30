@@ -84,7 +84,7 @@
   <!-- 第三行 -->
   <el-row class="mt-10px">
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -272,6 +272,7 @@ const queryForm = reactive({
   producterTel: '', //电话
   keywords: '', //关键字
 }) //查询条件表单
+const loading = ref(true)
 
 //重置查询条件
 const resetQueryFetch = () => {
@@ -466,6 +467,7 @@ onMounted(() => {
 })
 
 const getProucterFetch = () => {
+  loading.value = true
   //获取厂家信息
   http
     .get('/producter/getAll', {
@@ -482,6 +484,9 @@ const getProucterFetch = () => {
       const list = Array.isArray(res.data.list) ? res.data.list : []
       producterData.splice(0, producterData.length, ...list)
       pageTotal.value = res.data?.total || 0
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 // 防抖处理

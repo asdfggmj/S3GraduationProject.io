@@ -54,6 +54,13 @@
                 </template>
               </el-table-column>
               <el-table-column label="手机号码" prop="phone" width="120" />
+              <el-table-column label="用户类型" prop="userType" width="120">
+                <template #default="scope">
+                  <el-tag :type="userTypeComputed(scope.row.userType)">
+                    {{ scope.row.userType === 0 ? '超级用户' : '系统用户' }}
+                  </el-tag>
+                </template>
+              </el-table-column>
               <el-table-column label="性别" prop="sex">
                 <template #default="scope">
                   <el-tag effect="dark" :type="sexComputedFetch(scope.row.sex)">{{
@@ -61,7 +68,6 @@
                   }}</el-tag>
                 </template>
               </el-table-column>
-              <el-table-column label="年龄" prop="age" />
               <el-table-column label="是否参与排班" prop="schedulingFlag" width="120">
                 <template #default="scope">
                   <el-tag
@@ -71,6 +77,7 @@
                   >
                 </template>
               </el-table-column>
+              <el-table-column label="年龄" prop="age" />
               <el-table-column label="级别" prop="userRankValue" width="100" />
               <el-table-column label="教育背景" prop="backgroundValue" width="100" />
               <el-table-column label="用户状态" prop="status" width="100">
@@ -223,13 +230,6 @@
               <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
             </el-upload>
           </el-form-item>
-
-          <el-form-item label="状态">
-            <el-radio-group v-model="userObject.status">
-              <el-radio value="0">正常</el-radio>
-              <el-radio value="1">禁用</el-radio>
-            </el-radio-group>
-          </el-form-item>
           <el-form-item label="是否参与排班" style="margin-left: 30px">
             <el-radio-group v-model="userObject.schedulingFlag">
               <el-radio value="0">是</el-radio>
@@ -328,6 +328,18 @@ const userObject = reactive({
   userRankValue: '',
   backgroundValue: '',
 })
+
+//计算用户类型
+const userTypeComputed = (value) => {
+  switch (value) {
+    case 0:
+      return 'danger'
+    case 1:
+      return 'primary'
+    default:
+      return 'warning'
+  }
+}
 
 //上传用户头像方法
 const uploadUserHeader = (file) => {

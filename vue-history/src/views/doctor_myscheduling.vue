@@ -31,7 +31,7 @@
     <!-- 第三行 -->
     <el-row class="mt-10px">
       <el-col>
-        <el-card shadow="always">
+        <el-card shadow="always" v-loading="loading">
           <el-row>
             <el-col :span="24">
               <el-table
@@ -97,13 +97,13 @@ import { ElMessage } from 'element-plus'
 import { onMounted, ref } from 'vue'
 
 //排班医生数据
-const schedulingData = ref([])
 const userStore = useUserStore()
 const aScheduleData = ref([]) //一个排班医生数据
 const weekDates = ref([]) // 本周日期
 const timesDataMap = ref({}) //存储排班时间类型字典
 const schedulingTypeMap = ref({}) //存储排班类型字典
 const weekToAdd = ref(0) //周位移  -1代表上周 0本周 1下周
+const loading = ref(true)
 
 onMounted(() => {
   getMySchedulingData()
@@ -158,6 +158,7 @@ const nextWeek = () => {
 
 //获取我的排班信息
 const getMySchedulingData = () => {
+  loading.value = true
   //获取用户编号
   let userId = userStore.getUser.data.data.userId
   //根据编号获取排班信息
@@ -172,6 +173,9 @@ const getMySchedulingData = () => {
       if (res.data && res.data.data && res.data.data.length > 0) {
         aScheduleData.value = res.data.data // 存储医生排班数据
         weekDates.value = res.data.data[0].dates // 获取排班日期
+        setTimeout(() => {
+          loading.value = false
+        }, 500)
       } else {
         console.error('排班数据为空')
       }

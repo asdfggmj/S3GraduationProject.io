@@ -1,6 +1,6 @@
 <template>
   <!-- 第一行 -->
-  <el-card shadow="always">
+  <el-card shadow="always" v-loading="loading">
     <!-- 切换卡 -->
     <el-tabs v-model="activeName" class="demo-tabs" stretch>
       <el-tab-pane label="药品总库存" name="first">
@@ -348,6 +348,7 @@ const prescriptionTypeDataMap = ref({}) //存储处方类型字典
 const prescriptionTypeMap = ref([])
 const medicinesData = reactive([]) //药品数据
 const producterList = ref([]) //生产厂家数组
+const loading = ref(true)
 
 //重置查询条件
 const resetMedicinesQueryFetch = () => {
@@ -423,6 +424,7 @@ const currentChange = (newPage) => {
 }
 
 const getMedicinesFetch = () => {
+  loading.value = true
   http
     .get('/medicines/list', {
       params: {
@@ -440,6 +442,9 @@ const getMedicinesFetch = () => {
       const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       medicinesData.splice(0, medicinesData.length, ...list)
       medicinesPageTotal.value = res.data.data?.total || 0
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 

@@ -35,38 +35,44 @@
         <!-- 菜单行 -->
         <el-row>
           <el-col>
-        <el-table :data="menuData" row-key="menuId" border max-height="560"
-        :tree-props="{children: 'childMenus',hasChildren:'hasChildren'}"
-        default-expand-none
-        stripe
-        @selection-change="handleSelectionChange">
-          <el-table-column prop="menuName" label="菜单名称" width="160" />
-          <el-table-column prop="menuType" label="类型">
-            <template #default="scope">
-              <el-tag effect="dark" :type="getMenuTagType(scope.row.menuType)">
-                {{ scope.row.menuType }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="path" label="组件路径" width="200" />
-          <el-table-column prop="perCode" label="权限标识" width="120">
-            <template #default="scope">
-              <el-tag v-if="scope.row.perCode === null">空的呢</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="status" label="菜单状态" width="120">
-            <template #default="scope">
-              <el-switch
-                v-model="scope.row.status"
-                :before-change="
-                  () =>
-                    handleBeforeChange(
-                      scope.row.menuId,
-                      scope.row.status === '0' ? '1' : '0',
-                      scope.row.menuName
-                    )"
-                     :active-value="'0'"
-                     :inactive-value="'1'"
+            <el-table
+              :data="menuData"
+              row-key="menuId"
+              border
+              max-height="560"
+              :tree-props="{ children: 'childMenus', hasChildren: 'hasChildren' }"
+              default-expand-none
+              stripe
+              @selection-change="handleSelectionChange"
+            >
+              <el-table-column prop="menuName" label="菜单名称" width="160" />
+              <el-table-column prop="menuType" label="类型">
+                <template #default="scope">
+                  <el-tag effect="dark" :type="getMenuTagType(scope.row.menuType)">
+                    {{ scope.row.menuType }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="path" label="组件路径" width="200" />
+              <el-table-column prop="perCode" label="权限标识" width="120">
+                <template #default="scope">
+                  <el-tag v-if="scope.row.perCode === null">空的呢</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="status" label="菜单状态" width="120">
+                <template #default="scope">
+                  <el-switch
+                    v-model="scope.row.status"
+                    :before-change="
+                      () =>
+                        handleBeforeChange(
+                          scope.row.menuId,
+                          scope.row.status === '0' ? '1' : '0',
+                          scope.row.menuName,
+                        )
+                    "
+                    :active-value="'0'"
+                    :inactive-value="'1'"
                     active-text="正常"
                     inactive-text="禁用"
                     class="ml-2"
@@ -79,15 +85,15 @@
               <el-table-column prop="remark" label="备注" width="120" />
               <el-table-column prop="createTime" label="创建时间" width="180">
                 <template #default="scope">
-                  {{ scope.row.createTime?scope.row.createTime.replace('T', ' '):'' }}
+                  {{ scope.row.createTime ? scope.row.createTime.replace('T', ' ') : '' }}
                 </template>
               </el-table-column>
               <el-table-column prop="createBy" label="创建人" />
-              <el-table-column prop="updateTime" label="最后一次修改时间" width="180" >
-            <template #default="scope">
-                {{ scope.row.updateTime?scope.row.updateTime.replace('T',' '):'' }}
-              </template>
-            </el-table-column>
+              <el-table-column prop="updateTime" label="最后一次修改时间" width="180">
+                <template #default="scope">
+                  {{ scope.row.updateTime ? scope.row.updateTime.replace('T', ' ') : '' }}
+                </template>
+              </el-table-column>
               <el-table-column prop="updateBy" label="最后一次修改人" width="180" />
               <el-table-column label="操作" width="220" fixed="right">
                 <!-- 按钮组 -->
@@ -213,7 +219,7 @@ const menuObject = reactive({
   createTime: '',
   updateTime: '',
   createBy: '',
-  updateBy: ''
+  updateBy: '',
 })
 
 //计算菜单类别名字
@@ -236,7 +242,7 @@ const addMenu = () => {
   menuObject.parentId = ''
   menuObject.menuName = ''
   menuObject.menuType = ''
-  menuObject.status='0'
+  menuObject.status = '0'
   menuObject.path = ''
 
   addOrEditDrawerTitle.value = '添加菜单'
@@ -247,7 +253,7 @@ const addMenu = () => {
 const addMenuSubmit = () => {
   // console.log("添加的数据"+roleObject)
   //后端发送添加菜单请求
-  http.post("/menu/addMenu",menuObject).then((res) => {
+  http.post('/menu/addMenu', menuObject).then((res) => {
     if (res.data.data) {
       ElMessage.success('添加成功')
       addOrEditDrawerModal.value = false
@@ -281,10 +287,10 @@ const batchDelete = async () => {
     // 调用 API 批量删除
     await http.post('/dictData/batchDelete', { ids }).then((res) => {
       // 重新查询一遍数据
-      if(res.data.data){
-      getMenus()
-      ElMessage.success('批量删除成功！')
-    }
+      if (res.data.data) {
+        getMenus()
+        ElMessage.success('批量删除成功！')
+      }
     })
   } catch (error) {
     ElMessage.error('批量删除有误,请重试!', error)
@@ -317,24 +323,26 @@ const editMenu = (menuId: string) => {
   addOrEditDrawerTitle.value = '编辑菜单'
   addOrEditDrawerModal.value = true
   //回调单个菜单数据
-  http.get("/menu/getMenu?menuId="+menuId).then((res)=>{
-   if(res.data.data){
-      res.data = res.data.data
-      menuObject.menuId = menuId
-      menuObject.parentId = res.data.parentId
-      menuObject.menuName = res.data.menuName
-      menuObject.menuType = res.data.menuType
-      menuObject.status = res.data.status
-      menuObject.path = res.data.path
-      menuObject.remark = res.data.remark
-      menuObject.createTime = res.data.createTime
-      menuObject.updateTime = res.data.updateTime
-      menuObject.createBy = res.data.createBy
-      menuObject.updateBy = res.data.updateBy
-    }
-  }).catch((error)=>{
-    ElMessage.error('获取菜单数据失败'+error)
-  })
+  http
+    .get('/menu/getMenu?menuId=' + menuId)
+    .then((res) => {
+      if (res.data) {
+        menuObject.menuId = menuId
+        menuObject.parentId = res.data.parentId
+        menuObject.menuName = res.data.menuName
+        menuObject.menuType = res.data.menuType
+        menuObject.status = res.data.status
+        menuObject.path = res.data.path
+        menuObject.remark = res.data.remark
+        menuObject.createTime = res.data.createTime
+        menuObject.updateTime = res.data.updateTime
+        menuObject.createBy = res.data.createBy
+        menuObject.updateBy = res.data.updateBy
+      }
+    })
+    .catch((error) => {
+      // ElMessage.error('获取菜单数据失败'+error)
+    })
 }
 
 //修改菜单
@@ -371,6 +379,7 @@ const beforeChangeAddOrEditDrawer = () => {
   })
     .then(() => {
       addOrEditDrawerModal.value = false
+      //deptData.splice(0, deptData.length)
     })
     .catch(() => {
       return
@@ -396,6 +405,7 @@ const handleBeforeChange = async (menuId, menuStatus, menuName) => {
 
 // 修改菜单状态改变事件
 const updateMenuStatus = async (menuId, menuStatus, menuName) => {
+  //menuId = menuId.parseInt(menuId);
   try {
     const response = await http.put(`/menu/update/${menuId}/${menuStatus}`)
     if (response.data.data) {
@@ -422,6 +432,8 @@ const updateMenuStatus = async (menuId, menuStatus, menuName) => {
     })
     throw error
   }
+  //刷新
+  //getMenus()
 }
 
 //上一页
