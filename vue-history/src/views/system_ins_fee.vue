@@ -32,7 +32,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -81,13 +81,17 @@
                   />
                 </template>
               </el-table-column>
-              <el-table-column prop="createTime" label="创建时间" >
+              <el-table-column prop="createTime" label="创建时间" width="200" sortable>
                 <template #default="scope">
-                  {{ scope.row.createTime.replace('T',' ') }}
+                  {{ scope.row.createTime.replace('T', ' ') }}
                 </template>
               </el-table-column>
-              <el-table-column label="创建人" prop="createTime" width="200" />
-              <el-table-column label="最后一次修改时间" prop="updateTime" width="200" />
+              <el-table-column label="创建人" prop="createBy" width="120" />
+              <el-table-column label="最后一次修改时间" prop="updateTime" width="200">
+                <template #default="scope">
+                  {{ scope.row.updateTime.replace('T', ' ') }}
+                </template>
+              </el-table-column>
               <el-table-column label="修改人" prop="updateBy" width="200" />
 
               <!-- 按钮组 -->
@@ -168,12 +172,6 @@
           <el-form-item label="项目单位">
             <el-input v-model="checkItemObject.unit" placeholder="请输入项目单位" />
           </el-form-item>
-          <el-form-item label="状态">
-            <el-radio-group v-model="checkItemObject.status">
-              <el-radio value="0">正常</el-radio>
-              <el-radio value="1">禁用</el-radio>
-            </el-radio-group>
-          </el-form-item>
         </el-form>
       </el-col>
     </el-row>
@@ -181,7 +179,7 @@
     <el-row class="text-center">
       <el-col>
         <el-button @click="handleSubmit" type="primary">提交</el-button>
-        <el-button type="primary">取消</el-button>
+        <el-button type="primary" @click="addOrEditDrawerModal = false">取消</el-button>
       </el-col>
     </el-row>
   </el-drawer>
@@ -189,9 +187,7 @@
 
 <script setup lang="ts">
 import http from '@/http'
-import { formatDate } from '@/utils/dateUtils'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
-import { c } from 'vite/dist/node/moduleRunnerTransport.d-CXw_Ws6P'
 import { onMounted, reactive, ref } from 'vue'
 
 const pageNum = ref(1) //当前页
@@ -203,6 +199,7 @@ const rowLoadingMap = reactive({}) //是否处于加载状态
 const addOrEditDrawerModal = ref(false) //添加或编辑检查费用抽屉
 const addOrEditDrawerTitle = ref('') //添加或编辑检查费用抽屉标题
 const checkItemIds = ref([]) //选中的编号数组
+const loading = ref(true) //表格加载动画
 
 //检查费用对象，用于存储添加或修改的检查费用信息
 const checkItemObject = reactive({
@@ -450,6 +447,7 @@ onMounted(() => {
 })
 
 const getAnnouncementFetch = () => {
+  loading.value = true
   //获取检查费用数据
   http
     .get('/checkItem/list', {
@@ -467,6 +465,9 @@ const getAnnouncementFetch = () => {
       })
       inspectionFeeData.splice(0, inspectionFeeData.length, ...list)
       pageTotal.value = res.data?.total || 0
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 </script>

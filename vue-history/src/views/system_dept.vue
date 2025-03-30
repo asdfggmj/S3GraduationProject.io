@@ -32,7 +32,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -47,7 +47,7 @@
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="科室名称" prop="deptName" width="120" />
               <el-table-column label="科室编码" prop="deptNumber" />
-              <el-table-column label="当前挂号量" prop="regNumber" width="120" />
+              <el-table-column label="当前挂号量" prop="regNumber" width="120" sortable />
               <el-table-column label="负责人" prop="deptLeader" />
               <el-table-column label="电话" prop="leaderPhone" />
               <el-table-column label="状态" prop="status">
@@ -73,7 +73,7 @@
                   />
                 </template>
               </el-table-column>
-              <el-table-column label="创建时间" prop="createTime" width="200" />
+              <el-table-column label="创建时间" prop="createTime" width="200" sortable />
               <!-- 按钮组 -->
               <el-table-column label="操作" fixed="right" width="240">
                 <template #default="scope">
@@ -160,7 +160,6 @@
 <script setup lang="ts">
 import http from '@/http'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
-import { de } from 'element-plus/es/locale'
 import { onMounted, reactive, ref } from 'vue'
 const addOrEditDrawerModal = ref(false) //添加或编辑科室抽屉
 const addOrEditDrawerTitle = ref('') //添加或编辑科室抽屉标题
@@ -171,6 +170,7 @@ const keyWord = ref('') //关键字
 const deptData = reactive([]) //科室数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
 const depIds = ref([]) //选中的编号数组
+const loading = ref(true) //表格加载动画
 
 //科室对象，用于存储添加或修改的科室信息
 const deptObject = reactive({
@@ -181,12 +181,11 @@ const deptObject = reactive({
   orderNum: '',
   deptLeader: '',
   leaderPhone: '',
-  status: '0'
+  status: '0',
 })
 
 // 监听多选
 const handleSelectionChange = (val) => {
-  //console.log('当前选中的数据:', val) // ✅ 确保这里不是空的
   depIds.value = val
 }
 
@@ -431,6 +430,9 @@ const getDeptFetch = () => {
       })
       deptData.splice(0, deptData.length, ...list)
       pageTotal.value = res.data?.total || 0
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 </script>

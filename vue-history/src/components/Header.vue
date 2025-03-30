@@ -24,12 +24,13 @@
     </el-menu-item>
 
     <!-- 头像地址 -->
-    <el-menu-item index="2">
+    <el-menu-item index="3">
       <div class="block" @click="chatMyMessage">
         <el-avatar :size="50" :src="userObject.picture" />
       </div>
     </el-menu-item>
   </el-menu>
+
   <!-- 个人信息抽屉 -->
   <el-drawer v-model="personalDrawer" :show-close="false" :size="400">
     <!-- 自定义头部 -->
@@ -129,9 +130,8 @@
 <script setup lang="ts">
 import router from '@/router'
 import { useUserStore } from '@/stores/user'
-import { Close, Switch } from '@element-plus/icons-vue'
+import { Close, Delete, Switch } from '@element-plus/icons-vue'
 import { useCookies } from '@vueuse/integrations/useCookies'
-import { all } from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -148,6 +148,10 @@ const updatePwdObject = ref({
   oldPwd: '',
   newPwd: '',
 })
+
+const chatNotice = () => {
+  console.log('点击了公告按钮')
+}
 
 //忘记密码
 const forgetPwd = () => {
@@ -226,5 +230,8 @@ const chatMyMessage = () => {
 .block {
   display: flex;
   align-items: center;
+}
+.mr-10px {
+  margin-right: 10px;
 }
 </style>

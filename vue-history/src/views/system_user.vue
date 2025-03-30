@@ -10,11 +10,11 @@
               <el-icon><Plus /></el-icon>
               <span>新增用户</span>
             </el-button>
-            <el-button type="success">
+            <el-button type="success" disabled>
               <el-icon><Refresh /></el-icon>
               <span>重置选中用户账号</span>
             </el-button>
-            <el-button type="danger">
+            <el-button type="danger" disabled>
               <el-icon><Minus /></el-icon>
               <span>删除选中用户</span>
             </el-button>
@@ -36,7 +36,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -49,28 +49,31 @@
               </el-table-column>
               <el-table-column label="用户姓名" prop="userName" width="120" />
               <el-table-column label="所属部门" width="120">
-                <template #default="scope">
-                  {{ getDeptName(scope.row.deptId) }}
-                  <!-- 根据 deptId 查找科室名称 -->
+                <template #default="{ row }">
+                  {{ getDeptName(row.deptId) }}
                 </template>
               </el-table-column>
               <el-table-column label="手机号码" prop="phone" width="120" />
               <el-table-column label="性别" prop="sex">
                 <template #default="scope">
-                  <el-tag v-if="scope.row.sex === 0" type="primary">男</el-tag>
-                  <el-tag v-if="scope.row.sex === 1" type="danger">女</el-tag>
-                  <el-tag v-if="scope.row.sex === 2" type="info">未知</el-tag>
+                  <el-tag effect="dark" :type="sexComputedFetch(scope.row.sex)">{{
+                    scope.row.sex === 0 ? '男' : scope.row.sex === 1 ? '女' : '未知'
+                  }}</el-tag>
                 </template>
               </el-table-column>
               <el-table-column label="年龄" prop="age" />
               <el-table-column label="是否参与排班" prop="schedulingFlag" width="120">
                 <template #default="scope">
-                  <span>{{ scope.row.schedulingFlag === 0 ? '是' : '否' }}</span>
+                  <el-tag
+                    effect="dark"
+                    :type="schedulingFlagComputedFetch(scope.row.schedulingFlag)"
+                    >{{ scope.row.schedulingFlag === '0' ? '是' : '否' }}</el-tag
+                  >
                 </template>
               </el-table-column>
-              <el-table-column label="级别" prop="userRankValue" width="120" />
-              <el-table-column label="教育背景" prop="backgroundValue" />
-              <el-table-column label="用户状态" prop="status">
+              <el-table-column label="级别" prop="userRankValue" width="100" />
+              <el-table-column label="教育背景" prop="backgroundValue" width="100" />
+              <el-table-column label="用户状态" prop="status" width="100">
                 <template #default="scope">
                   <el-switch
                     v-model="scope.row.status"
@@ -82,8 +85,8 @@
                           scope.row.userName,
                         )
                     "
-                    active-value="0"
-                    inactive-value="1"
+                    :active-value="0"
+                    :inactive-value="1"
                     active-text="正常"
                     inactive-text="禁用"
                     class="ml-2"
@@ -93,7 +96,7 @@
                   />
                 </template>
               </el-table-column>
-              <el-table-column label="创建时间" prop="createTime" width="200">
+              <el-table-column label="创建时间" prop="createTime" width="200" sortable>
                 <template #default="scope">
                   <span>{{ formatDate(scope.row.createTime) }}</span>
                 </template>
@@ -208,19 +211,18 @@
               <el-radio value="2">未知</el-radio>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="头像:" label-width="140px" style="margin-left: -40px">
+          <el-form-item label="头像:" label-width="140px">
             <el-upload
-            class="avatar-uploader"
-            action="http://localhost:8080/user/uploadImg"
-            :show-file-list="false"
-            :on-success="handleAvatarSuccess"
-            :before-upload="beforeAvatarUpload"
-            :headers="{Authorization: auhtorization }"
-          >
-            <img v-if="imageUrl" :src="imageUrl" class="avatar" />
-            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-          </el-upload>
-      </el-form-item>
+              class="avatar-uploader"
+              :http-request="uploadUserHeader"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess"
+              :before-upload="beforeAvatarUpload"
+            >
+              <img v-if="userObject.picture" :src="userObject.picture" class="avatar" />
+              <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+            </el-upload>
+          </el-form-item>
 
           <el-form-item label="状态">
             <el-radio-group v-model="userObject.status">
@@ -241,7 +243,7 @@
     <el-row class="text-center">
       <el-col>
         <el-button @click="handleSubmit" type="primary">提交</el-button>
-        <el-button type="primary">取消</el-button>
+        <el-button type="primary" @click="addOrEditDrawerModal = false">取消</el-button>
       </el-col>
     </el-row>
   </el-drawer>
@@ -276,11 +278,17 @@
 
 <script setup lang="ts">
 import http from '@/http'
-import { dayjs, ElMessage, ElMessageBox, ElNotification, UploadProps } from 'element-plus'
+import {
+  dayjs,
+  ElLoading,
+  ElMessage,
+  ElMessageBox,
+  ElNotification,
+  UploadProps,
+} from 'element-plus'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useCookies } from '@vueuse/integrations/useCookies'
 import { Message, Plus } from '@element-plus/icons-vue'
-import { useData } from 'element-plus/es/components/table-v2/src/composables'
 
 const addOrEditDrawerModal = ref(false) //添加或编辑用户抽屉
 const addOrEditDrawerTitle = ref('') //添加或编辑用户抽屉标题
@@ -290,7 +298,7 @@ const pageTotal = ref(0) //总个数
 const keyWord = ref('') //关键字
 const userData = reactive([]) //用户数据
 const rowLoadingMap = reactive({}) //是否处于加载状态
-const deptData = reactive([]) //科室数据
+const deptData = ref([]) //科室数据
 const backgroundData = reactive([]) //背景数据
 const userRankData = reactive([]) //级别数据
 let dialog = ref(false) //控制分配抽屉
@@ -300,16 +308,94 @@ let rids = ref([])
 let roleData = ref([])
 //授权的用户编号
 let uid = ref('')
+// 定义一个加载实例
+let loadingInstance = null
+const loading = ref(true) //表格加载动画
+//用户对象，用于存储添加或修改的用户信息
+const userObject = reactive({
+  userId: '',
+  userName: '',
+  email: '',
+  deptId: '',
+  phone: '',
+  age: '',
+  sex: '2',
+  status: '0',
+  userRank: '',
+  background: '',
+  schedulingFlag: '1',
+  picture: '',
+  userRankValue: '',
+  backgroundValue: '',
+})
 
+//上传用户头像方法
 const uploadUserHeader = (file) => {
   const formData = new FormData()
   formData.append('file', file.file)
 
-  http.post('http://localhost:8080/file/user/uploadImg', formData).then((res) => {
-    if (res.data.code === 200) {
-      ElMessage.success('头像更改成功!')
-    }
+  // 开始上传时显示加载动画
+  loadingInstance = ElLoading.service({
+    lock: true,
+    text: '头像上传中...',
+    background: 'rgba(0, 0, 0, 0.7)',
   })
+
+  // 假设 HTTP 请求函数 http 已经定义
+  http
+    .post('http://localhost:8080/file/user/uploadImg', formData)
+    .then((res) => {
+      if (res.data.code === 200) {
+        handleAvatarSuccess(res.data, file)
+        ElMessage.success('头像更改成功!')
+      }
+    })
+    .catch((error) => {
+      ElMessage.error('头像上传失败!')
+    })
+    .finally(() => {
+      // 上传完成后关闭加载动画
+      if (loadingInstance) {
+        loadingInstance.close()
+      }
+    })
+}
+
+//计算性别颜色
+const sexComputedFetch = (value) => {
+  switch (value) {
+    case 0:
+      return 'primary'
+    case 1:
+      return 'danger'
+    default:
+      return 'warning'
+  }
+}
+
+//是否需要参与排班的标签类型
+const schedulingFlagComputedFetch = (value) => {
+  switch (value) {
+    case '0':
+      return 'primary'
+    case '1':
+      return 'danger'
+    default:
+      return 'warning'
+  }
+}
+
+const deptMap = computed(() => {
+  const map = new Map()
+  deptData.value.forEach((item) => {
+    map.set(item.deptId, item.deptName)
+  })
+  return map
+})
+
+// 计算属性，根据 deptId 获取科室名称
+const getDeptName = (deptId) => {
+  return deptMap.value.get(deptId) || '未知科室'
 }
 
 //使用dayjs序列化时间
@@ -389,35 +475,19 @@ const selectedFieldBackground = computed({
   },
 })
 
-//用户对象，用于存储添加或修改的用户信息
-const userObject = reactive({
-  userId: '',
-  userName: '',
-  email: '',
-  deptId: '',
-  phone: '',
-  age: '',
-  sex: '2',
-  status: '0',
-  userRank: '',
-  background: '',
-  schedulingFlag: '1',
-  picture: '',
-  userRankValue: '',
-  backgroundValue: '',
-})
-
 //从cookie获取authorization
 const cookie = useCookies()
 const auhtorization = cookie.get('Authorization')
 
-//获取科室数据
-const getAllDept = () => {
-  if (deptData.length === 0) {
-    http.get('/dept/list').then((res) => {
-      const list = Array.isArray(res.data.list) ? res.data.list : []
-      deptData.splice(0, deptData.length, ...list)
-    })
+// 获取所有科室数据
+const getAllDept = async () => {
+  if (deptData.value.length === 0) {
+    try {
+      const res = await http.get('/dept/list')
+      deptData.value = Array.isArray(res.data.list) ? res.data.list : []
+    } catch (error) {
+      console.error('获取科室列表失败', error)
+    }
   }
 }
 
@@ -446,18 +516,9 @@ const getAllRank = () => {
   }
 }
 
-//获取科室名称
-const getDeptName = (deptId) => {
-  //查询所有科室
-  getAllDept()
-  const dept = deptData.find((item) => item.deptId === deptId)
-  return dept ? dept.deptName : '未知科室' // 如果找不到，返回默认值
-}
-
 //模糊查询
 const searchUser = (keyWordInput) => {
   keyWord.value = keyWordInput
-  //ElMessage.info(keyWord.value)
   getUserData()
 }
 
@@ -474,17 +535,16 @@ const currentChange = (newPage) => {
 }
 
 //实现添加用户头像文件上传
-const imageUrl = ref('') //上传成功的图片路径
 //上传成功调用
-const handleAvatarSuccess: UploadProps['onSuccess'] = (response, uploadFile) => {
-  imageUrl.value = URL.createObjectURL(uploadFile.raw!)
-  //给用户对象的头像属性赋值
-  userObject.picture = response
-  console.log(userObject.picture)
-  console.log(imageUrl.value)
+// 上传成功回调函数
+const handleAvatarSuccess = (response, uploadFile) => {
+  // 这里使用从服务器返回的图片 URL，而不是本地临时URL
+  userObject.picture = response.data // 更新用户头像地址
 }
 //上传之前调用,验证文件的格式文件的大小
-const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
+// 上传之前的验证
+const beforeAvatarUpload = (rawFile) => {
+  // 验证文件类型
   if (
     rawFile.type !== 'image/jpeg' &&
     rawFile.type !== 'image/png' &&
@@ -492,7 +552,9 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
   ) {
     ElMessage.error('请选择正确图片格式!')
     return false
-  } else if (rawFile.size / 1024 / 1024 > 2) {
+  }
+  // 验证文件大小
+  else if (rawFile.size / 1024 / 1024 > 2) {
     ElMessage.error('文件大小不能大于2MB!')
     return false
   }
@@ -501,21 +563,22 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
 //添加用户抽屉
 const addUser = () => {
   //清空用户对象
-  userObject.userId =
-    userObject.userName =
-    userObject.email =
-    userObject.deptId =
-    userObject.phone =
-    userObject.age =
-    userObject.userRank =
-    userObject.background =
-    userObject.picture =
-    userObject.userRankValue =
-    userObject.backgroundValue =
-      ''
-  userObject.status = '0'
-  userObject.schedulingFlag = '1'
-  userObject.sex = '2'
+  Object.assign(userObject, {
+    userId: '',
+    userName: '',
+    email: '',
+    deptId: '',
+    phone: '',
+    age: '18',
+    sex: '0',
+    status: '0',
+    userRank: '',
+    background: '',
+    schedulingFlag: '1',
+    picture: '',
+    userRankValue: '',
+    backgroundValue: '',
+  })
 
   addOrEditDrawerTitle.value = '添加用户'
   addOrEditDrawerModal.value = true
@@ -523,10 +586,10 @@ const addUser = () => {
 
 //添加用户
 const addUserSubmit = () => {
-  // console.log("添加的数据"+userObject)
+  console.log('添加的数据' + userObject)
   //后端发送添加用户请求
   http.post('/user/addUser', userObject).then((res) => {
-    if (res.data) {
+    if (res.data === true) {
       ElMessage.success('添加成功')
       addOrEditDrawerModal.value = false
     } else {
@@ -553,17 +616,10 @@ const delUser = (userId) => {
       }
     })
   })
-  // .catch(() => {
-  //   ElMessage({
-  //     type: 'info',
-  //     message: 'Delete canceled',
-  //   })
-  // })
 }
 
 //修改用户抽屉
 const editUser = (userId) => {
-  //userId=userId
   addOrEditDrawerTitle.value = '编辑用户'
   addOrEditDrawerModal.value = true
   //回调单个用户数据
@@ -571,29 +627,32 @@ const editUser = (userId) => {
     .get('/user/getUserById?userId=' + userId)
     .then((res) => {
       if (res.data) {
-        userObject.userId = userId
-        userObject.userName = res.data.data.userName
-        userObject.email = res.data.data.email
-        userObject.deptId = res.data.data.deptId
-        userObject.phone = res.data.data.phone
-        userObject.age = res.data.data.age
-        userObject.phone = res.data.data.phone
-        userObject.background = res.data.data.background
-        userObject.userRank = res.data.data.userRank
-        userObject.schedulingFlag = res.data.data.schedulingFlag
-        userObject.picture = res.data.data.picture
-        userObject.userRankValue = res.data.data.userRankValue
-        userObject.backgroundValue = res.data.data.backgroundValue
+        const data = res.data.data
+        Object.assign(userObject, {
+          userId: userId,
+          userName: data.userName,
+          email: data.email,
+          deptId: data.deptId,
+          phone: data.phone,
+          age: data.age,
+          sex: String(data.sex),
+          status: data.status,
+          userRank: data.userRank,
+          background: data.background,
+          schedulingFlag: data.schedulingFlag,
+          picture: data.picture,
+          userRankValue: data.userRankValue,
+          backgroundValue: data.backgroundValue,
+        })
       }
     })
     .catch((error) => {
-      // ElMessage.error('获取用户数据失败'+error)
+      ElMessage.error('获取用户数据失败' + error)
     })
 }
 
 //修改用户
 const updateUserSubmit = () => {
-  // console.log("修改的数据"+userObject)
   //后端发送修改用户请求
   http.post('/user/updateUser', userObject).then((res) => {
     if (res.data) {
@@ -626,7 +685,7 @@ const beforeChangeAddOrEditDrawer = () => {
     .then(() => {
       addOrEditDrawerModal.value = false
       dialog.value = false
-      deptData.splice(0, deptData.length)
+      deptData.value.splice(0, deptData.value.length)
     })
     .catch(() => {
       return
@@ -690,7 +749,7 @@ const handleBeforeChange = async (uid, value, username) => {
 // 页面加载时获取用户数据
 onMounted(() => {
   getUserData()
-  console.log(userObject)
+  getAllDept()
 })
 
 // 获取用户数据
@@ -714,8 +773,10 @@ const getUserData = () => {
         pageNum.value = user.pageNum
         pageSize.value = user.pageSize
         userData.splice(0, userData.length, ...user.list)
-        console.log(userData)
       }
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 </script>
@@ -736,6 +797,12 @@ const getUserData = () => {
 .text-center {
   text-align: center;
 }
+.avatar-uploader .avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
+}
+
 .avatar-uploader .el-upload {
   border: 1px dashed var(--el-border-color);
   border-radius: 6px;
