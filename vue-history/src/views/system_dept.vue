@@ -243,7 +243,7 @@ const addDeptSubmit = () => {
   // console.log("添加的数据"+deptObject)
   //后端发送添加科室请求
   http.post('/dept/addDept', deptObject).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
       ElMessage.success('添加成功')
       addOrEditDrawerModal.value = false
     } else {
@@ -262,7 +262,7 @@ const delDept = (deptId) => {
   }).then(() => {
     //删除科室
     http.post('dept/deleteDept?deptId=' + deptId).then((res) => {
-      if (res.data) {
+      if (res.data.data) {
         ElMessage.success('删除成功')
         getDeptFetch()
       } else {
@@ -285,14 +285,14 @@ const editDept = (deptId) => {
   addOrEditDrawerModal.value = true
   //回调单个科室数据
   http.get('/dept/getDeptById?deptId=' + deptId).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
       deptObject.deptId = deptId
-      deptObject.deptName = res.data.deptName
-      deptObject.deptLeader = res.data.deptLeader
-      deptObject.deptNumber = res.data.deptNumber
-      deptObject.orderNum = res.data.orderNum
-      deptObject.leaderPhone = res.data.leaderPhone
-      deptObject.status = res.data.status
+      deptObject.deptName = res.data.data.deptName
+      deptObject.deptLeader = res.data.data.deptLeader
+      deptObject.deptNumber = res.data.data.deptNumber
+      deptObject.orderNum = res.data.data.orderNum
+      deptObject.leaderPhone = res.data.data.leaderPhone
+      deptObject.status = res.data.data.status
     }
   })
   // .catch((error)=>{
@@ -357,7 +357,7 @@ const currentChange = (newPage) => {
 const updateUserStatus = async (id, status, name) => {
   try {
     const response = await http.put(`/dept/update/${id}/${status}`)
-    if (response.data) {
+    if (response.data.data) {
       ElNotification({
         title: '修改成功!',
         message: `科室 ${name} 的状态已更新为 ${status === 0 ? '正常' : '禁用'}`,
@@ -423,13 +423,13 @@ const getDeptFetch = () => {
       },
     })
     .then((res) => {
-      const list = Array.isArray(res.data.list) ? res.data.list : []
+      const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       // 将 status 转换为数字类型
       list.forEach((item) => {
         item.status = Number(item.status)
       })
       deptData.splice(0, deptData.length, ...list)
-      pageTotal.value = res.data?.total || 0
+      pageTotal.value = res.data.data?.total || 0
     })
 }
 </script>

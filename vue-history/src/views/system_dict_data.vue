@@ -85,7 +85,7 @@
               <el-table-column label="创建人" prop="createBy" width="120" />
               <el-table-column label="最后一次修改时间" prop="updateTime" width="200">
                 <template #default="scope">
-                  {{ scope.row.updateTime.replace('T',' ') }}
+                  {{ scope.row.updateTime?scope.row.updateTime.replace('T',' '):'' }}
                 </template>
               </el-table-column>
               <el-table-column label="修改人" prop="updateBy" width="120" />
@@ -236,12 +236,15 @@ const batchDelete = async () => {
     // 调用 API 批量删除
     await http.post('/dictData/batchDelete', { ids }).then((res) => {
       // 重新查询一遍数据
+      if(res.data.data){
       getDictFetch()
       ElMessage.success('批量删除成功！')
+    }
     })
   } catch (error) {
-    ElMessage.error('批量删除失败！', error)
+    ElMessage.error('批量删除有误,请重试!', error)
   }
+  keyWord.value = ''
 }
 
 //添加字典数据抽屉
@@ -251,6 +254,7 @@ const addDictData = () => {
   dictDataObject.dictLabel = ''
   dictDataObject.dictSort = ''
   dictDataObject.status = '0'
+  dictDataObject.dictValue = ''
   dictDataObject.dictType = dictType.value
   dictDataObject.remark = ''
 
@@ -307,14 +311,15 @@ const delDictData = (roleId) => {
     type: 'warning',
   }).then(() => {
     //删除字典数据
-    http.post('dictData/deleteById?od=' + roleId).then((res) => {
-      if (res.data) {
+    http.post('dictData/deleteById?id=' + roleId).then((res) => {
+      if (res.data.data) {
         ElMessage.success('删除成功')
         getDictFetch()
       } else {
         throw new Error('字典数据删除失败')
       }
     })
+    keyWord.value = ''
   })
   // .catch(() => {
   //   ElMessage({
@@ -343,7 +348,7 @@ const beforeChangeAddOrEditDrawer = () => {
 const updateUserStatus = async (rid, roleStatus, roleName) => {
   try {
     const response = await http.put(`/dictData/update/${rid}/${roleStatus}`)
-    if (response.data) {
+    if (response.data.data) {
       ElNotification({
         title: '修改成功!',
         message: `字典数据 ${roleName} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
@@ -424,13 +429,13 @@ const getDictFetch = () => {
       },
     })
     .then((res) => {
-      const list = Array.isArray(res.data.list) ? res.data.list : []
+      const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       // 将 status 转换为数字类型
       list.forEach((item) => {
         item.status = Number(item.status)
       })
       dictData.splice(0, dictData.length, ...list)
-      pageTotal.value = res.data?.total || 0
+      pageTotal.value = res.data.data?.total || 0
     })
 }
 </script>

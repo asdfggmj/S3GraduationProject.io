@@ -270,7 +270,7 @@ const addNoticeSubmit = () => {
   // console.log("添加的数据"+noticeObject)
   //后端发送添加通知请求
   http.post('/notice/add', noticeObject).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
       ElMessage.success('添加成功')
       addOrEditDrawerModal.value = false
     } else {
@@ -284,7 +284,7 @@ const addNoticeSubmit = () => {
 const seeContext = (noticeId) => {
   //查询当前通知内容
   http.get('/notice/getById?id=' + noticeId).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
       noticeObject.noticeContent = res.data.noticeContent
       noticeObject.noticeTitle = res.data.noticeTitle
     }
@@ -303,7 +303,7 @@ const delNotice = (noticeId) => {
   }).then(() => {
     //删除通知
     http.post('notice/deleteById?id=' + noticeId).then((res) => {
-      if (res.data) {
+      if (res.data.data) {
         ElMessage.success('删除成功')
         getNoticeFetch()
       } else {
@@ -326,7 +326,8 @@ const editNotice = (noticeId) => {
   addOrEditDrawerModal.value = true
   //回调单个通知数据
   http.get('/notice/getById?id=' + noticeId).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
+      res.data.status = res.data.data.data
       noticeObject.noticeId = noticeId
       noticeObject.noticeType = res.data.noticeType
       noticeObject.noticeContent = res.data.noticeContent
@@ -345,7 +346,7 @@ const updateNoticeSubmit = () => {
   // console.log("修改的数据"+userObject)
   //后端发送修改通知请求
   http.post('/notice/update', noticeObject).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
       ElMessage.success('修改成功')
       addOrEditDrawerModal.value = false
       getNoticeFetch()
@@ -397,7 +398,7 @@ const currentChange = (newPage) => {
 const updateUserStatus = async (id, roleStatus, roleName) => {
   try {
     const response = await http.put(`/notice/update/${id}/${roleStatus}`)
-    if (response.data) {
+    if (response.data.data) {
       ElNotification({
         title: '修改成功!',
         message: `编号为 ${id} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
@@ -463,13 +464,13 @@ const getNoticeFetch = () => {
       },
     })
     .then((res) => {
-      const list = Array.isArray(res.data.list) ? res.data.list : []
+      const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       // 将 status 转换为数字类型
       list.forEach((item) => {
         item.status = Number(item.status)
       })
       noticeData.splice(0, noticeData.length, ...list)
-      pageTotal.value = res.data?.total || 0
+      pageTotal.value = res.data.data?.total || 0
     })
 }
 </script>

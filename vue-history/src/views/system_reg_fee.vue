@@ -253,7 +253,7 @@ const addRegisteredItemSubmit = () => {
   // console.log("添加的数据"+regItemObject)
   //后端发送添加检查费用请求
   http.post('/registeredItem/add', regItemObject).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
       ElMessage.success('添加成功')
       addOrEditDrawerModal.value = false
     } else {
@@ -272,7 +272,7 @@ const delRegistrationFee = (registeredItemId) => {
   }).then(() => {
     //删除检查费用
     http.post('registeredItem/delete?id=' + registeredItemId).then((res) => {
-      if (res.data) {
+      if (res.data.data) {
         ElMessage.success('删除成功')
         getAnnouncementFetch()
       } else {
@@ -295,7 +295,8 @@ const editRegistrationFee = (registeredItemId) => {
   addOrEditDrawerModal.value = true
   //回调单个检查费用数据
   http.get('/registeredItem/getById?id=' + registeredItemId).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
+      res.data=res.data.data
       regItemObject.regItemId = res.data.regItemId
       regItemObject.regItemName = res.data.regItemName
       regItemObject.regItemFee = res.data.regItemFee
@@ -313,7 +314,7 @@ const updateRegisteredItemSubmit = () => {
   // console.log("修改的数据"+userObject)
   //后端发送修改检查费用请求
   http.post('/registeredItem/update', regItemObject).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
       ElMessage.success('修改成功')
       addOrEditDrawerModal.value = false
       getAnnouncementFetch()
@@ -371,7 +372,7 @@ const updateUserStatus = async (rid, roleStatus, roleName) => {
   }
   try {
     const response = await http.put(`/registeredItem/update/${rid}/${roleStatus}`)
-    if (response.data) {
+    if (response.data.data) {
       ElNotification({
         title: '修改成功!',
         message: `挂号费用 ${roleName} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
@@ -437,13 +438,13 @@ const getAnnouncementFetch = () => {
       },
     })
     .then((res) => {
-      const list = Array.isArray(res.data.list) ? res.data.list : []
+      const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       // 将 status 转换为数字类型
       list.forEach((item) => {
         item.status = Number(item.status)
       })
       registrationFeeData.splice(0, registrationFeeData.length, ...list)
-      pageTotal.value = res.data?.total || 0
+      pageTotal.value = res.data.data?.total || 0
     })
 }
 </script>

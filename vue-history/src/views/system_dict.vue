@@ -203,7 +203,7 @@ const formatDate = (date) => {
 const checkDictData = (dictType) => {
   dictTypeStore.setDictType({ dictType: dictType })
   console.log(dictTypeStore.getDictType)
-  ElMessage.success(dictType)
+  //ElMessage.success(dictType)
   router.push({ name: 'dictData' })
 }
 
@@ -226,12 +226,12 @@ const batchDelete = async () => {
     })
 
     //提取id
-    const ids = dCodes.value.map((item) => item.dictCode)
+    const ids = dCodes.value.map((item) => item.dictId)
     // 调用 API 批量删除
     await http.post('/dictType/batchDelete', { ids }).then((res) => {
       // 重新查询一遍数据
       getDictFetch()
-      ElMessage.success('批量删除成功！')
+      ElMessage.success(res.data.data)
     })
   } catch (error) {
     ElMessage.error('批量删除失败！', error)
@@ -299,7 +299,7 @@ const delDictType = (roleId) => {
   }).then(() => {
     //删除字典数据
     http.post('dictType/deleteById?id=' + roleId).then((res) => {
-      if (res.data) {
+      if (res.data.data) {
         ElMessage.success('删除成功')
         getDictFetch()
       } else {
@@ -334,7 +334,7 @@ const beforeChangeAddOrEditDrawer = () => {
 const updateUserStatus = async (rid, roleStatus, roleName) => {
   try {
     const response = await http.put(`/dictType/update/${rid}/${roleStatus}`)
-    if (response.data) {
+    if (response.data.data) {
       ElNotification({
         title: '修改成功!',
         message: `字典数据 ${roleName} 的状态已更新为 ${roleStatus === 0 ? '正常' : '禁用'}`,
@@ -419,13 +419,13 @@ const getDictFetch = () => {
       },
     })
     .then((res) => {
-      const list = Array.isArray(res.data.list) ? res.data.list : []
+      const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       // 将 status 转换为数字类型
       list.forEach((item) => {
         item.status = Number(item.status)
       })
       dictData.splice(0, dictData.length, ...list)
-      pageTotal.value = res.data?.total || 0
+      pageTotal.value = res.data.data?.total || 0
     })
 }
 </script>

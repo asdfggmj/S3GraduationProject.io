@@ -151,7 +151,6 @@
     size="30%"
     :before-close="beforeChangeAddOrEditDrawer"
   >
-  >
     <el-row>
       <el-col :span="20">
         <el-form :model="userObject" label-width="auto" style="max-width: 600px">
@@ -307,7 +306,7 @@ const uploadUserHeader = (file) => {
   formData.append('file', file.file)
 
   http.post('http://localhost:8080/file/user/uploadImg', formData).then((res) => {
-    if (res.data.code === 200) {
+    if (res.data.data.code === 200) {
       ElMessage.success('头像更改成功!')
     }
   })
@@ -325,12 +324,12 @@ const userGrant = async (index: number, userId) => {
   //console.log(index, row)
   //查询用户拥有的角色编号
   await http.get('/user/getUserRids?uid=' + userId).then((res) => {
-    rids.value = res.data
+    rids.value = res.data.data
   })
   //查询所有的角色
   await http.get('/role/getAll').then((res) => {
     //console.log(res)
-    roleData.value = res.data
+    roleData.value = res.data.data
   })
   //用户授予角色抽屉显示
   dialog.value = true
@@ -343,7 +342,7 @@ function addUserRole() {
   http
     .get('/user/addUserRole', { params: { uid: uid.value, rids: rids.value.toString() } })
     .then((res) => {
-      if (res.data) {
+      if (res.data.data) {
         //成功提示
         ElMessage({
           message: '授权成功',
@@ -415,7 +414,7 @@ const auhtorization = cookie.get('Authorization')
 const getAllDept = () => {
   if (deptData.length === 0) {
     http.get('/dept/list').then((res) => {
-      const list = Array.isArray(res.data.list) ? res.data.list : []
+      const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       deptData.splice(0, deptData.length, ...list)
     })
   }
@@ -425,7 +424,7 @@ const getAllDept = () => {
 const getAllBackground = () => {
   if (backgroundData.length === 0) {
     http.get('user/getBackground', { params: { dictType: 'sys_user_background' } }).then((res) => {
-      const list = Array.isArray(res.data) ? res.data : []
+      const list = Array.isArray(res.data.data) ? res.data.data : []
       backgroundData.splice(0, backgroundData.length, ...list)
     })
   }
@@ -440,7 +439,7 @@ const getAllRank = () => {
         headers: { Authorization: 'Bearer ' + auhtorization },
       })
       .then((res) => {
-        const list = Array.isArray(res.data) ? res.data : []
+        const list = Array.isArray(res.data.data) ? res.data.data : []
         userRankData.splice(0, userRankData.length, ...list)
       })
   }
@@ -526,7 +525,7 @@ const addUserSubmit = () => {
   // console.log("添加的数据"+userObject)
   //后端发送添加用户请求
   http.post('/user/addUser', userObject).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
       ElMessage.success('添加成功')
       addOrEditDrawerModal.value = false
     } else {
@@ -545,7 +544,7 @@ const delUser = (userId) => {
   }).then(() => {
     //删除用户
     http.post('user/deleteUser?userId=' + userId).then((res) => {
-      if (res.data) {
+      if (res.data.data) {
         ElMessage.success('删除成功')
         getUserData()
       } else {
@@ -570,7 +569,7 @@ const editUser = (userId) => {
   http
     .get('/user/getUserById?userId=' + userId)
     .then((res) => {
-      if (res.data) {
+      if (res.data.data) {
         userObject.userId = userId
         userObject.userName = res.data.data.userName
         userObject.email = res.data.data.email
@@ -596,7 +595,7 @@ const updateUserSubmit = () => {
   // console.log("修改的数据"+userObject)
   //后端发送修改用户请求
   http.post('/user/updateUser', userObject).then((res) => {
-    if (res.data) {
+    if (res.data.data) {
       ElMessage.success('修改成功')
       addOrEditDrawerModal.value = false
       getUserData()
@@ -645,7 +644,7 @@ const beforeChange = () => {
 const updateUserStatus = async (userId, userStatus, username) => {
   try {
     const response = await http.put(`/user/update/${userId}/${userStatus}`)
-    if (response.data) {
+    if (response.data.data) {
       ElNotification({
         title: '修改成功!',
         message: `用户 ${username} 的状态已更新为 ${userStatus === 0 ? '正常' : '禁用'}`,
@@ -724,7 +723,7 @@ const getUserData = () => {
       },
     })
     .then((res) => {
-      const user = res.data
+      const user = res.data.data
       // 将 status 转换为数字类型
       user.list.forEach((item) => {
         item.status = Number(item.status)
