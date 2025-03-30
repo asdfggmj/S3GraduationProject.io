@@ -32,7 +32,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -323,6 +323,7 @@ const deptData = ref([]) //部门数据
 const coId = ref('') //用药详细ID
 const careOrderList = ref([]) //用药详细数据
 const checkOrderList = ref([]) //检查详细数据
+const loading = ref(true)
 
 //根据ID查询用药详细
 const getCareOrderItem = (id) => {
@@ -449,6 +450,7 @@ const currentChange = (newPage) => {
 }
 
 const getPatientFetch = () => {
+  loading.value = true
   //获取患者信息
   http
     .get('/patient/list', {
@@ -462,6 +464,11 @@ const getPatientFetch = () => {
       const list = Array.isArray(res.data.list) ? res.data.list : []
       registrationFeeData.splice(0, registrationFeeData.length, ...list)
       pageTotal.value = res.data?.total || 0
+    })
+    .finally(() => {
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 </script>

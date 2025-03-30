@@ -23,8 +23,9 @@
             <el-form-item label="挂号单号">
               <el-input
                 placeholder="请输入挂号单号"
-                v-model="queryForm.regId"
+                v-model="queryForm.itemId"
                 @input="debouncedGetCheckResultFetch"
+                clearable
               />
             </el-form-item>
           </el-col>
@@ -34,16 +35,17 @@
                 placeholder="请输入患者姓名"
                 v-model="queryForm.patientName"
                 @input="debouncedGetCheckResultFetch"
+                clearable
               />
             </el-form-item>
           </el-col>
           <el-col :span="4">
             <el-button-group>
-              <el-button type="primary">
+              <el-button type="primary" @click="debouncedGetCheckResultFetch">
                 <el-icon><Search /></el-icon>
                 <span>搜索</span>
               </el-button>
-              <el-button type="primary">
+              <el-button type="primary" @click="resetQuery">
                 <el-icon><Refresh /></el-icon>
                 <span>重置</span>
               </el-button>
@@ -56,7 +58,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -179,7 +181,7 @@ const checkItemList = ref([]) // 存储获取的检查项
 const checkResultList = ref([]) //检查结果数组
 const resultVisibleTitle = ref('') //录入标题
 const queryForm = reactive({
-  regId: '', //挂号单
+  itemId: '', //挂号单
   patientName: '', //患者姓名
 })
 const checkResultText = ref('') //检查结果文本
@@ -187,6 +189,15 @@ const fileList = ref([]) // 存储已上传文件列表
 // 定义一个加载实例
 let loadingInstance = null
 const itemId = ref('')
+const loading = ref(true)
+
+//重置查询方法
+const resetQuery = () => {
+  Object.assign(queryForm, {
+    itemId: '', //挂号单
+    patientName: '', //患者姓名
+  })
+}
 
 const handleRemove = (file, fileList) => {
   // 删除本地文件（在前端删除）
@@ -220,7 +231,7 @@ const addCheckResult = () => {
         getCheckResultList('1') //重新获取数据
         resultVisible.value = false //关闭对话框
         //修改用药和检查项目状态为3已完成
-        http.put(`/orderItem/update/${itemId.value}/3`).then((res) => {
+        http.put(`/orderItem/update/3/${itemId.value}`).then((res) => {
           if (res.data.code === 200 && res.data.data === true) {
             itemId.value = '' //清空itemId
             ElMessage.success('录入成功!!!')
@@ -319,16 +330,22 @@ const beforeUpload = (file) => {
 
 //获取检测中的检查数据
 const getCheckResultList = (itemRefId) => {
+  loading.value = true
   http
-    .get(`/checkResult/get/0/${itemRefId}`, {
+    .get(`/checkResult/get/0/${itemRefId == '' ? '1' : itemRefId}`, {
       params: {
-        regId: queryForm.regId,
+        regId: queryForm.itemId,
         patientName: queryForm.patientName,
       },
     })
     .then((res) => {
       checkResultList.value = res.data.data.list
       console.log(res.data.data)
+    })
+    .finally(() => {
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 
