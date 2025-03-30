@@ -138,12 +138,6 @@
           <el-form-item label="显示顺序">
             <el-input-number v-model="deptObject.orderNum" :min="18" :max="200" />
           </el-form-item>
-          <el-form-item label="状态">
-            <el-radio-group v-model="deptObject.status">
-              <el-radio value="0">正常</el-radio>
-              <el-radio value="1">禁用</el-radio>
-            </el-radio-group>
-          </el-form-item>
         </el-form>
       </el-col>
     </el-row>
@@ -151,7 +145,7 @@
     <el-row class="text-center">
       <el-col>
         <el-button @click="handleSubmit" type="primary">提交</el-button>
-        <el-button type="primary">取消</el-button>
+        <el-button type="primary" @click="addOrEditDrawerModal = false">取消</el-button>
       </el-col>
     </el-row>
   </el-drawer>
@@ -404,6 +398,7 @@ onMounted(() => {
 })
 
 const getDeptFetch = () => {
+  loading.value = true
   //获取科室数据
   http
     .get('/dept/list', {
@@ -421,6 +416,9 @@ const getDeptFetch = () => {
       })
       deptData.splice(0, deptData.length, ...list)
       pageTotal.value = res.data.data?.total || 0
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 </script>

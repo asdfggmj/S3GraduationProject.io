@@ -679,8 +679,8 @@ const getScheduleRegItemFetch = () => {
 //获取展示挂号类型
 const getRegItemFetch = () => {
   http.get('/registeredItem/list').then((res) => {
-    registeredItems.value = res.data.list
-    queryRegisteredItems.value = res.data.list
+    registeredItems.value = res.data.data.list
+    queryRegisteredItems.value = res.data.data.list
   })
 }
 
