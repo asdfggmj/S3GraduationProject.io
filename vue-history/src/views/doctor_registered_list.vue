@@ -271,7 +271,7 @@ const statusTagType = (status) => {
 const getAllDeptDataFetch = () => {
   if (deptData.value.length === 0) {
     http.get('/dept/getAll').then((res) => {
-      deptData.value = res.data
+      deptData.value = res.data.data
     })
   }
 }
