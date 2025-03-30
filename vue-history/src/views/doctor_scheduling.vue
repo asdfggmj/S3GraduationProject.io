@@ -79,7 +79,7 @@
   <!-- 第三行 -->
   <el-row class="mt-10px">
     <el-col>
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <el-row>
           <el-col :span="24">
             <el-table
@@ -217,6 +217,7 @@ const selectedDoctorValue = ref('') //选中的医生值
 const schedulingEditTitle = ref('') //编辑标题
 const weekDates = ref([]) // 本周日期
 const weekToAdd = ref(0) //周位移  -1代表上周 0本周 1下周
+const loading = ref(false)
 
 onMounted(() => {
   getDoctorFetch()
@@ -340,6 +341,7 @@ const getDepts = () => {
 
 //获取所有医生信息
 const getDoctorFetch = () => {
+  loading.value = true
   http
     .get('/doctors/ScheduleList', {
       params: {
@@ -352,6 +354,9 @@ const getDoctorFetch = () => {
       if (res.data && res.data.data && res.data.data.length > 0) {
         schedulingData.value = res.data.data // 存储医生排班数据
         weekDates.value = res.data.data[0].dates // 获取排班日期
+        setTimeout(() => {
+          loading.value = false
+        }, 500)
       } else {
         console.error('排班数据为空')
       }

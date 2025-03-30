@@ -363,18 +363,6 @@
           <el-table-column label="身份证号" prop="idCard" />
           <el-table-column label="挂号类型" prop="regItemId" />
           <el-table-column label="过敏史" prop="allergyInfo" />
-          <el-table-column label="操作" width="100" fixed="right">
-            <template #default="scope">
-              <el-button
-                type="success"
-                size="small"
-                @click="chooseSelectedPatient(scope.row.regId)"
-              >
-                <el-icon><Select /></el-icon>
-                <span>选择</span>
-              </el-button>
-            </template>
-          </el-table-column>
         </el-table>
       </el-tab-pane>
 

@@ -68,37 +68,6 @@
                     "
                     :active-value="0"
                     :inactive-value="1"
-        <el-table :data="menuData" row-key="menuId" border max-height="560"
-        :tree-props="{children: 'childMenus',hasChildren:'hasChildren'}"
-        default-expand-none
-        stripe>
-          <el-table-column prop="menuName" label="菜单名称" width="160" />
-          <el-table-column prop="menuType" label="类型">
-            <template #default="scope">
-              <el-tag effect="dark" :type="getMenuTagType(scope.row.menuType)">
-                {{ scope.row.menuType }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="path" label="组件路径" width="200" />
-          <el-table-column prop="perCode" label="权限标识" width="120">
-            <template #default="scope">
-              <el-tag v-if="scope.row.perCode === null">空的呢</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="status" label="菜单状态" width="120">
-            <template #default="scope">
-              <el-switch
-                v-model="scope.row.status"
-                :before-change="
-                  () =>
-                    handleBeforeChange(
-                      scope.row.menuId,
-                      scope.row.status === '0' ? '1' : '0',
-                      scope.row.menuName
-                    )"
-                     :active-value="'0'"
-                     :inactive-value="'1'"
                     active-text="正常"
                     inactive-text="禁用"
                     class="ml-2"
@@ -232,14 +201,6 @@ const menuObject = reactive({
   updateTime: '',
   createBy: '',
   updateBy: '',
-  perCode:'',
-  path:'',
-  remark:'',
-  status:'0',
-  createTime:'',
-  updateTime:'',
-  createBy:'',
-  updateBy:''
 })
 
 //计算菜单类别名字
@@ -263,7 +224,6 @@ const addMenu = () => {
   menuObject.menuName = ''
   menuObject.menuType = ''
   menuObject.status = 0
-  menuObject.status='0'
   menuObject.path = ''
 
   addOrEditDrawerTitle.value = '添加菜单'
@@ -310,23 +270,26 @@ const editMenu = (menuId: string) => {
   addOrEditDrawerTitle.value = '编辑菜单'
   addOrEditDrawerModal.value = true
   //回调单个菜单数据
-  http.get("/menu/getMenu?menuId="+menuId).then((res)=>{
-   if(res.data){
-      menuObject.menuId = menuId
-      menuObject.parentId = res.data.parentId
-      menuObject.menuName = res.data.menuName
-      menuObject.menuType = res.data.menuType
-      menuObject.status = res.data.status
-      menuObject.path = res.data.path
-      menuObject.remark = res.data.remark
-      menuObject.createTime = res.data.createTime
-      menuObject.updateTime = res.data.updateTime
-      menuObject.createBy = res.data.createBy
-      menuObject.updateBy = res.data.updateBy
-    }
-  }).catch((error)=>{
-    ElMessage.error('获取菜单数据失败'+error)
-  })
+  http
+    .get('/menu/getMenu?menuId=' + menuId)
+    .then((res) => {
+      if (res.data) {
+        menuObject.menuId = menuId
+        menuObject.parentId = res.data.parentId
+        menuObject.menuName = res.data.menuName
+        menuObject.menuType = res.data.menuType
+        menuObject.status = res.data.status
+        menuObject.path = res.data.path
+        menuObject.remark = res.data.remark
+        menuObject.createTime = res.data.createTime
+        menuObject.updateTime = res.data.updateTime
+        menuObject.createBy = res.data.createBy
+        menuObject.updateBy = res.data.updateBy
+      }
+    })
+    .catch((error) => {
+      // ElMessage.error('获取菜单数据失败'+error)
+    })
 }
 
 //修改菜单
@@ -363,6 +326,7 @@ const beforeChangeAddOrEditDrawer = () => {
   })
     .then(() => {
       addOrEditDrawerModal.value = false
+      //deptData.splice(0, deptData.length)
     })
     .catch(() => {
       return
@@ -388,6 +352,7 @@ const handleBeforeChange = async (menuId, menuStatus, menuName) => {
 
 // 修改菜单状态改变事件
 const updateMenuStatus = async (menuId, menuStatus, menuName) => {
+  //menuId = menuId.parseInt(menuId);
   try {
     const response = await http.put(`/menu/update/${menuId}/${menuStatus}`)
     if (response.data) {
@@ -412,6 +377,8 @@ const updateMenuStatus = async (menuId, menuStatus, menuName) => {
     })
     throw error
   }
+  //刷新
+  //getMenus()
 }
 
 //上一页

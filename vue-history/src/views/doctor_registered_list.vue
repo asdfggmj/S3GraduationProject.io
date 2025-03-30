@@ -115,7 +115,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -241,6 +241,7 @@ const queryForm = reactive({
   selectedRegName: '', //选中的患者名称（查询用）
 })
 const deptData = ref([]) //科室数据
+const loading = ref(true)
 
 // 重置方法
 const resetQueryFetch = () => {
@@ -407,6 +408,7 @@ const currentChange = (newPage) => {
 
 //获取所有挂号信息
 const getRegListFetch = () => {
+  loading.value = true
   http
     .get('/regList/list', {
       params: {
@@ -424,6 +426,9 @@ const getRegListFetch = () => {
       const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       regListData.splice(0, regListData.length, ...list)
       pageTotal.value = res.data.data?.total || 0
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
 </script>

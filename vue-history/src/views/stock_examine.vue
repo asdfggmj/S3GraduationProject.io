@@ -153,8 +153,16 @@
           <el-table-column label="详细ID" prop="itemId" width="220" />
           <el-table-column label="单据号" prop="purchaseId" width="220" />
           <el-table-column label="药品名称" prop="medicinesName" width="100" />
-          <el-table-column label="药品分类" prop="medicinesType" width="100" />
-          <el-table-column label="处方类型" prop="prescriptionType" width="100" />
+          <el-table-column label="药品类型" prop="medicinesType" width="160">
+            <template #default="scope">
+              <span>{{ medicinesMap[scope.row.medicinesType] }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="处方类型" prop="prescriptionType" width="100">
+            <template #default="scope">
+              <span>{{ prescriptionTypeMap[scope.row.prescriptionType] }}</span>
+            </template>
+          </el-table-column>
           <el-table-column label="生产厂家" prop="producterId" width="100" />
           <el-table-column label="规格" prop="conversion">
             <template #default="scope">
@@ -240,6 +248,36 @@ const purchaseItemForm = reactive({
 }) //查看入库详细信息对象
 const unPassValue = ref('') //审核不通过的原因
 const unPassDialogVisible = ref(false) //审核驳回的对话框控制显示
+const prescriptionTypeDataMap = ref({}) //存储处方类型字典
+const prescriptionTypeMap = ref([])
+const medicinesDataMap = ref({}) //存储药品类型字典
+const medicinesMap = ref([])
+
+//药品类型
+const getMedicinesTypeFetch = () => {
+  http.get('/dictData/get/his_medicines_type').then((res) => {
+    const medicinesData = res.data.data || []
+    medicinesDataMap.value = medicinesData
+
+    medicinesMap.value = medicinesData.reduce((map, item) => {
+      map[Number(item.dictValue)] = item.dictLabel
+      return map
+    }, {})
+  })
+}
+
+//处方类型
+const getPrescriptionTypeFetch = () => {
+  http.get('/dictData/get/his_prescription_type').then((res) => {
+    const prescriptionTypeData = res.data.data || []
+    prescriptionTypeDataMap.value = prescriptionTypeData
+
+    prescriptionTypeMap.value = prescriptionTypeData.reduce((map, item) => {
+      map[Number(item.dictValue)] = item.dictLabel
+      return map
+    }, {})
+  })
+}
 
 // 提交审核不通过的理由
 const submitUnpassFetch = async () => {
@@ -372,6 +410,8 @@ onMounted(() => {
   getPurchaseFetch()
   getProducterFetch()
   getPurchaseTypeFetch()
+  getPrescriptionTypeFetch()
+  getMedicinesTypeFetch()
 })
 
 //获取所有待审核的入库订单数据

@@ -147,7 +147,7 @@
                   <span>{{ formatDate(scope.row.storageOptTime) || '--' }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="创建时间" prop="createTime" width="200">
+              <el-table-column label="创建时间" prop="createTime" width="200" sortable>
                 <template #default="scope">
                   <span>{{ formatDate(scope.row.createTime) }}</span>
                 </template>
@@ -239,7 +239,7 @@
             <el-form-item label="供应商">
               <el-select
                 v-model="addPurchaseData.providerId"
-                placeholder="请选择"
+                placeholder="请选择供应商"
                 style="width: 240px"
               >
                 <el-option
@@ -311,14 +311,14 @@
                 }}
               </template>
             </el-table-column>
-            <el-table-column label="批次号">
-              <template #default="{ row }">
-                <el-input v-model="row.batchNumber" placeholder="输入批次号" />
+            <el-table-column label="批次号" prop="batchNumber">
+              <template #default="scope">
+                <el-input v-model="scope.row.batchNumber" placeholder="输入批次号" />
               </template>
             </el-table-column>
-            <el-table-column label="备注">
-              <template #default="{ row }">
-                <el-input v-model="row.remark" placeholder="输入备注" />
+            <el-table-column label="备注" prop="remark">
+              <template #default="scope">
+                <el-input v-model="scope.row.remark" placeholder="输入备注" />
               </template>
             </el-table-column>
             <el-table-column label="操作" width="120">
@@ -517,8 +517,16 @@
           <el-table-column label="详细ID" prop="itemId" width="220" />
           <el-table-column label="单据号" prop="purchaseId" width="220" />
           <el-table-column label="药品名称" prop="medicinesName" width="100" />
-          <el-table-column label="药品分类" prop="medicinesType" width="100" />
-          <el-table-column label="处方类型" prop="prescriptionType" width="100" />
+          <el-table-column label="药品类型" prop="medicinesType" width="160">
+            <template #default="scope">
+              <span>{{ medicinesMap[scope.row.medicinesType] }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="处方类型" prop="prescriptionType" width="100">
+            <template #default="scope">
+              <span>{{ prescriptionTypeMap[scope.row.prescriptionType] }}</span>
+            </template>
+          </el-table-column>
           <el-table-column label="生产厂家" prop="producterId" width="100" />
           <el-table-column label="规格" prop="conversion">
             <template #default="scope">
@@ -609,8 +617,8 @@ const medicinesQueryForm = reactive({
 }) //查询条件表单数据对象
 const batchSettingsVisible = ref(false) //批量设置对话框控制显示
 const batchSettingForm = reactive({
-  num: 0, //数量
-  price: 0.0, //批发价格
+  num: 1, //数量
+  price: 0.01, //批发价格
   batchNumber: '', //批次号
   remark: '', //备注
 }) //入库订单明细表的批量设置
@@ -628,12 +636,22 @@ watch(
   () => checkedAddMedicinesDataList.value, // 监听 checkedAddMedicinesDataList 的变化
   (newValue) => {
     newValue.forEach((item) => {
-      // 给每个条目赋默认值
-      item.purchaseId = addPurchaseData.purchaseId // 单据号
-      item.purchaseNumber = item.purchaseNumber || 0 // 采购数量，默认是 0
-      item.tradePrice = item.tradePrice || 0 // 批发价格，默认是 0
-      item.batchNumber = batchSettingForm.batchNumber // 批次号
-      item.remark = batchSettingForm.remark // 备注
+      // 仅在数据为空时才赋默认值，避免重复赋值
+      if (!item.purchaseId) {
+        item.purchaseId = addPurchaseData.purchaseId // 单据号
+      }
+      if (item.purchaseNumber === undefined) {
+        item.purchaseNumber = 0 // 采购数量，默认是 0
+      }
+      if (item.tradePrice === undefined) {
+        item.tradePrice = 0 // 批发价格，默认是 0
+      }
+      if (!item.batchNumber) {
+        item.batchNumber = batchSettingForm.batchNumber // 批次号
+      }
+      if (!item.remark) {
+        item.remark = batchSettingForm.remark // 备注
+      }
     })
   },
   { deep: true }, // 深度监听，确保监听嵌套对象
@@ -886,10 +904,17 @@ const submitOrder = async (status) => {
 }
 
 // 暂存-->1
-const temporaryStorageFetch = () => submitOrder('1')
-
+const temporaryStorageFetch = () => {
+  if (addPurchaseData.providerId === '') return ElMessage.warning('请选择供应商!!!')
+  if (checkedAddMedicinesDataList.value.length === 0) return ElMessage.warning('请添加药品!!!')
+  submitOrder('1')
+}
 // 提交审核-->2
-const submitForReviewFetch = () => submitOrder('2')
+const submitForReviewFetch = () => {
+  if (addPurchaseData.providerId === '') return ElMessage.warning('请选择供应商!!!')
+  if (checkedAddMedicinesDataList.value.length === 0) return ElMessage.warning('请添加药品!!!')
+  submitOrder('2')
+}
 
 //重置查询条件
 const resetQueryFetch = () => {

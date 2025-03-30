@@ -41,7 +41,7 @@
                 <el-input
                   v-model="hisPatient.idCard"
                   placeholder="输入或导入身份证"
-                  @change="getBirthdayAndAgeFromIdCard"
+                  @input="handleIdCardInput"
                 />
               </el-form-item>
               <el-form-item label="患者姓名" prop="name">
@@ -76,12 +76,14 @@
             </el-col>
             <el-col :span="8">
               <el-form-item label="患者地址">
+                <el-cascader :options="pcaTextArr" v-model="selectedOptions" />
                 <el-input
                   v-model="hisPatient.address"
                   :rows="4"
                   type="textarea"
-                  placeholder="输入或导入患者地址"
+                  placeholder="请输入患者详细地址"
                   resize="none"
+                  class="mt-10px"
                 />
               </el-form-item>
             </el-col>
@@ -194,11 +196,6 @@
                   type="date"
                   placeholder="挂号时间"
                 >
-                  <!-- <template #default="{ cell }">
-                  <div class="cell" :class="{ current: cell.isCurrent, today: isToday(cell.text) }">
-                    <span class="text">{{ cell.text }}</span>
-                  </div>
-                </template> -->
                 </el-date-picker>
               </el-form-item>
             </el-col>
@@ -292,13 +289,13 @@
           <el-pagination
             background
             layout="prev, pager, next"
-            :total="pageTotal"
+            :total="patientPageTotal"
             :pager-count="11"
-            :page-size="pageSize"
+            :page-size="patientPageSize"
             :page-sizes="[10, 20, 50]"
-            :current-page="pageNum"
-            @size-change="sizeChange"
-            @current-change="currentChange"
+            :current-page="patientPageNum"
+            @size-change="patientSizeChange"
+            @current-change="patientCurrentChange"
             size="small"
           />
         </el-col>
@@ -324,6 +321,7 @@ import {
   FormRules,
 } from 'element-plus'
 import { computed, onMounted, reactive, ref } from 'vue'
+import { pcaTextArr } from 'element-china-area-data'
 
 const queryTypeKeyword = ref('') //搜索关键词
 const timeData = ref([]) //时段ID
@@ -365,6 +363,16 @@ const queryForm = reactive({
   selectedTimeDataId: '', //挂号时段
   queryRegTime: '', //挂号时间
 })
+const selectedOptions = ref([]) //选中的地址
+const patientPageTotal = ref(0)
+const patientPageSize = ref(10)
+const patientPageNum = ref(1)
+
+const handleIdCardInput = () => {
+  const { birthday, age } = getBirthdayAndAgeFromIdCard(hisPatient.idCard)
+  hisPatient.birthDay = birthday
+  hisPatient.age = age
+}
 
 //患者规则验证
 const rules = reactive<FormRules>({
@@ -408,12 +416,18 @@ const joinFeeFetch = async () => {
     hisRegistration.schedulingType = queryForm.querySelectedItemId
     hisRegistration.subsectionType = queryForm.selectedTimeDataId
 
+    if (selectedOptions.value && selectedOptions.value.length > 0) {
+      hisPatient.address =
+        selectedOptions.value.join(' ') + (hisPatient.address ? ' ' + hisPatient.address : '')
+    }
+
     const requestData = {
       hisRegistration: { ...hisRegistration },
       hisPatient: { ...hisPatient },
     }
 
     const res = await http.post('/regList/add', requestData)
+
     if (res.data.data) {
       ElNotification({
         title: '挂号成功！',
@@ -422,10 +436,13 @@ const joinFeeFetch = async () => {
         offset: 50,
         duration: 3000,
       })
-      resetQueryForm()
+
+      // **然后重置数据**
       resetRegistration()
       resetPatient()
       getTodaySchedulingFetch()
+      resetQueryForm()
+      selectedOptions.value = []
     }
   } catch (error) {
     ElMessage.error('表单校验失败，请检查输入')
@@ -491,7 +508,7 @@ const getTodaySchedulingFetch = () => {
     .then((res) => {
       registeredData.value = res.data.data?.list || [] // 防止 list 为空时报错
       pageNum.value = res.data.data?.pageNum || 1
-      pageSize.value = res.data.data?.pageSize || 3
+      pageSize.value = res.data.data?.pageSize || 5
       pageTotal.value = res.data.data?.total || 0
     })
 }
@@ -509,10 +526,18 @@ const handleRowClickByDeptId = (row) => {
   hisRegistration.deptId = row.deptId
 }
 
+// 验证身份证号是否合法
+const validateIdCard = (idCard) => {
+  const idCardPattern =
+    /^(^[1-9]\d{5}(18|19|20)?\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}(\d|X|x)?$)$/
+  return idCardPattern.test(idCard)
+}
+
 //根据身份证号计算出生日期和年龄的方法
 const getBirthdayAndAgeFromIdCard = (idCard) => {
-  if (!idCard || idCard.length !== 18) {
-    return { birthday: '', age: 0 }
+  // 先验证身份证号
+  if (!idCard || idCard.length !== 18 || !validateIdCard(idCard)) {
+    return { birthday: '', age: 0, isValid: false }
   }
 
   // 提取出生日期 (身份证 6-14 位)
@@ -567,12 +592,29 @@ const selectedPatientFetch = () => {
 //加载患者
 const addPatientFetch = () => {
   loadPatientDrawerVisible.value = true
-  if (patientData.value.length === 0) {
-    http.get('/patient/list').then((res) => {
-      patientData.value = res.data.list || [] // 确保是数组
+
+  // if (patientData.value.length === 0) {
+  http
+    .get('/patient/list', {
+      params: {
+        pageNum: patientPageNum.value,
+        pageSize: patientPageSize.value,
+      },
     })
-    console.log(patientData.value)
-  }
+    .then((res) => {
+      // 确保数据存在，防止 undefined 报错
+      const data = res.data || {}
+
+      patientData.value = data.list || [] // 确保 patientData.value 是数组
+      patientPageNum.value = data.pageNum || 1
+      patientPageSize.value = data.pageSize || 10
+      patientPageTotal.value = data.total || 0
+    })
+    .catch((error) => {
+      ElMessage.error('患者数据加载失败，请稍后重试')
+      console.error('获取患者列表失败:', error)
+    })
+  // }
 }
 
 const handlePatientDrawerClose = () => {
@@ -642,15 +684,43 @@ const getRegItemFetch = () => {
   })
 }
 
-//根据身份者号获取患者信息
+// 根据身份证号获取患者信息
 const getPatientFetch = async () => {
-  if (!idCard.value) return ElMessage.warning('身份证不可为空')
+  if (!idCard.value) {
+    return ElMessage.warning('身份证不可为空')
+  }
+
+  // 调用 validateIdCard 进行校验
+  if (!validateIdCard(idCard.value)) {
+    return ElMessage.error('身份证格式不正确!')
+  }
 
   try {
     const res = await http.get(`/patient/get/${idCard.value}`)
     const patientData = res.data.data
 
     if (!patientData) {
+      //解构序列化对象
+      Object.assign(hisPatient, {
+        idCard: '',
+        name: '',
+        phone: '',
+        age: 0,
+        sex: '0',
+        birthDay: '',
+        address: '',
+      })
+
+      //赋值
+      hisPatient.idCard = idCard.value
+      idCard.value = ''
+
+      // 计算生日和年龄并赋值
+      const { birthday, age } = getBirthdayAndAgeFromIdCard(hisPatient.idCard)
+      hisPatient.birthDay = birthday
+      hisPatient.age = age
+
+      //返回
       return ElMessage.warning('未查询到该患者，请手动添加信息')
     }
 
@@ -678,6 +748,18 @@ const sizeChange = (newPageSize) => {
 const currentChange = (newPage) => {
   pageNum.value = newPage
   getTodaySchedulingFetch()
+}
+
+//上一页
+const patientSizeChange = (newPageSize) => {
+  patientPageSize.value = newPageSize
+  addPatientFetch()
+}
+
+//下一页
+const patientCurrentChange = (newPage) => {
+  patientPageNum.value = newPage
+  addPatientFetch()
 }
 </script>
 
