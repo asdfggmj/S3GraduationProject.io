@@ -81,11 +81,11 @@
           <el-table-column label="操作" fixed="right" width="400">
             <template #default="scope">
               <el-button-group>
-                <el-button  type="primary" :disabled="isPyTypeDisabled(scope.row.orderStatus)" @click="pay('现金',scope.row.orderId,scope.row.orderAmount)">
+                <el-button  type="primary" v-if="scope.row.payType==0" :disabled="isPyTypeDisabled(scope.row.orderStatus)" @click="pay('现金',scope.row)">
                   <i class="iconfont icon-_xianjin" style="margin-right: 6px"></i>
                   <span>现金收费</span>
                 </el-button>
-                <el-button style="margin-left: 10px;" type="primary" :disabled="isPyTypeDisabled(scope.row.orderStatus)" @click="pay('支付宝',scope.row.orderId,scope.row.orderAmount)">
+                <el-button style="margin-left: 10px;" v-if="scope.row.payType==1" type="primary" :disabled="isPyTypeDisabled(scope.row.orderStatus)" @click="pay('支付宝',scope.row)">
                   <i class="iconfont icon-zhifubaozhifu" style="margin-right: 6px"></i>
                   <span>支付宝收费</span>
                 </el-button>
@@ -118,7 +118,7 @@
   </el-card>
   <el-dialog
     v-model="payforVisible"
-    :title="`使用[${payType}]扫码支付`"
+    :title="`使用[${payType}]支付`"
     width="600"
     :before-close="handleClose"
   >
@@ -126,14 +126,14 @@
       <el-row>
         <el-col :span="12">订单号：{{ odc }}</el-col>
         <el-row :span="12">总金额：￥{{ amount.toFixed(2) }}</el-row>
+        <el-row :span="12" style="margin-top: -5px;margin-left: 30px;"><el-button type="primary" @click="confirmPayment()">支付完成</el-button></el-row>
       </el-row>
     </el-card>
-    <el-card class="mt-10px">
+    <el-card class="mt-10px" v-if="payType=='支付宝'">
       <el-row>
         <!-- <el-col :span="24">二维码</el-col> -->
         <img :src="`/src/assets/image/${payType}.jpg`" alt="二维码" style="width: 200px; height: 200px;margin-left: 160px;" />
       </el-row>
-      <el-button style="float: right;" type="primary" @click="confirmPayment ">支付完成</el-button>
     </el-card>
   </el-dialog>
 </template>
@@ -153,6 +153,7 @@ const payforVisible = ref(false)//二维码显示
 let regId=ref('');//挂号编号
 let payType=ref('')//支付类型
 let amount=ref(0)//订单总金额
+const selectItem=ref('')//选中项
 
 // 重置按钮，清空数据
 const reset = () => {
@@ -163,8 +164,7 @@ const reset = () => {
 
 //支付费用
 const confirmPayment = () => {
-
-  http.post("orderCharge/feesApply")
+  http.post("orderCharge/feesApplyUpdateStatus",selectItem.value)
     .then(res => {
     const data=res.data.data;
     if(data){
@@ -183,13 +183,15 @@ const confirmPayment = () => {
 };
 
 //支付方式点击事件
-const pay = (type,orderId,orderAmount) => {
+const pay = (type,row) => {
   //赋值支付类型
   payType.value=type
   //赋值订单编号
-  odc.value=orderId
+  odc.value=row.orderId
   //赋值总金额
-  amount.value=orderAmount
+  amount.value=row.orderAmount
+  //赋值选中项
+  selectItem.value=row
   //显示
   payforVisible.value = true
 }

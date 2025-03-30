@@ -168,8 +168,8 @@
       <el-row>
         <el-col :span="12">订单号：{{ odc }}</el-col>
         <el-row :span="12">总金额：￥{{ amount.toFixed(2) }}</el-row>
+        <el-row :span="12" style="margin-top: -5px;margin-left: 30px;"><el-button type="primary" @click="confirmPayment ">支付完成</el-button></el-row>
       </el-row>
-      <el-row :span="12" style="margin-top: 20px;"><el-button type="primary" @click="confirmPayment ">支付完成</el-button></el-row>
     </el-card>
     <el-card class="mt-10px" v-if="payType=='支付宝'">
       <el-row>
