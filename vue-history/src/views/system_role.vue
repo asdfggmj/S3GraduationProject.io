@@ -40,7 +40,7 @@
               <el-table-column fixed type="selection" width="55" />
               <el-table-column label="角色名称" prop="roleName" width="120" />
               <el-table-column label="权限编码" prop="roleCode" />
-              <el-table-column label="显示顺序" prop="roleSort" width="120" />
+              <el-table-column label="显示顺序" min="0" prop="roleSort" width="120" />
               <el-table-column label="状态" prop="status">
                 <template #default="scope">
                   <el-switch
@@ -254,12 +254,10 @@ const addRoleMenu = () => {
       mids: checkMids
     })
     .then((res) => {
-      if(res.data.data){
       ElMessage({
         message: '授权成功',
         type: 'success',
       })
-    }
       dialog.value = false
     })
 }

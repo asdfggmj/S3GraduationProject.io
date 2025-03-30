@@ -78,6 +78,7 @@
                     <div class="block">
                       <el-date-picker
                         v-model="valueDate"
+                        :shortcuts="shortcuts"
                         type="daterange"
                         style="width: 100%"
                         start-placeholder="开始日期"
@@ -147,6 +148,37 @@ const pickdata = reactive({
 })
 const keyWord=ref('')//药品名称
 const activeName = ref('first')//当前激活的标签页
+
+//快速选择日期范围
+const shortcuts = [
+  {
+    text: '最近一周',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setDate(start.getDate() - 7)
+      return [start, end]
+    },
+  },
+  {
+    text: '最近一个月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setMonth(start.getMonth() - 1)
+      return [start, end]
+    },
+  },
+  {
+    text: '最近三个月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setMonth(start.getMonth() - 3)
+      return [start, end]
+    },
+  },
+]
 
 // 监听activeName变换，判断当前是哪个标签
 // watch(activeName, (newVal) => {

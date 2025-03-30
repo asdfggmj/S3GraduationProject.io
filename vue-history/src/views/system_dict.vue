@@ -20,7 +20,7 @@
             <el-input
               v-model="keyWord"
               @change="searchDict"
-              placeholder="请输入关键字回车以查询"
+              placeholder="请输入字典名称回车以查询"
               clearable
               size=""
             />

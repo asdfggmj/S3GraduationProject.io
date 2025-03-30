@@ -69,11 +69,17 @@
           <el-descriptions-item label="年龄">{{ userData.data.data.age }}</el-descriptions-item>
           <el-descriptions-item label="邮箱">{{ userData.data.data.email }}</el-descriptions-item>
           <el-descriptions-item label="手机号">{{ userData.data.data.phone }}</el-descriptions-item>
-          <el-descriptions-item label="系统权限">{{
-            userData.data.data.roleList
-          }}</el-descriptions-item>
+          <el-descriptions-item label="系统权限">
+              <el-tag
+                v-for="item in userData.data.data.sysRoleList"
+                style="padding: 5px;"
+                class="mr-10px"
+                size="small"
+                type="info"
+                >{{ item.roleName }}</el-tag>           
+          </el-descriptions-item>
           <el-descriptions-item label="所属部门">{{
-            userData.data.data.deptId
+            userData.data.data.deptValue
           }}</el-descriptions-item>
         </el-descriptions>
         <!-- 分割线 -->
