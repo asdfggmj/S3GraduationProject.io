@@ -20,7 +20,11 @@
           </el-col>
           <!-- 模糊查询 -->
           <el-col :span="8">
-            <el-input v-model="keyWord" placeholder="请输入检查单号回车以查询" />
+            <el-input
+              v-model="keyWord"
+              placeholder="请输入检查单号回车以查询"
+              @input="debouncedGetCheckResultFetch"
+            />
           </el-col>
         </el-row>
       </el-card>
@@ -29,7 +33,7 @@
   <!-- 第二行 -->
   <el-row>
     <el-col :span="24">
-      <el-card shadow="always">
+      <el-card shadow="always" v-loading="loading">
         <!-- 表格 -->
         <el-row class="mt-10px">
           <el-col>
@@ -37,9 +41,18 @@
               :data="checkResultFinishList"
               style="width: 100%"
               max-height="500"
-              row-key="dictId"
+              row-key="itemId"
               border
             >
+              <el-table-column type="expand">
+                <template #default="{ row }">
+                  <el-row justify="space-evenly">
+                    <el-col :span="6">患者ID：{{ row.patientId }}</el-col>
+                    <el-col :span="6">患者名称：{{ row.patientName }}</el-col>
+                    <el-col :span="6">挂号单：{{ row.regId }}</el-col>
+                  </el-row>
+                </template>
+              </el-table-column>
               <el-table-column label="检查项ID" prop="itemId" width="220" />
               <el-table-column label="项目名称" prop="checkItemName" width="180" />
               <el-table-column label="价格" prop="price">
@@ -47,8 +60,17 @@
                   {{ parseFloat(scope.row.price).toFixed(2) }}
                 </template>
               </el-table-column>
-              <el-table-column label="检查描述" prop="resultMsg" width="200" />
-              <el-table-column label="检查结果" prop="createBy" width="200" />
+              <el-table-column
+                label="检查描述"
+                prop="resultMsg"
+                width="200"
+                show-overflow-tooltip
+              />
+              <el-table-column label="检查结果" prop="resultStatus" width="200">
+                <template #default="scope">{{
+                  scope.row.resultStatus === '1' ? '检测完成' : '检测中'
+                }}</template>
+              </el-table-column>
               <el-table-column label="创建时间" prop="updateTime" width="200">
                 <template #default="scope">
                   {{ formatDate(scope.row.updateTime) }}
@@ -122,6 +144,7 @@
 import http from '@/http'
 import { onMounted, ref } from 'vue'
 import { formatDate } from '@/utils/dateUtils'
+import { debounce } from '@/utils/debounceUtils'
 
 const pageNum = ref(1) //当前页
 const pageSize = ref(10) //每页显示的数据
@@ -135,6 +158,7 @@ const checkDialogTitle = ref('') //查看检查结果的对话框标题
 const checkDIalogText = ref('') //查看检查结果的文本内容
 const checkDialogItemId = ref('') //查看检查结果的检查单号
 const checkDialogResultImg = ref([]) //查看检查结果的图片列表
+const loading = ref(true)
 
 //获取所有检查费用的ID和名字
 const getCheckItemFetchData = async () => {
@@ -185,8 +209,9 @@ onMounted(() => {
 
 //获取检查结果
 const getCheckResultFinishFetch = (checkItemId) => {
+  loading.value = true
   http
-    .get(`/checkResult/get/1/${checkItemId}`, {
+    .get(`/checkResult/get/1/${checkItemId == '' ? '1' : checkItemId}`, {
       params: {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
@@ -197,9 +222,16 @@ const getCheckResultFinishFetch = (checkItemId) => {
       const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
       checkResultFinishList.value.splice(0, checkResultFinishList.value.length, ...list)
       pageTotal.value = res.data.data?.total || 0
-      // checkResultFinishList.value = res.data.data
+    })
+    .finally(() => {
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
 }
+
+//防抖处理
+const debouncedGetCheckResultFetch = debounce(getCheckResultFinishFetch, 500)
 </script>
 
 <style>

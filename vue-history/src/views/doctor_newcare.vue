@@ -277,7 +277,11 @@
                         <el-table-column prop="price" label="单价(元)" />
                         <el-table-column prop="amount" label="总价(元)" />
                         <el-table-column prop="remark" label="备注" />
-                        <el-table-column prop="status" label="状态" />
+                        <el-table-column prop="status" label="状态">
+                          <template #default="scope">{{
+                            scope.row.status === '0' ? '未支付' : '已支付'
+                          }}</template>
+                        </el-table-column>
                         <el-table-column label="操作">
                           <template #default="scope">
                             <el-button type="danger" size="small" @click="deleteItem(scope.row)">
@@ -363,6 +367,18 @@
           <el-table-column label="身份证号" prop="idCard" />
           <el-table-column label="挂号类型" prop="regItemId" />
           <el-table-column label="过敏史" prop="allergyInfo" />
+          <el-table-column label="操作" width="100" fixed="right">
+            <template #default="scope">
+              <el-button
+                type="success"
+                size="small"
+                @click="chooseSelectedPatient(scope.row.regId)"
+              >
+                <el-icon><Select /></el-icon>
+                <span>选择</span>
+              </el-button>
+            </template>
+          </el-table-column>
         </el-table>
       </el-tab-pane>
 
@@ -651,7 +667,7 @@
 <script setup lang="ts">
 import http from '@/http'
 import { debounce } from '@/utils/debounceUtils'
-import { ElMessage, ElMessageBox, ElNotification, FormInstance, FormRules } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 
 const activeName = ref('first') // 默认选中的 tab
@@ -1097,8 +1113,8 @@ const getMedicinesFetch = () => {
 
 //获取检查列表
 const getCheckItemFetch = () => {
-  http.get('/checkItem/list').then((res) => {
-    const list = Array.isArray(res.data.list) ? res.data.list : []
+  http.get('/checkItem/list', { params: { status: '0' } }).then((res) => {
+    const list = Array.isArray(res.data.data.list) ? res.data.data.list : []
     checkItemList.value.splice(0, checkItemList.value.length, ...list)
     checkItemObj.checkItemPageTotal = res.data?.total || 0
   })
@@ -1331,7 +1347,7 @@ const getRegListFetchByStatus = async (status) => {
 const getContagious = () => {
   if (contagious.length === 0) {
     http.get(`/dictData/list/his_contagious_status`).then((res) => {
-      const list = Array.isArray(res.data) ? res.data : []
+      const list = Array.isArray(res.data.data) ? res.data.data : []
       contagious.splice(0, contagious.length, ...list)
     })
   }
@@ -1341,7 +1357,7 @@ const getContagious = () => {
 const getReceiveType = () => {
   if (receiveType.length === 0) {
     http.get(`/dictData/list/his_receive_type`).then((res) => {
-      const list = Array.isArray(res.data) ? res.data : []
+      const list = Array.isArray(res.data.data) ? res.data.data : []
       receiveType.splice(0, receiveType.length, ...list)
     })
   }

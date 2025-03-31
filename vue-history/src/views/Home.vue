@@ -1,12 +1,12 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <!-- 第一行 -->
-  <el-row>
-    <el-col>
+  <el-row justify="space-between">
+    <el-col :span="11">
       <!-- 卡片数据展示 -->
       <el-card shadow="always">
         <el-row>
-          <el-col :span="2">
+          <el-col :span="4">
             <el-avatar :size="64" :src="userObject.picture" />
           </el-col>
           <el-col :span="16">
@@ -20,29 +20,36 @@
               <el-col class="mt-4px"><weather /></el-col>
             </el-row>
           </el-col>
-          <el-col :span="6">
-            <el-row>
-              <el-col>仓库地址</el-col>
-              <el-col class="mt-4px"
-                >前端：
-                <el-tooltip class="box-item" effect="dark" content="前往前端仓库" placement="top">
+        </el-row>
+      </el-card>
+    </el-col>
+    <el-col :span="11">
+      <el-card>
+        <el-row align="middle">
+          <el-col :span="8">
+            <el-text class="title">📁 项目仓库</el-text>
+            <el-row justify="center" gutter="10">
+              <!-- GitHub -->
+              <el-col>
+                <el-tooltip effect="dark" content="前往 GitHub 仓库" placement="top">
                   <el-button type="primary" link @click="gitHub">
-                    <i class="iconfont icon-github-fill" style="margin-right: 6px"></i>
+                    <el-icon><i class="iconfont icon-github-fill"></i></el-icon> GitHub
                   </el-button>
                 </el-tooltip>
-
-                <a href=""></a
-              ></el-col>
-              <el-col class="mt-4px"
-                >后端：
-                <el-tooltip
-                  class="box-item"
-                  effect="dark"
-                  content="前往后端仓库"
-                  placement="bottom"
-                >
-                  <el-button type="primary" link @click="gitee">
-                    <i class="iconfont icon-gitee" style="margin-right: 6px"></i>
+              </el-col>
+              <!-- Gitee -->
+              <el-col>
+                <el-tooltip effect="dark" content="前往 Gitee 仓库" placement="bottom">
+                  <el-button type="danger" link @click="gitee">
+                    <el-icon><i class="iconfont icon-gitee"></i></el-icon> Gitee
+                  </el-button>
+                </el-tooltip>
+              </el-col>
+              <!-- Gitee -->
+              <el-col>
+                <el-tooltip effect="dark" content="前往接口文档" placement="bottom">
+                  <el-button type="danger" link @click="openApi">
+                    <el-icon><i class="iconfont icon-gitee"></i></el-icon> openAPI
                   </el-button>
                 </el-tooltip>
               </el-col>
@@ -55,7 +62,7 @@
   <el-row class="mt-10px">
     <el-col>
       <el-card shadow="always">
-        <el-carousel indicator-position="outside" height="300px">
+        <el-carousel indicator-position="outside" height="300px" :autoplay="true" :interval="4000">
           <el-carousel-item v-for="(item, index) in photoList" :key="index">
             <h3 text="2xl" justify="center">
               <el-image :src="item">
@@ -69,32 +76,33 @@
       </el-card>
     </el-col>
   </el-row>
+  <el-divider content-position="center">基本信息</el-divider>
   <!-- 第二行 -->
   <el-row class="mt-10px" :gutter="20">
     <el-col :span="6">
-      <el-card>
+      <el-card class="stat-card" shadow="hover">
         <el-statistic title="今日就诊数" :value="outputValue" suffix="人" />
       </el-card>
     </el-col>
     <el-col :span="6">
-      <el-card>
+      <el-card class="stat-card" shadow="hover">
         <el-statistic title="今日新增患者" :value="addHuanzValue" suffix="人" />
       </el-card>
     </el-col>
     <el-col :span="6">
-      <el-card>
+      <el-card class="stat-card" shadow="hover">
         <el-statistic title="痊愈患者" :value="cureHuanzValue" suffix="人" />
       </el-card>
     </el-col>
     <el-col :span="6">
-      <el-card>
+      <el-card class="stat-card" shadow="hover">
         <el-statistic title="医生规模" :value="doctorScaleValue" suffix="人" />
       </el-card>
     </el-col>
   </el-row>
 
   <!-- 分隔符 -->
-  <el-divider />
+  <el-divider content-position="center">统计数据</el-divider>
   <!-- 第三行 -->
   <el-row class="mt-10px">
     <el-col>
@@ -303,15 +311,15 @@ const updateTime = () => {
   timeObject.value.day = now.getDate() //获取日期
   timeObject.value.hourse = now.getHours() //获取小时
   if (timeObject.value.hourse >= 0 && timeObject.value.hourse < 6) {
-    timeText.value = '凌晨了,忙碌的同时要合理的休息哦,'
+    timeText.value = '凌晨了,忙碌的同时要合理的休息,'
   } else if (timeObject.value.hourse >= 6 && timeObject.value.hourse < 10) {
     timeText.value = '早上好！来一份元气早餐吧 '
   } else if (timeObject.value.hourse >= 10 && timeObject.value.hourse < 14) {
-    timeText.value = '中午好！要记得吃饭哦~ '
+    timeText.value = '中午好！要记得吃饭哦 '
   } else if (timeObject.value.hourse >= 14 && timeObject.value.hourse < 20) {
-    timeText.value = '下午好！要记得吃饭哦~ '
+    timeText.value = '下午好！来一杯奶茶吧awa!! '
   } else {
-    timeText.value = '晚上好！身体重要,要注意休息才行呢'
+    timeText.value = '晚上好！要注意休息呀'
   }
 
   timeObject.value.currentTime = now.toLocaleTimeString() // 获取当前时间并转化为本地时间字符串
@@ -338,6 +346,9 @@ const gitHub = () => {
 //后端地址
 const gitee = () => {
   window.open('https://gitee.com/asdfggmj12/history-back')
+}
+const openApi = () => {
+  window.open('http://localhost:8080/doc.html')
 }
 
 //今日就诊数
@@ -420,5 +431,43 @@ const get = async () => {
 }
 .mt-10px {
   margin-top: 10px;
+}
+.el-card {
+  border-radius: 12px !important;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+.el-row {
+  margin-bottom: 16px;
+}
+.el-statistic {
+  background: linear-gradient(to right, #66ccff, #ff99cc);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.el-statistic .el-statistic__value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #ff5733;
+}
+.stat-card {
+  background: linear-gradient(to right, #f9f9f9, #e3f2fd);
+  border-left: 5px solid #42b983;
+}
+body {
+  background: linear-gradient(to right, #f8f9fa, #e3f2fd);
+}
+.dark-mode {
+  background-color: #121212;
+  color: white;
+}
+.el-image {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+.el-avatar:hover {
+  transform: scale(1.1);
+  transition: 0.3s;
+}
+.el-statistic:hover {
+  color: #ff9900;
 }
 </style>

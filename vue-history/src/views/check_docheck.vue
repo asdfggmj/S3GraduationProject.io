@@ -23,11 +23,16 @@
         <el-row class="mt-10px">
           <el-col :span="8">
             <el-form-item label="检查单号">
-              <el-input placeholder="请输入检查单号" v-model="checkItemId" />
+              <el-input
+                placeholder="请输入检查单号"
+                v-model="queryForm.itemId"
+                @input="getCareOrderItemFetch(queryForm.itemId)"
+                clearable
+              />
             </el-form-item>
           </el-col>
           <el-col :span="2" style="margin-left: 6px"
-            ><el-button type="primary">
+            ><el-button type="primary" @click="getCareOrderItemFetch(queryForm.itemId)">
               <el-icon><Search /></el-icon>
               <span>查询</span>
             </el-button></el-col
@@ -39,7 +44,7 @@
   <!-- 第二行 -->
   <el-row class="mb-10px">
     <el-col :span="24">
-      <el-card shadow="hover">
+      <el-card shadow="hover" v-loading="loading">
         <el-row>
           <el-col>
             <el-table
@@ -126,7 +131,6 @@ const checkedData = reactive({
   itemName: '',
   remark: '',
 })
-const checkItemId = ref('') //检查单号
 const startCheckDisabled = ref(true)
 const checkResultObj = reactive({
   itemId: '', //处方检查项ID
@@ -137,6 +141,11 @@ const checkResultObj = reactive({
   patientName: '', //患者名称
   regId: '', //挂单号
 })
+const queryForm = reactive({
+  checkId: '',
+  itemId: '',
+})
+const loading = ref(true)
 
 //开始检查方法
 const startRegItemFetch = () => {
@@ -195,10 +204,23 @@ const getCheckItemFetchData = async () => {
 }
 
 //获取所有已支付的检查项目
-const getCareOrderItemFetch = debounce((itemId) => {
-  http.get('/orderItem/getCareOrderItem', { params: { itemId: itemId } }).then((res) => {
-    careOrderItemList.value = res.data
-  })
+const getCareOrderItemFetch = debounce((checkId) => {
+  loading.value = true
+  http
+    .get('/orderItem/getCareOrderItem', {
+      params: {
+        checkId: checkId,
+        itemId: queryForm.itemId,
+      },
+    })
+    .then((res) => {
+      careOrderItemList.value = res.data
+    })
+    .finally(() => {
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
+    })
 }, 500)
 
 //页面加载时挂载
