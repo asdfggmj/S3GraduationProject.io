@@ -227,7 +227,7 @@ const menuGrant = async (index: number, role) => {
   //查询当前角色拥有的子菜单的权限编号
   await http.get('/role/getRoleMids?rid=' + rid.value).then((res) => {
     mids.value = res.data.data
-    console.log(mids.value)
+    console.log("子菜单"+mids.value)
   })
   //查询所有的菜单(查询父菜单以及子菜单的层次结构的格式)
   await http.get('/menu/getMenusAll').then((res) => {
