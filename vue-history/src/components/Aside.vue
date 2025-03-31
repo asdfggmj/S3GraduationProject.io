@@ -3,7 +3,10 @@
   <el-row>
     <el-col :span="24">
       <el-scrollbar style="height: 90vh">
-        <el-menu class="el-menu-vertical-demo" :default-active="activeMenu">
+        <el-menu
+          class="el-menu-vertical-demo"
+          :expanded-keys="expandedKeys"
+        >
           <!-- 首页 -->
           <el-menu-item index="/home" @click="navigateTo('/home')">
             <el-icon><House /></el-icon>
@@ -11,7 +14,7 @@
           </el-menu-item>
           <!-- 循环遍历菜单 -->
           <el-sub-menu
-            v-for="parentMenu in menuData"
+            v-for="parentMenu in menuStore.menuData"
             :key="parentMenu.menuId"
             :index="String(parentMenu.menuId)"
           >
@@ -42,10 +45,13 @@ import { House, Setting } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+// 导入 Pinia Store
+import { useMenuStore } from '@/stores/menuStore';
+const menuStore = useMenuStore();
 
-const menuData = ref([]) // 菜单数据
 const router = useRouter() // 获取路由实例
 const activeMenu = ref(router.currentRoute.value.path) // 绑定当前激活菜单
+const expandedKeys = ref([]) // 控制展开的菜单项
 
 const navigateTo = (path: string) => {
   if (router.currentRoute.value.path !== path) {
@@ -75,10 +81,11 @@ const getMenus = async () => {
       return
     }
 
-    if (menuData.value.length === 0) {
-      const response = await http.get(`/menu/getUserMenus`)
-      menuData.value = response.data.data || []
-    }
+    // 使用 menuStore.menuData
+    const response = await http.get('/menu/getUserMenus')
+    menuStore.menuData = response.data.data || []
+    // 重置展开的菜单项
+    expandedKeys.value = []
   } catch (error) {
     ElMessage.error('获取菜单失败: ' + error)
   }

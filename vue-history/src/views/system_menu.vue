@@ -149,7 +149,7 @@
               id="parentSelect"
               v-model="menuObject.parentId"
               @click="getParentsMenu"
-              placeholder="所属科室"
+              placeholder="上级菜单"
             >
               <el-option
                 v-for="item in parentMenuData"
@@ -165,12 +165,12 @@
           <el-form-item label="路由地址">
             <el-input v-model="menuObject.path" placeholder="请输入路由地址" />
           </el-form-item>
-          <el-form-item label="状态">
+          <!-- <el-form-item label="状态">
             <el-radio-group v-model="menuObject.status">
               <el-radio value="0">正常</el-radio>
               <el-radio value="1">禁用</el-radio>
             </el-radio-group>
-          </el-form-item>
+          </el-form-item> -->
           <el-form-item label="备注">
             <el-input v-model="menuObject.remark" type="textarea" />
           </el-form-item>
@@ -192,6 +192,9 @@ import http from '@/http'
 import { Delete, Edit, Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { computed, onMounted, reactive, ref } from 'vue'
+// 导入 Pinia Store
+import { useMenuStore } from '@/stores/menuStore';
+const menuStore = useMenuStore();
 
 const addOrEditDrawerModal = ref(false) //添加或编辑角色抽屉
 const addOrEditDrawerTitle = ref('') //添加或编辑角色抽屉标题
@@ -244,7 +247,7 @@ const addMenu = () => {
   menuObject.menuType = ''
   menuObject.status = '0'
   menuObject.path = ''
-
+  menuObject.remark = ''
   addOrEditDrawerTitle.value = '添加菜单'
   addOrEditDrawerModal.value = true
 }
@@ -261,6 +264,7 @@ const addMenuSubmit = () => {
       ElMessage.error('添加失败')
     }
     getMenus()
+    menuStore.getMenus() // 更新菜单数据
   })
 }
 
@@ -309,10 +313,11 @@ const delMenu = (menuId) => {
     http.post('menu/delMenu?menuId=' + menuId).then((res) => {
       if (res.data.data) {
         ElMessage.success('删除成功')
-        getMenus()
       } else {
         throw new Error('菜单删除失败')
       }
+      getMenus()
+      menuStore.getMenus() // 更新菜单数据
     })
   })
 }
@@ -326,18 +331,18 @@ const editMenu = (menuId: string) => {
   http
     .get('/menu/getMenu?menuId=' + menuId)
     .then((res) => {
-      if (res.data) {
+      if (res.data.data) {
         menuObject.menuId = menuId
-        menuObject.parentId = res.data.parentId
-        menuObject.menuName = res.data.menuName
-        menuObject.menuType = res.data.menuType
-        menuObject.status = res.data.status
-        menuObject.path = res.data.path
-        menuObject.remark = res.data.remark
-        menuObject.createTime = res.data.createTime
-        menuObject.updateTime = res.data.updateTime
-        menuObject.createBy = res.data.createBy
-        menuObject.updateBy = res.data.updateBy
+        menuObject.parentId = res.data.data.parentId==0?'':res.data.data.parentId
+        menuObject.menuName = res.data.data.menuName
+        menuObject.menuType = res.data.data.menuType
+        menuObject.status = res.data.data.status
+        menuObject.path = res.data.data.path
+        menuObject.remark = res.data.data.remark
+        menuObject.createTime = res.data.data.createTime
+        menuObject.updateTime = res.data.data.updateTime
+        menuObject.createBy = res.data.data.createBy
+        menuObject.updateBy = res.data.data.updateBy
       }
     })
     .catch((error) => {
@@ -357,6 +362,7 @@ const updateMenuSubmit = () => {
     } else {
       ElMessage.error('操作有误,请重试!')
     }
+    menuStore.getMenus() // 更新菜单数据
     getMenus()
   })
 }
@@ -418,6 +424,7 @@ const updateMenuStatus = async (menuId, menuStatus, menuName) => {
       })
       //刷新
       getMenus()
+      menuStore.getMenus() // 更新菜单数据
     } else {
       throw new Error('状态更新失败')
     }
@@ -493,6 +500,7 @@ const getMenus = async () => {
     setTimeout(() => {
       loading.value = false
     }, 500)
+    console.log(menuData.value);
   } catch (error) {
     console.error('获取菜单失败', error)
   }

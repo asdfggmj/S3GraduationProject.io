@@ -237,14 +237,14 @@ const addDictType = () => {
   dictTypeObject.status = '0'
   dictTypeObject.remark = ''
 
-  addOrEditDrawerTitle.value = '添加字典数据'
+  addOrEditDrawerTitle.value = '添加字典类别'
   addOrEditDrawerModal.value = true
 }
 
 //修改字典数据抽屉
 const editDictType = (dictCode) => {
   //userId=userId
-  addOrEditDrawerTitle.value = '编辑字典数据'
+  addOrEditDrawerTitle.value = '编辑字典类别'
   addOrEditDrawerModal.value = true
   //回调单个字典数据数据
   http
